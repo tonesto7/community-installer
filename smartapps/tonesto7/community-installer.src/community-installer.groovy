@@ -49,7 +49,7 @@ def startPage() {
 def mainPage() {
     dynamicPage (name: "mainPage", title: "", install: true, uninstall: true) {
         def theURL = "https://consigliere-regional.api.smartthings.com/?redirect=${getAppEndpointUrl("installStart")}"
-        log.trace getAppEndpointUrl("stupdate")
+        log.trace getAppEndpointUrl("installStart")
         section("Automatic Setup") {
             paragraph title: "What now?", "Tap on the input below to launch the Installer Web App"
             href "", title: "Get Started", url: theURL, style: "embedded", required: false, description: "", image: ""
@@ -82,7 +82,7 @@ def webFooterHtml(verStr="") {
         <footer class="page-footer center-on-small-only fixed-bottom">
             <div class="footer-copyright">
                 <div class="containter-fluid">
-                    Â© 2018 Copyright Anthony Santilli & Corey Lista
+                    Copyright © 2018 Anthony Santilli & Corey Lista
                 </div>
             </div>
         </footer>
