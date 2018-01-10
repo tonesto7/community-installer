@@ -38,7 +38,7 @@ def startPage() {
                 def desc = ""
 				if(!atomicState?.accessToken) { title="OAUTH Error"; desc = "OAuth is not Enabled for ${app?.label} application.  Please click remove and review the installation directions again"; }
 				else { title="Unknown Error"; desc = "Application Status has not received any messages to display";	}
-				LogAction("Status Message: $desc", "warn", true)
+				log.warn "Status Message: $desc"
 				paragraph title: "$title", "$desc", required: true, state: null
 			}
 		}
@@ -164,7 +164,7 @@ def installStartHtml() {
 def getAccessToken() {
     try {
         if(!atomicState?.accessToken) {
-            LogAction("SmartThings Access Token Not Found... Creating a New One!!!","info", true)
+            log.error "SmartThings Access Token Not Found... Creating a New One!!!"
             atomicState?.accessToken = createAccessToken()
         } else { return true }
     }
