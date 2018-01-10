@@ -72,8 +72,8 @@ def webHeadHtml(title, verStr="") {
         <script src="https://use.fontawesome.com/a81eef09c0.js" defer></script>
         <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js" defer></script>
-        <link href="https://echosistant.com/es5_content/css/es5_master.min.css" rel="stylesheet">
-        <link href="https://echosistant.com/es5_content/css/es5_web.min.css" rel="stylesheet">
+        <link href="https://community-installer-34dac.firebaseapp.com/content/css/main_mdb.min.css" rel="stylesheet">
+        <link href="https://community-installer-34dac.firebaseapp.com/content/css/main_web.min.css" rel="stylesheet">
     """
 }
 
@@ -86,9 +86,9 @@ def webFooterHtml(verStr="") {
                 </div>
             </div>
         </footer>
-        <script type="text/javascript" src="https://echosistant.com/es5_content/js/popper.min.js" defer></script>
-        <script type="text/javascript" src="https://echosistant.com/es5_content/js/bootstrap.min.js" defer></script>
-        <script type="text/javascript" src="https://echosistant.com/es5_content/js/mdb.min.js" defer></script>
+        <script type="text/javascript" src="https://community-installer-34dac.firebaseapp.com/content/js/popper.min.js" defer></script>
+        <script type="text/javascript" src="https://community-installer-34dac.firebaseapp.com/content/js/bootstrap.min.js" defer></script>
+        <script type="text/javascript" src="https://community-installer-34dac.firebaseapp.com/content/js/mdb.min.js" defer></script>
     """
 }
 
@@ -120,7 +120,7 @@ def installStartHtml() {
                 // var repoData = ${new JsonOutput().toJson([owner: 'tonesto7', repoName: 'echosistant-alpha', branch: 'master', namespace: 'com.tonesto7'])};
                 // var appNames = ${new JsonOutput().toJson(['ST Home Manager':'smartapps/tonesto7/st-home-manager.src/st-home-manager.groovy', 'Event Reporting App':'smartapps/tonesto7/event-reporting-app.src/event-reporting-app.groovy'])};
             </script>
-            <script src="https://echosistant.com/es5_content/js/ignore_me.js" async></script>
+            <script src="https://community-installer-34dac.firebaseapp.com/content/js/ignore_me.js" async></script>
         </head>
         <body>
             <header>
