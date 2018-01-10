@@ -21,6 +21,8 @@ private releaseVer() { return "5.0.0109" }
 private appVerDate() { "1-09-2018" }
 /**********************************************************************************************************************************************/
 preferences {
+    page name: "startPage"
+    page name: "prereqPage"
     page name: "mainPage"
 }
 
@@ -28,12 +30,30 @@ mappings {
     path("/installStart") { action: [GET: "installStartHtml"] }
 }
 
+def startPage() {
+    if(!atomicState?.accessToken) { getAccessToken() }
+	if(!atomicState?.accessToken) {
+		return dynamicPage(name: "startPage", title: "Status Page", nextPage: "", install: false, uninstall: false) {
+			section ("Status Page:") {
+				def title = ""
+                def desc = ""
+				if(!atomicState?.accessToken) { title="OAUTH Error"; desc = "OAuth is not Enabled for ${appName()} application.  Please click remove and review the installation directions again"; }
+				else if(!preReqOk) { title="SmartThings Location Error"; desc = "SmartThings Location is not returning (TimeZone: ${location?.timeZone}) or (ZipCode: ${location?.zipCode}) Please edit these settings under the ST IDE or Mobile App"; }
+				else { title="Unknown Error"; desc = "Application Status has not received any messages to display";	}
+				LogAction("Status Message: $desc", "warn", true)
+				paragraph title: "$title", "$desc", required: true, state: null
+			}
+		}
+	}
+    else { return mainPage() }
+}
+
 def mainPage() {
-    if(!atomicState?.accessToken) { atomicState?.accessToken = createAccessToken() }
     dynamicPage (name: "mainPage", title: "", install: true, uninstall: true) {
         def theURL = "https://consigliere-regional.api.smartthings.com/?redirect=${getAppEndpointUrl("installStart")}"
         log.trace getAppEndpointUrl("stupdate")
         section("Automatic Setup") {
+            paragraph title: "What now?", "Tap on the input below to launch the Installer Web App"
             href "", title: "Get Started", url: theURL, style: "embedded", required: false, description: "", image: ""
         }
     }
@@ -64,7 +84,7 @@ def webFooterHtml(verStr="") {
         <footer class="page-footer center-on-small-only fixed-bottom">
             <div class="footer-copyright">
                 <div class="containter-fluid">
-                    © 2018 Copyright Anthony Santilli & Corey Lista
+                    Â© 2018 Copyright Anthony Santilli & Corey Lista
                 </div>
             </div>
         </footer>
