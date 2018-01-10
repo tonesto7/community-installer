@@ -161,6 +161,30 @@ def installStartHtml() {
     render contentType: "text/html", data: html
 }
 
+def installed() {
+    LogAction("Installed with settings: ${settings}", "debug", false)
+    atomicState?.isInstalled = true
+    initialize()
+}
+
+def updated() {
+    log.trace ("${app?.getLabel()} | Now Running Updated() Method")
+    if(!atomicState?.isInstalled) { atomicState?.isInstalled = true }
+    initialize()
+}
+
+def initialize() {
+    if (!atomicState?.accessToken) {
+        LogAction("Access token not defined. Attempting to refresh. Ensure OAuth is enabled in the SmartThings IDE.", "error", false)
+        getAccessToken()
+    }
+}
+
+def uninstalled() {
+	revokeAccessToken()
+    log.warn("${app?.getLabel()} has been Uninstalled...")
+}
+
 def getAccessToken() {
     try {
         if(!atomicState?.accessToken) {
