@@ -201,3 +201,4 @@ def getAccessToken() {
 def getAppImg(file)	    { return "https://echosistant.com/es5_content/images/$file" }
 def getAppVideo(file)	{ return "https://echosistant.com/es5_content/videos/$file" }
 def getAppEndpointUrl(subPath)	{ return "${apiServerUrl("/api/smartapps/installations/${app.id}${subPath ? "/${subPath}" : ""}?access_token=${atomicState.accessToken}")}" }
+
