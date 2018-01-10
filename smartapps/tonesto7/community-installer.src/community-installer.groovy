@@ -86,8 +86,8 @@ def webFooterHtml(verStr="") {
                 </div>
             </div>
         </footer>
-        <script type="text/javascript" src="https://community-installer-34dac.firebaseapp.com/content/js/popper.min.js" defer></script>
         <script type="text/javascript" src="https://community-installer-34dac.firebaseapp.com/content/js/bootstrap.min.js" defer></script>
+        <script type="text/javascript" src="https://community-installer-34dac.firebaseapp.com/content/js/popper.min.js" defer></script>
         <script type="text/javascript" src="https://community-installer-34dac.firebaseapp.com/content/js/mdb.min.js" defer></script>
     """
 }
@@ -123,31 +123,45 @@ def installStartHtml() {
             <header>
                 <nav class="navbar navbar-dark sticky-top navbar-expand-lg">
                     <a class="navbar-brand" href="#"><img src="https://echosistant.com/es5_content/images/es5_logo.png" height="30" class="d-inline-block align-top" alt=""> Community Installer</a>
+                    <!-- Collapse button -->
+                            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                                aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+
+                            <!-- Collapsible content -->
+                            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+
+                                <!-- Links -->
+                                <ul class="navbar-nav mr-auto">
+                                    <li class="nav-item active">
+                                        <a class="nav-link" href="#"><i class="fa fa-home"></i> Home <span class="sr-only">(current)</span></a>
+                                    </li>
+                                </ul>
+                                <!-- Links -->
+
+                                <!-- Search form -->
+                                <!-- <form class="form-inline">
+                                    <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
+                                </form> -->
+                            </div>
+                            <!-- Collapsible content -->
                 </nav>
             </header>
             <main>
                 <div class="container">
-                    <section id="homeSect">
-                        <div style="width: 100%; min-height: 200px; text-align: center;">
-                            <h2 class="h2-responsive mb-2" style="font-weight: 400;">Select an App</h2>
-                            <hr class="white">
-                            <div id="listContDiv" class="row fadeIn fadeOut">
-                                
-                            </div>
-                        </div>
-                    </section>
-                    <section id="installSect" style="display: none;">
+                    <section>
                         <div style="width: 100%; height: 200px; text-align: center;">
-                            <h2 class="h2-responsive mb-2" style="font-weight: 400;">Software Installer</h2>
-                            <hr class="white">
+                            <h2 id="sectTitle" class="h2-responsive mb-2" style="font-weight: 400; display: none;">Software Installer</h2>
+                            <hr id="sectTitleHr" class="white" style="display: none;">
                             <div id="loaderDiv" class="row fadeIn fadeOut">
                                 <div class="col-lg-12 mb-r">
                                     ${getLoaderAnimation()}
                                 </div>
                             </div>
-                            <div class="row fadeIn fadeOut">
+                            <div id="listContDiv" class="row fadeIn fadeOut" style="display: none;"></div>
+                            <div id="appViewDiv" class="row fadeIn fadeOut" style="display: none;"></div>
+                            <div id="actResultsDiv" class="row fadeIn fadeOut" style="display: none;">
                                 <div class="col-lg-12 mb-r">
-                                    <div class="listDiv">
+                                    <div class="listDiv" style="display: none;">
                                         <div id="resultList">
                                             <h3 id="resultsTitle" style="display: none;">Install Results</h3>
                                             <ul id="resultUl"></ul>

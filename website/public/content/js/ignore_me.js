@@ -9,6 +9,7 @@ var writableRepos = [];
 const repoData = { owner: 'tonesto7', repoName: 'laundry-wizard', branch: 'master', namespace: 'tonesto7' };
 const appNames = { 'Laundry Wizard': 'smartapps/tonesto7/laundry-wizard.src/laundry-wizard.groovy' };
 var installedSmartapps;
+var availableApps;
 var retryCnt = 0;
 const authUrl = serverUrl + 'hub';
 const fetchReposUrl = serverUrl + 'github/writeableRepos';
@@ -16,7 +17,7 @@ const updRepoUrl = serverUrl + 'githubAuth/updateRepos';
 const updFormUrl = serverUrl + 'githubAuth/updateForm';
 const doRepoUpdUrl = serverUrl + 'ide/app/doRepoUpdates';
 const smartappsListUrl = serverUrl + 'ide/apps';
-const availableSAs = serverUrl + '/api/smartapps/editable';
+const availableSaUrl = serverUrl + 'api/smartapps/editable';
 
 const appsManifest = [{
         namespace: 'tonesto7',
@@ -33,7 +34,7 @@ const appsManifest = [{
     {
         namespace: 'tonesto7',
         repoName: 'echosistant-dev',
-        name: 'EchoSistant5',
+        name: 'EchoSistant Evolution',
         author: 'Anthony S.',
         description: 'The Ultimate Voice Controlled Assistant Using Alexa Enabled Devices.',
         category: 'My Apps',
@@ -43,6 +44,52 @@ const appsManifest = [{
         manifestUrl: 'https://raw.githubusercontent.com/tonesto7/echosistant-dev/master/installerManifest.json'
     }
 ];
+
+const installerManifests = [{
+    namespace: 'tonesto7',
+    repoName: 'echosistant-dev',
+    name: 'EchoSistant Evolution',
+    author: 'Anthony S.',
+    description: 'The Ultimate Voice Controlled Assistant Using Alexa Enabled Devices.',
+    category: 'My Apps',
+    videoUrl: 'http://f.cl.ly/items/3O2L03471l2K3E3l3K1r/Zombie%20Kid%20Likes%20Turtles.mp4',
+    photoUrl: 'https://echosistant.com/es5_content/images/Echosistant_V5.png',
+    smartApp: {
+        parent: {
+            name: 'SmartAppName',
+            iconUrl: 'https://echosistant.com/es5_content/images/Echosistant_V5.png',
+            published: true,
+            oAuth: true,
+            appUrl: 'smartapps/Echo/echosistant5.src/echosistant5.groovy'
+        },
+        child: {
+            '1': {
+                name: 'ES-Profiles',
+                iconUrl: 'https://echosistant.com/es5_content/images/es5_rooms.png',
+                published: true,
+                oAuth: false,
+                appUrl: 'smartapps/Echo/es-profiles.src/es-profiles.groovy',
+                optional: false
+            },
+            '2': {
+                name: 'ES-Shortcuts',
+                iconUrl: 'https://echosistant.com/es5_content/images/es5_shortcuts.png',
+                published: true,
+                oAuth: false,
+                appUrl: 'smartapps/Echo/es-shortcuts.src/es-shortcuts.groovy',
+                optional: false
+            },
+            '2': {
+                name: 'ES-Storage',
+                iconUrl: 'https://echosistant.com/es5_content/images/es5_storage.png',
+                published: true,
+                oAuth: false,
+                appUrl: 'smartapps/Echo/es-storage.src/es-storage.groovy',
+                optional: false
+            }
+        }
+    }
+}];
 
 function makeRequest(url, method, message, appId = null, appDesc = null, contentType = null, responseType = null, allow500 = false) {
     return new Promise(function(resolve, reject) {
@@ -141,6 +188,16 @@ function installComplete(text, red = false) {
         .html(text + '<br/><br/>Press Back/Done Now');
     sessionStorage.removeItem('appsDone');
     sessionStorage.removeItem('refreshCount');
+}
+
+function updSectTitle(str, hide = false) {
+    $('#sectTitle').html(str).css({ display: hide ? 'none' : 'block' });
+    $('#sectTitleHr').css({ display: hide ? 'none' : 'block' });
+}
+
+function updLoaderText(str1, str2) {
+    $('#loaderText1').text(str1);
+    $('#loaderText2').text(str2);
 }
 
 function buildRepoParamString(rdata) {
@@ -266,8 +323,7 @@ function processIntall() {
 
 function getStAuth() {
     return new Promise(function(resolve, reject) {
-        $('#loaderText1').text('Authenticating');
-        $('#loaderText2').text('Please Wait');
+        updLoaderText('Authenticating', 'Please Wait');
         makeRequest(authUrl, 'GET', null)
             .catch(function(err) {
                 installError(err);
@@ -280,11 +336,31 @@ function getStAuth() {
     });
 }
 
+function getAvailableApps(updDom = false) {
+    return new Promise(function(resolve, reject) {
+        // console.log('apps:', apps);
+        if (updDom) {
+            updLoaderText('Loading Data', 'Please Wait');
+        }
+        makeRequest(availableSaUrl, 'GET', null)
+            .catch(function(err) {
+                reject(err);
+            })
+            .then(function(resp) {
+                // console.log(resp);
+                let fndApps = JSON.parse(resp);
+                if (fndApps.length) {
+                    availableApps = fndApps;
+                }
+                resolve(fndApps);
+            });
+    });
+}
+
 function checkIdeForRepo(rname, branch) {
     return new Promise(function(resolve, reject) {
         let repoFound = false;
-        $('#loaderText1').text('Checking');
-        $('#loaderText2').text('Repos');
+        updLoaderText('Checking', 'Repos');
         makeRequest(fetchReposUrl, 'GET', null)
             .catch(function(err) {
                 installError(err, false);
@@ -293,8 +369,7 @@ function checkIdeForRepo(rname, branch) {
             })
             .then(function(resp) {
                 // console.log(resp);
-                $('#loaderText1').text('Analyzing');
-                $('#loaderText2').text('Repos');
+                updLoaderText('Analyzing', 'Repos');
                 let respData = JSON.parse(resp);
                 writableRepos = respData;
                 if (respData.length) {
@@ -314,8 +389,7 @@ function checkIdeForRepo(rname, branch) {
 function checkIfAppsInstalled(apps) {
     return new Promise(function(resolve, reject) {
         // console.log('apps:', apps);
-        $('#loaderText1').text('Getting');
-        $('#loaderText2').text('Apps');
+        updLoaderText('Getting', 'Apps');
         makeRequest(availableSAs, 'GET', null)
             .catch(function(err) {
                 installError(err, false);
@@ -326,9 +400,8 @@ function checkIfAppsInstalled(apps) {
                 // console.log(resp);
                 let fndApps = JSON.parse(resp);
                 if (fndApps.length) {
-                    $('#loaderText1').text('Analyzing');
-                    $('#loaderText2').text('Apps');
-
+                    availableApps = fndApps;
+                    updLoaderText('Analyzing', 'Apps');
                     for (let a in apps) {
                         let fnd = false;
                         for (let i in fndApps) {
@@ -349,8 +422,7 @@ function checkIfAppsInstalled(apps) {
 function addRepoToIde(rname, branch) {
     return new Promise(function(resolve, reject) {
         let repoAdded = false;
-        $('#loaderText1').text('Adding');
-        $('#loaderText2').text('Repo to ST');
+        updLoaderText('Adding', 'Repo to ST');
         let repoParams = buildRepoParamString(writableRepos);
         // console.log('repoParams: ', repoParams);
         addResult('Repo Not Found - Adding to IDE', true);
@@ -363,8 +435,7 @@ function addRepoToIde(rname, branch) {
             })
             .then(function(resp) {
                 console.log(resp);
-                $('#loaderText1').text('Verifying');
-                $('#loaderText2').text('Repo');
+                updLoaderText('Verifying', 'Repo');
                 checkIdeForRepo(rname, 'master')
                     .catch(function(err) {
                         installError(err, false);
@@ -384,8 +455,7 @@ function addRepoToIde(rname, branch) {
 
 function installAppsToIde(appNames) {
     return new Promise(function(resolve, reject) {
-        $('#loaderText1').text('Beginning');
-        $('#loaderText2').text('Installs');
+        updLoaderText('Beginning', 'Installs');
         // console.log('repoParams: ', repoParams);
         if (appNames) {
             let repoParams = buildAppInstallParams(repoId, appNames);
@@ -397,8 +467,7 @@ function installAppsToIde(appNames) {
                     reject(err);
                 })
                 .then(function(resp) {
-                    $('#loaderText1').text('Apps');
-                    $('#loaderText2').text('Installed');
+                    updLoaderText('Apps', 'Installed');
                     for (let i in appNames) {
                         addResult(i + ' App Installed/Published', true);
                     }
@@ -414,7 +483,7 @@ function buildAppList() {
         html += '<div id=listDiv class="col-lg-12 mb-r dark">';
         html += '   <div class="listGroup">';
         for (let i in appsManifest) {
-            html += "     <a href='#' id='" + appsManifest[i].repoName + "' class='list-group-item list-group-item-action flex-column align-items-start'>";
+            html += "     <a href='#' id='" + appsManifest[i].repoName + "' onclick='appItemClicked(this)' class='list-group-item list-group-item-action flex-column align-items-start'>";
             html += "         <div class='d-flex w-100 justify-content-between align-items-center'>";
             html += '             <h5 class="mb-1"><img src="' + appsManifest[i].iconUrl + '" height="40" class="d-inline-block align-middle" alt=""> ' + appsManifest[i].name + '</h5>';
             html += '             <small><b>Author:</b> ' + appsManifest[i].author + '</small>';
@@ -432,22 +501,89 @@ function buildAppList() {
         html += '   </div>';
         html += '</div>';
     }
+    updSectTitle('Select an Item');
     $('#listContDiv').append(html);
+    $('#listContDiv').css({ display: 'block' });
     $('#loaderDiv').css({ display: 'none' });
+    $('#actResultsDiv').css({ display: 'none' });
+    $('#appViewDiv').css({ display: 'none' });
     new WOW().init();
 }
 
-async function loaderFunc() {
-    if (functionType !== 'stackUtil') {
-        $('#results').text('Waiting for connection...');
-        if (sessionStorage.refreshCount === undefined) {
-            sessionStorage.refreshCount = '0';
+function renderAppView(appName) {
+    let html = '';
+    if (appsManifest.length > 0) {
+        html += '<div class="col-lg-12 mb-r">';
+        let items = appsManifest.filter(app => app.repoName === appName);
+        console.log(items);
+
+        for (let i in items) {
+            let manifests = installerManifests; // getManifest();
+            for (let m in installerManifests) {
+                updSectTitle('<h5 class="card-title align-center white-text" > <img src="' + installerManifests[m].smartApp.parent.iconUrl + '" height="40" class="d-inline-block align-middle align-center" alt=""> ' + installerManifests[m].name + '</h5>');
+                console.log(installerManifests[m]);
+                html += '     <!--Panel-->';
+                html += '     <div class="card card-body">';
+                html += '        <small class="black-text"><b>Author:</b> ' + installerManifests[m].author + '</small>';
+                html += '        <div class="flex-column align-items-center">';
+                html += '           <div class="d-flex w-100 justify-content-center">';
+                html += '               <p class="card-text">' + installerManifests[m].description + '</p>';
+                html += '           </div>';
+                html += '       </div>';
+                html += '       <div class="flex-row">';
+                html += '          <a class="card-link">Card link</a>';
+                html += '          <a class="card-link">Another link</a>';
+                html += '       </div>';
+                html += '     </div>';
+                html += '     <!--/.Panel-->';
+                html += '     <button id="installBtn" type="button" class="btn btn-success">Install</button>';
+            }
         }
-        sessionStorage.refreshCount = Number(sessionStorage.refreshCount) + 1;
-        await processIntall();
-    } else {
-        await lambdaUtil();
+        html += '</div>';
+    }
+
+    $('#appViewDiv').append(html);
+    $('#listContDiv').css({ display: 'none' });
+    $('#loaderDiv').css({ display: 'none' });
+    $('#actResultsDiv').css({ display: 'none' });
+    $('#appViewDiv').css({ display: 'block' });
+    new WOW().init();
+}
+
+function appItemClicked(appItem) {
+    console.log('App Item Clicked: (' + appItem.id + ')');
+    if (appItem.id) {
+        renderAppView(appItem.id);
     }
 }
 
-window.onload = buildAppList;
+async function loaderFunc() {
+    $('#results').text('Waiting for connection...');
+    if (sessionStorage.refreshCount === undefined) {
+        sessionStorage.refreshCount = '0';
+    }
+    sessionStorage.refreshCount = Number(sessionStorage.refreshCount) + 1;
+    updSectTitle('App Details', true);
+    // $('#loaderDiv').css({ display: 'block' });
+    await getStAuth()
+        .catch(function(err) {
+            installError(err, false);
+        })
+        .then(function(resp) {
+            if (resp === true) {
+                getAvailableApps(true)
+                    .catch(function(err) {
+                        installError(err, false);
+                    })
+                    .then(function(resp) {
+                        if (resp.length) {
+                            buildAppList();
+                        }
+                    });
+            }
+        });
+}
+
+$(document).ready(function() {
+    loaderFunc();
+});
