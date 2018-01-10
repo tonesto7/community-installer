@@ -22,7 +22,6 @@ private appVerDate() { "1-09-2018" }
 /**********************************************************************************************************************************************/
 preferences {
     page name: "startPage"
-    page name: "prereqPage"
     page name: "mainPage"
 }
 
@@ -33,7 +32,7 @@ mappings {
 def startPage() {
     if(!atomicState?.accessToken) { getAccessToken() }
 	if(!atomicState?.accessToken) {
-		return dynamicPage(name: "startPage", title: "Status Page", nextPage: "", install: false, uninstall: false) {
+		return dynamicPage(name: "startPage", title: "Status Page", nextPage: "", install: false, uninstall: true) {
 			section ("Status Page:") {
 				def title = ""
                 def desc = ""
