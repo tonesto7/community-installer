@@ -121,7 +121,7 @@ function buildRepoParamString(rdata) {
     let objs = [];
     objs.push('referringController=appIde');
     objs.push('referringAction=apps');
-    objs.push('defaultNamespace=' + repoData.namespace);
+    // objs.push('defaultNamespace=' + repoData.namespace);
     objs.push('repos.id=0');
     objs.push('repos.owner=' + repoData.namespace);
     objs.push('repos.name=' + repoData.repoName);

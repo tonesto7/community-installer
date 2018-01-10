@@ -36,7 +36,7 @@ def startPage() {
 			section ("Status Page:") {
 				def title = ""
                 def desc = ""
-				if(!atomicState?.accessToken) { title="OAUTH Error"; desc = "OAuth is not Enabled for ${appName()} application.  Please click remove and review the installation directions again"; }
+				if(!atomicState?.accessToken) { title="OAUTH Error"; desc = "OAuth is not Enabled for ${app?.label} application.  Please click remove and review the installation directions again"; }
 				else { title="Unknown Error"; desc = "Application Status has not received any messages to display";	}
 				LogAction("Status Message: $desc", "warn", true)
 				paragraph title: "$title", "$desc", required: true, state: null
