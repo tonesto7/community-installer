@@ -37,7 +37,6 @@ def startPage() {
 				def title = ""
                 def desc = ""
 				if(!atomicState?.accessToken) { title="OAUTH Error"; desc = "OAuth is not Enabled for ${appName()} application.  Please click remove and review the installation directions again"; }
-				else if(!preReqOk) { title="SmartThings Location Error"; desc = "SmartThings Location is not returning (TimeZone: ${location?.timeZone}) or (ZipCode: ${location?.zipCode}) Please edit these settings under the ST IDE or Mobile App"; }
 				else { title="Unknown Error"; desc = "Application Status has not received any messages to display";	}
 				LogAction("Status Message: $desc", "warn", true)
 				paragraph title: "$title", "$desc", required: true, state: null
