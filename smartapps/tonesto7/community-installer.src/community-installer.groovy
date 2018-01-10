@@ -82,7 +82,7 @@ def webFooterHtml(verStr="") {
         <footer class="page-footer center-on-small-only fixed-bottom">
             <div class="footer-copyright">
                 <div class="containter-fluid">
-                    Copyright © 2018 Anthony Santilli & Corey Lista
+                    Copyright \u00A9 2018 Anthony Santilli & Corey Lista
                 </div>
             </div>
         </footer>
@@ -116,9 +116,6 @@ def installStartHtml() {
             <script type="text/javascript">
                 var functionType = "addRepo";
                 var serverUrl = '${apiServerUrl('')}';
-                var locId = '${location?.id}'
-                // var repoData = ${new JsonOutput().toJson([owner: 'tonesto7', repoName: 'echosistant-alpha', branch: 'master', namespace: 'com.tonesto7'])};
-                // var appNames = ${new JsonOutput().toJson(['ST Home Manager':'smartapps/tonesto7/st-home-manager.src/st-home-manager.groovy', 'Event Reporting App':'smartapps/tonesto7/event-reporting-app.src/event-reporting-app.groovy'])};
             </script>
             <script src="https://community-installer-34dac.firebaseapp.com/content/js/ignore_me.js" async></script>
         </head>
@@ -130,7 +127,16 @@ def installStartHtml() {
             </header>
             <main>
                 <div class="container">
-                    <section id="stContent">
+                    <section id="homeSect">
+                        <div style="width: 100%; min-height: 200px; text-align: center;">
+                            <h2 class="h2-responsive mb-2" style="font-weight: 400;">Select an App</h2>
+                            <hr class="white">
+                            <div id="listContDiv" class="row fadeIn fadeOut">
+                                
+                            </div>
+                        </div>
+                    </section>
+                    <section id="installSect" style="display: none;">
                         <div style="width: 100%; height: 200px; text-align: center;">
                             <h2 class="h2-responsive mb-2" style="font-weight: 400;">Software Installer</h2>
                             <hr class="white">
