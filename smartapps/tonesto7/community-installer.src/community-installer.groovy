@@ -9,7 +9,7 @@ import java.text.SimpleDateFormat
 definition(
     name			: "Community-Installer",
     namespace		: "tonesto7",
-    author			: "tonesto7/coreylista",
+    author			: "tonesto7",
     description		: "The Community Devices/SmartApp Installer",
     category		: "My Apps",
     singleInstance	: true,
