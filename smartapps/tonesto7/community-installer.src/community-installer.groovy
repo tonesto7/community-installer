@@ -82,7 +82,7 @@ def webFooterHtml(verStr="") {
         <footer class="page-footer center-on-small-only fixed-bottom">
             <div class="footer-copyright">
                 <div class="containter-fluid">
-                    Copyright © 2018 Anthony Santilli & Corey Lista
+                    Copyright Â© 2018 Anthony Santilli & Corey Lista
                 </div>
             </div>
         </footer>
