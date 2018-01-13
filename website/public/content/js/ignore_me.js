@@ -1,12 +1,7 @@
-'use esversion: 6';
-
-const ESStackName = 'EchoSistantV5';
-var functionArn = '';
-var echoSistantAPIURL = '';
 var repoId = '';
 var writableRepos = [];
 // var repoData = { owner: 'tonesto7', repoName: 'echosistant-alpha', branch: 'master', namespace: 'com.tonesto7'}
-const repoData = { owner: 'tonesto7', repoName: 'laundry-wizard', branch: 'master', namespace: 'tonesto7' };
+const repoData = { owner: 'tonesto7', repoName: 'laundry-wizard', branch: 'master', namespace: 'coreylista' };
 const appNames = { 'Laundry Wizard': 'smartapps/tonesto7/laundry-wizard.src/laundry-wizard.groovy' };
 var installedSmartapps;
 var availableApps;
@@ -20,29 +15,29 @@ const smartappsListUrl = serverUrl + 'ide/apps';
 const availableSaUrl = serverUrl + 'api/smartapps/editable';
 
 const appsManifest = [{
-        namespace: 'tonesto7',
-        repoName: 'nest-manager',
-        name: 'NST Manager',
-        author: 'Anthony S.',
-        description: 'This SmartApp is used to integrate your Nest devices with SmartThings and to enable built-in automations',
-        category: 'Convenience',
-        videoUrl: 'http://f.cl.ly/items/3O2L03471l2K3E3l3K1r/Zombie%20Kid%20Likes%20Turtles.mp4',
-        photoUrl: 'https://raw.githubusercontent.com/tonesto7/nest-manager/master/Images/App/nst_manager_icon.png',
-        iconUrl: 'https://raw.githubusercontent.com/tonesto7/nest-manager/master/Images/App/nst_manager_icon.png',
-        manifestUrl: 'https://raw.githubusercontent.com/tonesto7/nest-manager/master/installerManifest.json'
-    },
-    {
-        namespace: 'tonesto7',
-        repoName: 'echosistant-dev',
-        name: 'EchoSistant Evolution',
-        author: 'Anthony S.',
-        description: 'The Ultimate Voice Controlled Assistant Using Alexa Enabled Devices.',
-        category: 'My Apps',
-        videoUrl: 'http://f.cl.ly/items/3O2L03471l2K3E3l3K1r/Zombie%20Kid%20Likes%20Turtles.mp4',
-        photoUrl: 'https://echosistant.com/es5_content/images/Echosistant_V5.png',
-        iconUrl: 'https://echosistant.com/es5_content/images/Echosistant_V5.png',
-        manifestUrl: 'https://raw.githubusercontent.com/tonesto7/echosistant-dev/master/installerManifest.json'
-    }
+    namespace: 'tonesto7',
+    repoName: 'nest-manager',
+    name: 'NST Manager',
+    author: 'Anthony S.',
+    description: 'This SmartApp is used to integrate your Nest devices with SmartThings and to enable built-in automations',
+    category: 'Convenience',
+    videoUrl: 'http://f.cl.ly/items/3O2L03471l2K3E3l3K1r/Zombie%20Kid%20Likes%20Turtles.mp4',
+    photoUrl: 'https://raw.githubusercontent.com/tonesto7/nest-manager/master/Images/App/nst_manager_icon.png',
+    iconUrl: 'https://raw.githubusercontent.com/tonesto7/nest-manager/master/Images/App/nst_manager_icon.png',
+    manifestUrl: 'https://raw.githubusercontent.com/tonesto7/nest-manager/master/installerManifest.json'
+},
+{
+    namespace: 'tonesto7',
+    repoName: 'echosistant-dev',
+    name: 'EchoSistant Evolution',
+    author: 'Anthony S.',
+    description: 'The Ultimate Voice Controlled Assistant Using Alexa Enabled Devices.',
+    category: 'My Apps',
+    videoUrl: 'http://f.cl.ly/items/3O2L03471l2K3E3l3K1r/Zombie%20Kid%20Likes%20Turtles.mp4',
+    photoUrl: 'https://echosistant.com/es5_content/images/Echosistant_V5.png',
+    iconUrl: 'https://echosistant.com/es5_content/images/Echosistant_V5.png',
+    manifestUrl: 'https://raw.githubusercontent.com/tonesto7/echosistant-dev/master/installerManifest.json'
+}
 ];
 
 const installerManifests = [{
@@ -584,6 +579,6 @@ async function loaderFunc() {
         });
 }
 
-$(document).ready(function() {
+document.addEventListener("DOMContentLoaded", function() {
     loaderFunc();
 });

@@ -1,0 +1,25 @@
+{
+    "compact": true,
+    "controlFlowFlattening": true,
+    "controlFlowFlatteningThreshold": 0.75,
+    "deadCodeInjection": true,
+    "deadCodeInjectionThreshold": 0.2,
+    "debugProtection": true,
+    "debugProtectionInterval": true,
+    "disableConsoleOutput": false,
+    "identifierNamesGenerator": "hexadecimal",
+    "log": false,
+    "renameGlobals": true,
+    "rotateStringArray": true,
+    "selfDefending": true,
+    "stringArray": true,
+    "stringArrayEncoding": "rc4",
+    "stringArrayThreshold": 0.9,
+    "unicodeEscapeSequence": true,
+    "target": "browser",
+    "sourceMap": false,
+    "reservedNames": [
+			"^appItemClicked"
+    ],
+    "seed": 0
+}
