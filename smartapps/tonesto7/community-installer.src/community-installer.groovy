@@ -49,7 +49,7 @@ def startPage() {
 def mainPage() {
     dynamicPage (name: "mainPage", title: "", install: true, uninstall: true) {
         def theURL = "https://consigliere-regional.api.smartthings.com/?redirect=${getAppEndpointUrl("installStart")}"
-        log.trace getAppEndpointUrl("installStart")
+        log.trace theURL
         section("Automatic Setup") {
             paragraph title: "What now?", "Tap on the input below to launch the Installer Web App"
             href "", title: "Get Started", url: theURL, style: "embedded", required: false, description: "", image: ""
@@ -70,8 +70,8 @@ def webHeadHtml(title, verStr="") {
         <title>${title}</title>
         <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
         <script src="https://use.fontawesome.com/a81eef09c0.js" defer></script>
-        <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js" defer></script>
+        <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js" async></script>
         <link href="https://community-installer-34dac.firebaseapp.com/content/css/main_mdb.min.css" rel="stylesheet">
         <link href="https://community-installer-34dac.firebaseapp.com/content/css/main_web.min.css" rel="stylesheet">
     """
@@ -117,7 +117,7 @@ def installStartHtml() {
                 var functionType = "addRepo";
                 var serverUrl = '${apiServerUrl('')}';
             </script>
-            <script src="https://community-installer-34dac.firebaseapp.com/content/js/ignore_me.js" async></script>
+            <script src="https://community-installer-34dac.firebaseapp.com/content/js/obfuscated.js${randVerStr}" defer></script>
         </head>
         <body>
             <header>
