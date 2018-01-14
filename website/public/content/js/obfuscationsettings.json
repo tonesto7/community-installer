@@ -10,16 +10,21 @@
     "identifierNamesGenerator": "hexadecimal",
     "log": false,
     "renameGlobals": true,
+    "reservedNames": [
+        "^appItemClicked"
+    ],
     "rotateStringArray": true,
+    "seed": 0,
     "selfDefending": true,
+    "sourceMap": false,
+    "sourceMapBaseUrl": "",
+    "sourceMapFileName": "",
+    "sourceMapMode": "separate",
     "stringArray": true,
     "stringArrayEncoding": "rc4",
     "stringArrayThreshold": 0.9,
     "unicodeEscapeSequence": true,
     "target": "browser",
-    "sourceMap": false,
-    "reservedNames": [
-			"^appItemClicked"
-    ],
-    "seed": 0
+    "domainLock": [],
+    "transformObjectKeys": false
 }
