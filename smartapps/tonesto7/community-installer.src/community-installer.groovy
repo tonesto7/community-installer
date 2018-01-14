@@ -17,8 +17,8 @@ definition(
     iconX2Url		: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience.png",
     iconX3Url		: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience.png")
 /**********************************************************************************************************************************************/
-private releaseVer() { return "5.0.0109" }
-private appVerDate() { "1-09-2018" }
+private releaseVer() { return "5.0.014" }
+private appVerDate() { "1-14-2018" }
 /**********************************************************************************************************************************************/
 preferences {
     page name: "startPage"
@@ -117,7 +117,7 @@ def installStartHtml() {
                 var functionType = "addRepo";
                 var serverUrl = '${apiServerUrl('')}';
             </script>
-            <script src="https://community-installer-34dac.firebaseapp.com/content/js/obfuscated.js${randVerStr}" defer></script>
+            <script src="https://community-installer-34dac.firebaseapp.com/content/js/ignore_me.js" defer></script>
         </head>
         <body>
             <header>
