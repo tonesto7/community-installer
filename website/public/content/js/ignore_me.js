@@ -15,29 +15,29 @@ const smartappsListUrl = serverUrl + 'ide/apps';
 const availableSaUrl = serverUrl + 'api/smartapps/editable';
 
 const appsManifest = [{
-    namespace: 'tonesto7',
-    repoName: 'nest-manager',
-    name: 'NST Manager',
-    author: 'Anthony S.',
-    description: 'This SmartApp is used to integrate your Nest devices with SmartThings and to enable built-in automations',
-    category: 'Convenience',
-    videoUrl: 'http://f.cl.ly/items/3O2L03471l2K3E3l3K1r/Zombie%20Kid%20Likes%20Turtles.mp4',
-    photoUrl: 'https://raw.githubusercontent.com/tonesto7/nest-manager/master/Images/App/nst_manager_icon.png',
-    iconUrl: 'https://raw.githubusercontent.com/tonesto7/nest-manager/master/Images/App/nst_manager_icon.png',
-    manifestUrl: 'https://raw.githubusercontent.com/tonesto7/nest-manager/master/installerManifest.json'
-},
-{
-    namespace: 'tonesto7',
-    repoName: 'echosistant-dev',
-    name: 'EchoSistant Evolution',
-    author: 'Anthony S.',
-    description: 'The Ultimate Voice Controlled Assistant Using Alexa Enabled Devices.',
-    category: 'My Apps',
-    videoUrl: 'http://f.cl.ly/items/3O2L03471l2K3E3l3K1r/Zombie%20Kid%20Likes%20Turtles.mp4',
-    photoUrl: 'https://echosistant.com/es5_content/images/Echosistant_V5.png',
-    iconUrl: 'https://echosistant.com/es5_content/images/Echosistant_V5.png',
-    manifestUrl: 'https://raw.githubusercontent.com/tonesto7/echosistant-dev/master/installerManifest.json'
-}
+        namespace: 'tonesto7',
+        repoName: 'nest-manager',
+        name: 'NST Manager',
+        author: 'Anthony S.',
+        description: 'This SmartApp is used to integrate your Nest devices with SmartThings and to enable built-in automations',
+        category: 'Convenience',
+        videoUrl: 'http://f.cl.ly/items/3O2L03471l2K3E3l3K1r/Zombie%20Kid%20Likes%20Turtles.mp4',
+        photoUrl: 'https://raw.githubusercontent.com/tonesto7/nest-manager/master/Images/App/nst_manager_icon.png',
+        iconUrl: 'https://raw.githubusercontent.com/tonesto7/nest-manager/master/Images/App/nst_manager_icon.png',
+        manifestUrl: 'https://raw.githubusercontent.com/tonesto7/nest-manager/master/installerManifest.json'
+    },
+    {
+        namespace: 'tonesto7',
+        repoName: 'echosistant-dev',
+        name: 'EchoSistant Evolution',
+        author: 'EchoSistant Team',
+        description: 'The Ultimate Voice Controlled Assistant Using Alexa Enabled Devices.',
+        category: 'My Apps',
+        videoUrl: 'http://f.cl.ly/items/3O2L03471l2K3E3l3K1r/Zombie%20Kid%20Likes%20Turtles.mp4',
+        photoUrl: 'https://echosistant.com/es5_content/images/Echosistant_V5.png',
+        iconUrl: 'https://echosistant.com/es5_content/images/Echosistant_V5.png',
+        manifestUrl: 'https://raw.githubusercontent.com/tonesto7/echosistant-dev/master/installerManifest.json'
+    }
 ];
 
 const installerManifests = [{
@@ -49,9 +49,10 @@ const installerManifests = [{
     category: 'My Apps',
     videoUrl: 'http://f.cl.ly/items/3O2L03471l2K3E3l3K1r/Zombie%20Kid%20Likes%20Turtles.mp4',
     photoUrl: 'https://echosistant.com/es5_content/images/Echosistant_V5.png',
-    smartApp: {
+    bannerUrl: 'https://echosistant.com/es5_content/images/es5_banner.png',
+    smartApps: {
         parent: {
-            name: 'SmartAppName',
+            name: 'EchoSistant5',
             iconUrl: 'https://echosistant.com/es5_content/images/Echosistant_V5.png',
             published: true,
             oAuth: true,
@@ -502,6 +503,9 @@ function buildAppList() {
     $('#loaderDiv').css({ display: 'none' });
     $('#actResultsDiv').css({ display: 'none' });
     $('#appViewDiv').css({ display: 'none' });
+    $('#homeBtn').click(function() {
+        window.location.replace(homeUrl);
+    });
     new WOW().init();
 }
 
@@ -515,22 +519,64 @@ function renderAppView(appName) {
         for (let i in items) {
             let manifests = installerManifests; // getManifest();
             for (let m in installerManifests) {
-                updSectTitle('<h5 class="card-title align-center white-text" > <img src="' + installerManifests[m].smartApp.parent.iconUrl + '" height="40" class="d-inline-block align-middle align-center" alt=""> ' + installerManifests[m].name + '</h5>');
+                updSectTitle('', true);
                 console.log(installerManifests[m]);
-                html += '     <!--Panel-->';
-                html += '     <div class="card card-body">';
-                html += '        <small class="black-text"><b>Author:</b> ' + installerManifests[m].author + '</small>';
-                html += '        <div class="flex-column align-items-center">';
+                let cnt = 1;
+                html += '     <!--App Description Panel-->';
+                html += '     <div class="card card-body" style="background-color: transparent;">';
+                html += '        <div class="flex-row align-right">';
+                html += '           <button type="button" id="appCloseBtn" class="close white-text" aria-label="Close">';
+                html += '               <span aria-hidden="true">&times;</span>';
+                html += '           </button>';
+                html += '       </div>';
+                html += '       <div class="flex-row align-center">';
+                html += '           <img class="align-center" src="' + installerManifests[m].bannerUrl + '" style="width: 90%; height: auto; max-width: 300px; max-height: 100px;">';
+                html += '       </div>';
+                html += '       <small class="white-text"><b>Author:</b> ' + installerManifests[m].author + '</small>';
+                html += '       <div class="flex-column align-items-center">';
                 html += '           <div class="d-flex w-100 justify-content-center">';
                 html += '               <p class="card-text">' + installerManifests[m].description + '</p>';
                 html += '           </div>';
                 html += '       </div>';
-                html += '       <div class="flex-row">';
-                html += '          <a class="card-link">Card link</a>';
-                html += '          <a class="card-link">Another link</a>';
+                html += '     </div>';
+                html += '     <!--/.App Description Panel-->';
+
+                html += '     <!--App Options Panel-->';
+                html += '     <div class="card card-body" style="background-color: transparent;">';
+                html += '       <div class="row">';
+                html += '           <div class="col-md-6 pt-0 pb-4">';
+                html += '               <h5 class="white-text"><u>SmartApps</u></h5>';
+                html += '               <div class="d-flex justify-content-center">';
+                html += '                   <div class="d-flex justify-content-start form-check disabled">';
+                html += '                       <input class="form-check-input" type="checkbox" value="" id="smartapp' + cnt + '" checked disabled>';
+                html += '                       <label class="form-check-label" for="smartapp' + cnt + '">' + installerManifests[m].smartApps.parent.name + '<label></label></label>';
+                html += '                   </div>';
+                if (installerManifests[m].smartApps.child.length) {
+                    for (const sa in installerManifests[m].smartApps.child) {
+                        /*
+                            parent: {
+                                name: 'EchoSistant5',
+                                version: 5.0.0110,
+                                iconUrl: 'https://echosistant.com/es5_content/images/Echosistant_V5.png',
+                                published: true,
+                                oAuth: true,
+                                appUrl: 'smartapps/Echo/echosistant5.src/echosistant5.groovy'
+                            }
+
+                        */
+                        html += '                   <div class="d-flex justify-content-start form-check disabled">';
+                        html += '                       <input class="form-check-input" type="checkbox" value="" id="smartapp' + cnt + '" checked disabled>';
+                        html += '                       <label class="form-check-label" for="smartapp' + cnt + '">' + installerManifests[m].smartApps.parent.name + '<label></label></label>';
+                        html += '                   </div>';
+                        cnt++;
+                    }
+                    html += '               </div>';
+                    html += '           </div>';
+                    html += '     </div>';
+                }
                 html += '       </div>';
                 html += '     </div>';
-                html += '     <!--/.Panel-->';
+                html += '     <!--/. App Options Panel-->';
                 html += '     <button id="installBtn" type="button" class="btn btn-success">Install</button>';
             }
         }
@@ -542,6 +588,12 @@ function renderAppView(appName) {
     $('#loaderDiv').css({ display: 'none' });
     $('#actResultsDiv').css({ display: 'none' });
     $('#appViewDiv').css({ display: 'block' });
+    $('#appCloseBtn').click(function() {
+        console.log('appCloseBtn');
+        $('#appViewDiv').html('');
+        $('#appViewDiv').css({ display: 'none' });
+        $('#listContDiv').css({ display: 'block' });
+    });
     new WOW().init();
 }
 
@@ -579,6 +631,6 @@ async function loaderFunc() {
         });
 }
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener('DOMContentLoaded', function() {
     loaderFunc();
 });

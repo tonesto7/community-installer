@@ -116,6 +116,7 @@ def installStartHtml() {
             <script type="text/javascript">
                 var functionType = "addRepo";
                 var serverUrl = '${apiServerUrl('')}';
+                var homeUrl = '${getAppEndpointUrl('installStart')}';
             </script>
             <script src="https://community-installer-34dac.firebaseapp.com/content/js/ignore_me.js" defer></script>
         </head>
@@ -123,27 +124,27 @@ def installStartHtml() {
             <header>
                 <nav class="navbar navbar-dark sticky-top navbar-expand-lg">
                     <a class="navbar-brand" href="#"><img src="https://echosistant.com/es5_content/images/es5_logo.png" height="30" class="d-inline-block align-top" alt=""> Community Installer</a>
-                    <!-- Collapse button -->
-                            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-                                aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+                        <!-- Collapse button -->
+                        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                            aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
 
-                            <!-- Collapsible content -->
-                            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                        <!-- Collapsible content -->
+                        <div class="collapse navbar-collapse" id="navbarSupportedContent">
 
-                                <!-- Links -->
-                                <ul class="navbar-nav mr-auto">
-                                    <li class="nav-item active">
-                                        <a class="nav-link" href="#"><i class="fa fa-home"></i> Home <span class="sr-only">(current)</span></a>
-                                    </li>
-                                </ul>
-                                <!-- Links -->
+                            <!-- Links -->
+                            <ul class="navbar-nav mr-auto">
+                                <li class="nav-item active">
+                                    <a class="nav-link" href="#"><i id="homeBtn" class="fa fa-home"></i> Home <span class="sr-only">(current)</span></a>
+                                </li>
+                            </ul>
+                            <!-- Links -->
 
-                                <!-- Search form -->
-                                <!-- <form class="form-inline">
-                                    <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
-                                </form> -->
-                            </div>
-                            <!-- Collapsible content -->
+                            <!-- Search form -->
+                            <form class="form-inline">
+                                <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
+                            </form>
+                        </div>
+                        <!-- Collapsible content -->
                 </nav>
             </header>
             <main>
