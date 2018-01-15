@@ -666,10 +666,11 @@ function renderAppView(appName) {
                     '\n       </div>' +
                     '\n   </div>' +
                     '\n</div>' +
-                    '\n<button id="installBtn" type="button" class="btn btn-success">Install</button>';
-
-
-
+                    '\n<div class="card card-body" style="background-color: transparent;">' +
+                    '\n   <div class="row">' +
+                    '\n       <button id="installBtn" type="button" class="btn btn-success">Install</button>' +
+                    '\n   </div>' +
+                    '\n</div>';
             }
         }
         html += '\n</div>';
