@@ -87,7 +87,7 @@ def webFooterHtml(verStr="") {
         <footer class="page-footer center-on-small-only fixed-bottom">
             <div class="footer-copyright">
                 <div class="containter-fluid">
-                    Copyright \u00A9 2018 Anthony Santilli & Corey Lista
+                    <small>Copyright \u00A9 2018 Anthony Santilli & Corey Lista</small>
                 </div>
             </div>
         </footer>
@@ -119,9 +119,9 @@ def installStartHtml() {
         <head>
             ${webHeadHtml("SmartThings Community Installer", randVerStr)}
             <script type="text/javascript">
-                var functionType = "addRepo";
-                var serverUrl = '${apiServerUrl('')}';
-                var homeUrl = '${getAppEndpointUrl('installStart')}';
+                const functionType = "addRepo";
+                const serverUrl = '${apiServerUrl('')}';
+                const homeUrl = '${getAppEndpointUrl('installStart')}';
             </script>
             <script src="${baseUrl('/content/js/ignore_me.js')}" defer></script>
             <style>
@@ -158,7 +158,7 @@ def installStartHtml() {
                 </nav>
             </header>
             <main>
-                <div class="container">
+                <div class="container" style="max-width: 700px;">
                     <section>
                         <div style="width: 100%; height: 200px; text-align: center;">
                             <h2 id="sectTitle" class="h2-responsive mb-2" style="font-weight: 400; display: none;">Software Installer</h2>
@@ -168,13 +168,13 @@ def installStartHtml() {
                                     ${getLoaderAnimation()}
                                 </div>
                             </div>
-                            <div id="listContDiv" class="row fadeIn fadeOut" style="display: none;"></div>
-                            <div id="appViewDiv" class="row fadeIn fadeOut" style="display: none;"></div>
+                            <div id="listContDiv" class="row fadeIn fadeOut pl-2 pr-2" style="display: none;"></div>
+                            <div id="appViewDiv" class="row fadeIn fadeOut mb-5" style="display: none;"></div>
                             <div id="actResultsDiv" class="row fadeIn fadeOut" style="display: none;">
                                 <div class="col-lg-12 mb-r">
-                                    <div class="listDiv" style="display: none;">
+                                    <div class="listDiv">
                                         <div id="resultList">
-                                            <h3 id="resultsTitle" style="display: none;">Install Results</h3>
+                                            <h3 id="resultsTitle">Install Results</h3>
                                             <ul id="resultUl"></ul>
                                         </div>
                                     </div>
