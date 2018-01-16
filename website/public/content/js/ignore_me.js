@@ -17,7 +17,7 @@ const smartappsListUrl = serverUrl + 'ide/apps';
 const appRepoChkUrl = serverUrl + 'github/appRepoStatus?appId=';
 const devRepoChkUrl = serverUrl + 'github/deviceRepoStatus?deviceTypeId=';
 const availableSaUrl = serverUrl + 'api/smartapps/editable';
-const availableDevsUrl = serverUrl + 'api/smartapps/editable';
+const availableDevsUrl = serverUrl + 'api/deviceTypes';
 
 const appsManifest = [{
         namespace: 'tonesto7',
