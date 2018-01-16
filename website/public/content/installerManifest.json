@@ -15,8 +15,8 @@
             "oAuth": true,
             "appUrl": "smartapps/namespace/smartappname.src/smartappname.groovy"
         },
-        "child": {
-            "1": {
+        "children": [
+            {
                 "name": "child1",
                 "iconUrl": "https://s3.amazonaws.com/smartapp-icons/Convenience/App.png",
                 "published": false,
@@ -24,15 +24,25 @@
                 "appUrl": "smartapps/namespace/smartappname.src/smartappname.groovy",
                 "optional": false
             },
-            "2": {
+            {
                 "name": "child2",
                 "iconUrl": "https://s3.amazonaws.com/smartapp-icons/Convenience/App.png",
                 "published": false,
                 "oAuth": false,
                 "appUrl": "smartapps/namespace/smartappname.src/smartappname.groovy",
-                "optional": false
+                "optional": false,
+                "children": [
+                    {
+                        "name": "child1",
+                        "iconUrl": "https://s3.amazonaws.com/smartapp-icons/Convenience/App.png",
+                        "published": false,
+                        "oAuth": false,
+                        "appUrl": "smartapps/namespace/smartappname.src/smartappname.groovy",
+                        "optional": false
+                    }
+                ]
             }
-        }
+        ]
     },
     "deviceHandler": {
         "parent": {
@@ -42,8 +52,8 @@
             "oAuth": true,
             "appUrl": "deviceTypes/namespace/smartappname.src/smartappname.groovy"
         },
-        "child": {
-            "1": {
+        "children": [
+            {
                 "name": "child1",
                 "iconUrl": "https://s3.amazonaws.com/smartapp-icons/Convenience/App.png",
                 "published": false,
@@ -51,7 +61,7 @@
                 "appUrl": "deviceTypes/namespace/smartappname.src/smartappname.groovy",
                 "optional": false
             },
-            "2": {
+            {
                 "name": "child2",
                 "iconUrl": "https://s3.amazonaws.com/smartapp-icons/Convenience/App.png",
                 "published": false,
@@ -59,6 +69,6 @@
                 "appUrl": "deviceTypes/namespace/smartappname.src/smartappname.groovy",
                 "optional": false
             }
-        }
+        ]
     }
 }
