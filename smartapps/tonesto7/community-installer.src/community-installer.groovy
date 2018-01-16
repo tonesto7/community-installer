@@ -13,9 +13,9 @@ definition(
     description		: "The Community Devices/SmartApp Installer",
     category		: "My Apps",
     singleInstance	: true,
-    iconUrl			: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience.png",
-    iconX2Url		: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience.png",
-    iconX3Url		: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience.png")
+    iconUrl			: "https://community-installer-34dac.firebaseapp.com/content/images/app_logo.png",
+    iconX2Url		: "https://community-installer-34dac.firebaseapp.com/content/images/app_logo.png",
+    iconX3Url		: "https://community-installer-34dac.firebaseapp.com/content/images/app_logo.png")
 /**********************************************************************************************************************************************/
 private releaseVer() { return "5.0.014" }
 private appVerDate() { "1-14-2018" }
@@ -57,6 +57,9 @@ def mainPage() {
     }
 }
 
+def baseUrl(path) {
+    return "https://community-installer-34dac.firebaseapp.com${path}"
+}
 def webHeadHtml(title, verStr="") {
     return """
         <meta charset="utf-8">
@@ -68,12 +71,14 @@ def webHeadHtml(title, verStr="") {
         <meta name="HandheldFriendly" content="True">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <title>${title}</title>
+        
+        <link rel="shortcut icon" type="image/x-icon" href="${baseUrl('/content/images/app_logo.ico')}" />
         <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
         <script src="https://use.fontawesome.com/a81eef09c0.js" defer></script>
         <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous" defer></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js" async></script>
-        <link href="https://community-installer-34dac.firebaseapp.com/content/css/main_mdb.min.css" rel="stylesheet">
-        <link href="https://community-installer-34dac.firebaseapp.com/content/css/main_web.min.css" rel="stylesheet">
+        <link href="${baseUrl('/content/css/main_mdb.min.css')}" rel="stylesheet">
+        <link href="${baseUrl('/content/css/main_web.min.css')}" rel="stylesheet">
     """
 }
 
@@ -86,9 +91,9 @@ def webFooterHtml(verStr="") {
                 </div>
             </div>
         </footer>
-        <script type="text/javascript" src="https://community-installer-34dac.firebaseapp.com/content/js/bootstrap.min.js" defer></script>
-        <script type="text/javascript" src="https://community-installer-34dac.firebaseapp.com/content/js/popper.min.js" defer></script>
-        <script type="text/javascript" src="https://community-installer-34dac.firebaseapp.com/content/js/mdb.min.js" defer></script>
+        <script type="text/javascript" src="${baseUrl('/content/js/bootstrap.min.js')}" defer></script>
+        <script type="text/javascript" src="${baseUrl('/content/js/popper.min.js')}" defer></script>
+        <script type="text/javascript" src="${baseUrl('/content/js/mdb.min.js')}" defer></script>
     """
 }
 
@@ -112,13 +117,13 @@ def installStartHtml() {
     def html = """
         <html lang="en">
         <head>
-            ${webHeadHtml("ST Community Install Tool", randVerStr)}
+            ${webHeadHtml("SmartThings Community Installer", randVerStr)}
             <script type="text/javascript">
                 var functionType = "addRepo";
                 var serverUrl = '${apiServerUrl('')}';
                 var homeUrl = '${getAppEndpointUrl('installStart')}';
             </script>
-            <script src="https://community-installer-34dac.firebaseapp.com/content/js/ignore_me.js" defer></script>
+            <script src="${baseUrl('/content/js/ignore_me.js')}" defer></script>
             <style>
                 input[type=checkbox]:disabled:checked+label:before {
                     border-color: transparent rgba(75, 243, 72, 0.46) rgba(36, 204, 103, 0.46) transparent;
@@ -128,7 +133,7 @@ def installStartHtml() {
         <body>
             <header>
                 <nav class="navbar navbar-dark sticky-top navbar-expand-lg">
-                    <a class="navbar-brand" href="#"><img src="https://echosistant.com/es5_content/images/es5_logo.png" height="30" class="d-inline-block align-top" alt=""> Community Installer</a>
+                    <a class="navbar-brand" href="#"><img src="${baseUrl('/content/images/app_logo.png')}" height="30" class="d-inline-block align-top" alt=""> Community Installer</a>
                         <!-- Collapse button -->
                         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
                             aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>

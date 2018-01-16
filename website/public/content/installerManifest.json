@@ -7,6 +7,7 @@
     "category": "My Apps",
     "videoUrl": "http://f.cl.ly/items/3O2L03471l2K3E3l3K1r/Zombie%20Kid%20Likes%20Turtles.mp4",
     "photoUrl": "https://s3.amazonaws.com/smartapp-icons/Convenience/App.png",
+    "bannerUrl": "https://echosistant.com/es5_content/images/es5_banner.png",
     "smartApp": {
         "parent": {
             "name": "SmartAppName",
@@ -15,8 +16,7 @@
             "oAuth": true,
             "appUrl": "smartapps/namespace/smartappname.src/smartappname.groovy"
         },
-        "children": [
-            {
+        "children": [{
                 "name": "child1",
                 "iconUrl": "https://s3.amazonaws.com/smartapp-icons/Convenience/App.png",
                 "published": false,
@@ -31,16 +31,14 @@
                 "oAuth": false,
                 "appUrl": "smartapps/namespace/smartappname.src/smartappname.groovy",
                 "optional": false,
-                "children": [
-                    {
-                        "name": "child1",
-                        "iconUrl": "https://s3.amazonaws.com/smartapp-icons/Convenience/App.png",
-                        "published": false,
-                        "oAuth": false,
-                        "appUrl": "smartapps/namespace/smartappname.src/smartappname.groovy",
-                        "optional": false
-                    }
-                ]
+                "children": [{
+                    "name": "child1",
+                    "iconUrl": "https://s3.amazonaws.com/smartapp-icons/Convenience/App.png",
+                    "published": false,
+                    "oAuth": false,
+                    "appUrl": "smartapps/namespace/smartappname.src/smartappname.groovy",
+                    "optional": false
+                }]
             }
         ]
     },
@@ -52,8 +50,7 @@
             "oAuth": true,
             "appUrl": "deviceTypes/namespace/smartappname.src/smartappname.groovy"
         },
-        "children": [
-            {
+        "children": [{
                 "name": "child1",
                 "iconUrl": "https://s3.amazonaws.com/smartapp-icons/Convenience/App.png",
                 "published": false,
