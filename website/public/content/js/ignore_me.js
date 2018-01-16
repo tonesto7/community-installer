@@ -637,8 +637,6 @@ function renderAppView(appName) {
                         html += '\n           <div class="d-flex w-100 justify-content-center">';
                         html += '\n               <p class="card-text">' + manifest.description + '</p>';
                         html += '\n           </div>';
-                        // html += appInstalled && !updAvail ? '             <small-medium class="align-middle"><span class="badge badge-primary blue align-middle">Installed</span></small-m>' : '';
-                        // html += appInstalled && updAvail ? '             <small-medium class="align-middle"><span class="badge badge-primary orange align-middle">Update Avail.</span></small-medium>' : '';
 
                         html += '\n       </div>';
                         html += '\n     </div>';
@@ -650,7 +648,7 @@ function renderAppView(appName) {
                         html += '\n<!--App Options Panel-->';
                         html += '\n<div class="card card-body" style="background-color: transparent;">';
                         html += '\n   <div class="row">';
-                        html += '\n       <div class="col-md-6">';
+                        html += '\n       <div class="col-sm-6 mb-4">';
                         html += '\n           <h5 class="white-text"><u>SmartApps</u></h5>';
                         html += '\n           <div class="d-flex justify-content-center">';
                         html += '\n               <div class="d-flex flex-column justify-content-center">';
@@ -702,7 +700,7 @@ function renderAppView(appName) {
                         html += '\n           </div>';
                         html += '\n       </div>';
 
-                        html += '\n       <div class="col-md-6 mt-4">';
+                        html += '\n       <div class="col-sm-6 mb-4">';
                         html += '\n           <h5 class="white-text"><u>Devices</u></h5>';
                         html += '\n           <div class="d-flex justify-content-center">';
                         html += '\n               <div class="d-flex flex-column justify-content-center">';
