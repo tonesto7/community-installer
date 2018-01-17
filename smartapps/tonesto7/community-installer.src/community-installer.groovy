@@ -48,7 +48,7 @@ def startPage() {
 
 def mainPage() {
     dynamicPage (name: "mainPage", title: "", install: true, uninstall: true) {
-        def theURL = "https://consigliere-regional.api.smartthings.com/?redirect=${getAppEndpointUrl("installStart")}"
+        def theURL = "https://account.smartthings.com/?redirect=${getAppEndpointUrl("installStart")}"
         log.trace theURL
         section("Automatic Setup") {
             paragraph title: "What now?", "Tap on the input below to launch the Installer Web App"
