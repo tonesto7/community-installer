@@ -129,8 +129,9 @@ function capitalize(value) {
         '';
 }
 
-function addResult(str, good) {
+function addResult(str, good, type = '') {
     // $('#results').css({ display: 'none' });
+
     $('#listDiv').css({
         display: 'block'
     });
@@ -140,7 +141,20 @@ function addResult(str, good) {
     let s = "<li><span style='color: " + (good !== false ? '#25c225' : '#FF0000') + ";'>";
     s += "<i class='fa fa-" + (good !== false ? 'check' : 'exclamation') + "'></i>";
     s += '</span> ' + str + '</li>';
-    $('#resultList ul').append(s);
+    switch (type) {
+        case 'auth':
+            $('#authResultUl').append(s);
+            break;
+        case 'app':
+            $('#appResultUl').append(s);
+            break;
+        case 'device':
+            $('#devResultUl').append(s);
+            break;
+        default:
+            $('#resultUl').append(s);
+            break;
+    }
 }
 
 function installError(err, reload = true) {
@@ -256,26 +270,32 @@ function processIntall(repoData) {
                                         .then(function(resp) {
                                             // console.log('installAppsToIde: ', resp);
                                             if (resp === true) {
-                                                if (Object.keys(repoData.deviceHandlers).length) {
-                                                    // checkIfItemsInstalled(appItems, 'app')
-                                                    //     .catch(function(err) {
-                                                    //         installError(err, false);
-                                                    //     })
-                                                    //     .then(function(resp) {
-                                                    //         if (Object.keys(resp).length) {
-                                                    //             installAppsToIde(resp)
-                                                    //                 .catch(function(err) {
-                                                    //                     installError(err, false);
-                                                    //                 }).then(function(resp) {
-                                                    //                     // console.log('installAppsToIde: ', resp);
-                                                    //                     if (resp === true) {
-                                                    //                         if (Object.keys(repoData.deviceHandlers).length) {
-                                                    //                             installComplete('Installs are Complete!<br/>Everything is Good!');
-                                                    //                         }
-                                                    //                     }
-                                                    //                 });
-                                                    //         }
-                                                    //     });
+                                                if (repoData.deviceHandlers) {
+                                                    let devItems = [];
+                                                    devItems.push(repoData.deviceHandlers);
+                                                    for (const dh in repoData.deviceHandlers) {
+                                                        devItems.push(repoData.deviceHandlers[dh]);
+                                                    }
+                                                    checkIfItemsInstalled(devItems, 'app')
+                                                        .catch(function(err) {
+                                                            installError(err, false);
+                                                        })
+                                                        .then(function(resp) {
+                                                            if (Object.keys(resp).length) {
+                                                                installDevsToIde(resp)
+                                                                    .catch(function(err) {
+                                                                        installError(err, false);
+                                                                    })
+                                                                    .then(function(resp) {
+                                                                        // console.log('installDevsToIde: ', resp);
+                                                                        if (resp === true) {
+                                                                            if (Object.keys(repoData.deviceHandlers).length) {
+                                                                                installComplete('Installs are Complete!<br/>Everything is Good!');
+                                                                            }
+                                                                        }
+                                                                    });
+                                                            }
+                                                        });
                                                 } else {
                                                     installComplete('Installs are Complete!<br/>Everything is Good!');
                                                 }
@@ -318,6 +338,30 @@ function installAppsToIde(appNames) {
                     updLoaderText('Apps', 'Installed');
                     for (let i in appNames) {
                         addResult(i + ' App Installed/Published', true);
+                    }
+                    resolve(true);
+                });
+        }
+    });
+}
+
+function installDevsToIde(devNames) {
+    return new Promise(function(resolve, reject) {
+        updLoaderText('Beginning', 'Installs');
+        // console.log('repoParams: ', repoParams);
+        if (devNames) {
+            let repoParams = buildAppInstallParams(repoId, devNames);
+            makeRequest(doDevRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
+                .catch(function(err) {
+                    installError(err, false);
+                    addResult(err + ' Install Devices IDE Issue', false);
+                    installComplete('Error!<br/>Try Again Later!', true);
+                    reject(err);
+                })
+                .then(function(resp) {
+                    updLoaderText('Devices', 'Installed');
+                    for (let i in devNames) {
+                        addResult(i + ' Device Installed/Published', true);
                     }
                     resolve(true);
                 });
@@ -446,7 +490,7 @@ function checkIfItemsInstalled(itemObj, type) {
                     updLoaderText('Analyzing', capitalize(type));
                     for (let a in itemObj) {
                         for (let i in itemsFnd) {
-                            console.log('itemsFnd: ', itemsFnd[i].name, ' | requested ' + type + ': ' + itemObj[a].name);
+                            // console.log('itemsFnd: ', itemsFnd[i].name, ' | requested ' + type + ': ' + itemObj[a].name);
                             if (itemsFnd[i].name === itemObj[a].name) {
                                 addResult(itemObj[a].name + ' Exists Already', true);
                                 delete itemObj[a];
@@ -482,7 +526,6 @@ function getProjectManifest(url) {
 
 function addRepoToIde(rname, branch) {
     return new Promise(function(resolve, reject) {
-        let repoAdded = false;
         updLoaderText('Adding', 'Repo to ST');
         let repoParams = buildRepoParamString(writableRepos);
         // console.log('repoParams: ', repoParams);
@@ -517,6 +560,30 @@ function addRepoToIde(rname, branch) {
 function buildAppList() {
     let html = '';
     if (appsManifest.length > 0) {
+
+        html += '<div class="col-xs-12">';
+        html += '   <form class="navbar-form m-2" role="search">';
+        html += '       <div class="input-group add-on">';
+        html += '           <div class="input-group-btn"> <button type="button" class="btn btn-outline-grey btn-rounded dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Category</button>';
+        html += '               <div class="dropdown-menu" x-placement="bottom-start" style="position: absolute; transform: translate3d(6px, 52px, 0px); top: 0px; left: 0px; will-change: transform;">';
+        html += '                   <a class="dropdown-item" href="#">My Apps</a>';
+        html += '                   <a class="dropdown-item" href="#">Convenience</a>';
+        html += '                   <a class="dropdown-item" href="#">Family</a>';
+        html += '                   <a class="dropdown-item" href="#">Fun & Social</a>';
+        html += '                   <a class="dropdown-item" href="#">Green Living</a>';
+        html += '                   <a class="dropdown-item" href="#">Health & Wellness</a>';
+        html += '                   <a class="dropdown-item" href="#">Mode Magic</a>';
+        html += '                   <a class="dropdown-item" href="#">Pets</a>';
+        html += '                   <a class="dropdown-item" href="#">Safety & Security</a>';
+        html += '                   <a class="dropdown-item" href="#">SmartThings Lab</a>';
+        html += '               </div>';
+        html += '           </div>';
+        html += '           <input class="form-control white-text" placeholder="Search" name="srch-term" id="srch-term" type="text">';
+        html += '        <div class="input-group-btn">';
+        html += '            <button class="btn btn-outline-grey btn-rounded waves-effect" type="submit"><i class="fa fa-search" aria-hidden="true"></i></button>';
+        html += '        </div>';
+        html += '    </div>';
+        html += '</div>';
         html += '<div id=listDiv class="col-lg-12 mb-r dark">';
         html += '   <div class="listGroup">';
         for (let i in appsManifest) {
@@ -537,20 +604,20 @@ function buildAppList() {
 
             html += '\n         <div class="d-flex w-100 justify-content-between align-items-center">';
             html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
-            html += '\n               <h5 class="mb-1"><img src="' + appsManifest[i].iconUrl + '" height="40" class="d-inline-block align-middle" alt=""> ' + appsManifest[i].name + '</h5>';
+            html += '\n               <h6 class="h6-responsive"><img src="' + appsManifest[i].iconUrl + '" height="40" class="d-inline-block align-middle" alt=""> ' + appsManifest[i].name + '</h6>';
             html += '\n             </div>';
             html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
             html += '\n                 <div class="d-flex flex-row">';
             html += '\n                     <small class="align-middle"><u><b>Author:</b></u></small>';
             html += '\n                 </div>';
             html += '\n                 <div class="d-flex flex-row">';
-            html += '\n                     <small class="align-middle">' + appsManifest[i].author + '</small>';
+            html += '\n                     <small class="align-middle"><em>' + appsManifest[i].author + '</em></small>';
             html += '\n                 </div>';
             html += '\n             </div>';
             html += '\n         </div>';
 
             html += '\n         <div class="d-flex justify-content-start">';
-            html += '\n             <p class="d-flex my-3 mx-3 justify-content-start">' + appsManifest[i].description + '</p>';
+            html += '\n             <p class="d-flex my-3 mx-6 justify-content-center"><small class="align-middle">' + appsManifest[i].description + '</small></p>';
             html += '\n         </div>';
 
             html += '\n         <div class="d-flex w-100 justify-content-between align-items-center">';
@@ -559,7 +626,7 @@ function buildAppList() {
             html += '\n                     <small class="align-middle"><u><b>Category:</b></u></small>';
             html += '\n                 </div>';
             html += '\n                 <div class="d-flex flex-row">';
-            html += '\n                     <small class="align-middle">' + appsManifest[i].category + '</small>';
+            html += '\n                     <small class="align-middle"><em>' + appsManifest[i].category + '</em></small>';
             html += '\n                 </div>';
             html += '\n             </div>';
             html += appInstalled || updAvail ? '\n                      <div class="d-flex flex-column justify-content-center align-items-center">\n<div class="d-flex flex-row">\n<small class="align-middle"><u><b>Category:</b></u></small>\n</div>\n<div class="d-flex flex-row">' : '';
@@ -571,7 +638,7 @@ function buildAppList() {
             html += '\n                     <small class="align-middle"><u><b>Installs:</b></u></small>';
             html += '\n                 </div>';
             html += '\n                 <div class="d-flex flex-row">';
-            html += '\n                     <small class="align-middle">' + 20 + '</small>';
+            html += '\n                     <small class="align-middle"><span class="badge badge-pill grey white-text align-middle">' + 20 + '</span></small>';
             html += '\n                 </div>';
             html += '\n             </div>';
             html += '\n         </div>';
@@ -591,6 +658,38 @@ function buildAppList() {
         window.location.replace(homeUrl);
     });
     new WOW().init();
+}
+
+function createAppDevTableItem(objData, type, parent = false, idNum) {
+    var appPub = type === 'device' || objData.published === true;
+    var appOauth = objData.oAuth === true;
+    var appOptional = objData.optional;
+    var disabled = parent || appOptional === false ? ' disabled' : '';
+    var checked = parent || appOptional === false ? ' checked' : '';
+
+    let html = '';
+    html += '\n        <tr>';
+    html += '\n           <td class="align-middle">';
+    html += '\n               <div class="d-flex flex-column justify-content-start my-0 form-check' + disabled + '">';
+    html += '\n                   <div class="flex-column justify-content-start">';
+    html += '\n                       <div class="d-flex flex-row">';
+    html += '\n                           <input class="form-check-input align-middle" type="checkbox" value="" id="smartapp' + idNum + '"' + checked + disabled + '>';
+    html += '\n                           <label class="form-check-label align-middle" for="smartapp' + idNum + '"><small class="align-middle">' + objData.name + '</small></label>';
+    html += '\n                       </div>';
+    html += '\n                   </div>';
+    html += '\n              </div>';
+    html += '\n           </td>';
+    html += '\n           <td class="align-middle">';
+    html += '\n               <small class="align-middle"><span class="badge grey white-text align-middle">v' + objData.version + '</span></small>';
+    html += '\n           </td>';
+    html += '\n           <td class="align-middle">';
+    html += parent === true ? '\n               <small class="align-middle"><span class="badge badge-pill purple white-text align-middle">Parent</span></small>' : '';
+    html += appPub === true ? '\n               <small class="align-middle"><span class="badge badge-pill green white-text align-middle">Publish</span></small>' : '';
+    html += appOauth === true ? '\n               <small class="align-middle"><span class="badge badge-pill red white-text align-middle">OAuth</span></small>' : '';
+    html += '\n           </td>';
+    html += '\n       </tr>';
+
+    return html;
 }
 
 function renderAppView(appName) {
@@ -634,96 +733,73 @@ function renderAppView(appName) {
                         html += '\n       </div>';
                         html += '\n       <small class="white-text"><b>Author:</b> ' + manifest.author + '</small>';
                         html += '\n       <div class="flex-column align-items-center">';
-                        html += '\n           <div class="d-flex w-100 justify-content-center">';
+                        html += '\n           <div class="d-flex w-100 justify-content-center align-items-center">';
                         html += '\n               <p class="card-text">' + manifest.description + '</p>';
                         html += '\n           </div>';
-
                         html += '\n       </div>';
                         html += '\n     </div>';
                         html += '\n     <!--/.App Description Panel-->';
+
                         // Column 1 start
-                        var appPub = manifest.smartApps.parent.published === true;
-                        var appOauth = manifest.smartApps.parent.oAuth;
 
                         html += '\n<!--App Options Panel-->';
                         html += '\n<div class="card card-body" style="background-color: transparent;">';
                         html += '\n   <div class="row">';
-                        html += '\n       <div class="col-sm-6 mb-4">';
-                        html += '\n           <h5 class="white-text"><u>SmartApps</u></h5>';
+                        html += '\n       <div class="' + (manifest.deviceHandlers.length ? 'col-sm-6' : 'col-sm-12') + ' mb-4">';
+                        html += '\n           <h6 class="h6-responsive white-text"><u>SmartApps</u></h6>';
                         html += '\n           <div class="d-flex justify-content-center">';
-                        html += '\n               <div class="d-flex flex-column justify-content-center">';
-                        html += '\n                   <div class="d-flex flex-column justify-content-center form-check disabled">';
-                        html += '\n                       <div class="d-flex flex-row justify-content-between align-middle">';
-                        html += '\n                           <input class="form-check-input align-middle" type="checkbox" value="" id="smartapp' + cnt + '" checked disabled>';
-                        html += '\n                           <label class="form-check-label align-middle" for="smartapp' + cnt + '">' + manifest.smartApps.parent.name + '  <span class="badge grey align-middle">v' + manifest.smartApps.parent.version + '</span></label>';
-                        html += '\n                       </div>';
-                        html += '\n                       <div class="d-flex flex-row justify-content-start pl-4">';
-                        html += '\n                           <small>Options: ';
-                        if (appPub) {
-                            html += '\n                               <span class="badge badge-pill green white-text align-middle">Publish</span>';
-                        }
-                        if (appOauth) {
-                            html += '\n                               <span class="badge badge-pill orange white-text align-middle">OAuth</span>';
-                        }
-                        html += '\n                           </small>';
-                        html += '\n                       </div>';
-                        html += '\n                   </div>';
+                        html += '\n               <div class="d-flex justify-content-center align-items-center">';
+                        html += '\n                   <table class="table table-sm">';
+                        html += '\n                       <thead>';
+                        html += '\n                           <tr>';
+                        html += '\n                               <th><small class="align-middle"><u><b>Name:</b></u></small></th>';
+                        html += '\n                               <th><small class="align-middle"><u><b>Version:</b></u></small></th>';
+                        html += '\n                               <th><small class="align-middle"><u><b>Options:</b></u></small></th>';
+                        html += '\n                           </tr>';
+                        html += '\n                       </thead>';
+                        html += '\n                       <tbody>';
+                        // Start Here
+
+                        html += createAppDevTableItem(manifest.smartApps.parent, 'app', true, cnt);
                         cnt++;
+
                         if (manifest.smartApps.children.length) {
                             for (const sa in manifest.smartApps.children) {
-                                var appPub = manifest.smartApps.children[sa].published === true;
-                                var appOauth = manifest.smartApps.children[sa].oAuth === true;
-                                var appOptional = manifest.smartApps.children[sa].optional;
-                                var disabled = appOptional === false ? ' disabled' : '';
-                                var checked = appOptional === false ? ' checked' : '';
-
-                                html += '\n                       ';
-                                html += '\n                   <div class="d-flex justify-content-start form-check disabled">';
-                                html += '\n                       <div class="d-flex flex-column justify-content-center">';
-                                html += '\n                           <div class="d-flex flex-row justify-content-start">';
-                                html += '\n                               <input class="form-check-input" type="checkbox" value="" id="smartapp' + cnt + '"' + checked + disabled + '>';
-                                html += '\n                               <label class="form-check-label" for="smartapp' + cnt + '">' + manifest.smartApps.children[sa].name + ' <span class="badge grey white-text align-middle">v' + manifest.smartApps.children[sa].version + '</span></label>';
-                                html += '\n                           </div>';
-                                html += '\n                           <div class="d-flex flex-row justify-content-start">';
-                                html += '\n                               <small class="ml-5">';
-                                html += appPub ? '\n                                  <span class="badge badge-primary badge-pill blue white-text align-middle">Publish</span>' : '';
-                                html += appOauth ? '\n                                  <span class="badge badge-primary badge-pill cyan align-middle">OAuth</span>' : '';
-                                html += '\n                               </small>';
-                                html += '\n                           </div>';
-                                html += '\n                       </div>';
-                                html += '\n                   </div>';
+                                html += createAppDevTableItem(manifest.smartApps.children[sa], 'app', false, cnt);
                                 cnt++;
                             }
                         }
-
+                        html += '\n                       </tbody>';
+                        html += '\n                   </table>';
                         html += '\n               </div>';
                         html += '\n           </div>';
                         html += '\n       </div>';
 
-                        html += '\n       <div class="col-sm-6 mb-4">';
-                        html += '\n           <h5 class="white-text"><u>Devices</u></h5>';
-                        html += '\n           <div class="d-flex justify-content-center">';
-                        html += '\n               <div class="d-flex flex-column justify-content-center">';
                         let devcnt = 1;
                         if (manifest.deviceHandlers.length) {
+                            html += '\n       <div class="col-sm-6 mb-4">';
+                            html += '\n           <h6 class="h6-responsive white-text"><u>Devices</u></h6>';
+                            html += '\n           <div class="d-flex justify-content-center">';
+                            html += '\n               <div class="d-flex justify-content-center align-items-center">';
+                            html += '\n                   <table class="table table-sm">';
+                            html += '\n                       <thead>';
+                            html += '\n                           <tr>';
+                            html += '\n                               <th><small class="align-middle"><u><b>Name:</b></u></small></th>';
+                            html += '\n                               <th><small class="align-middle"><u><b>Version:</b></u></small></th>';
+                            html += '\n                               <th><small class="align-middle"><u><b>Options:</b></u></small></th>';
+                            html += '\n                           </tr>';
+                            html += '\n                       </thead>';
+                            html += '\n                       <tbody>';
+                            html += '\n                       ';
                             for (const dh in manifest.deviceHandlers) {
-                                var devOptional = manifest.deviceHandlers[dh].optional;
-                                var disabled = devOptional === false ? ' disabled' : '';
-                                var checked = devOptional === false ? ' checked' : '';
-
-                                html += '\n                       ';
-                                html += '\n                   <div class="d-flex justify-content-start form-check disabled">';
-                                html += '\n                       <div class="d-flex flex-column justify-content-center">';
-                                html += '\n                           <div class="d-flex flex-row justify-content-start">';
-                                html += '\n                               <input class="form-check-input" type="checkbox" value="" id="device' + devcnt + '"' + checked + disabled + '>';
-                                html += '\n                               <label class="form-check-label" for="smartapp' + devcnt + '">' + manifest.deviceHandlers[dh].name + ' <span class="badge grey white-text align-middle">v' + manifest.deviceHandlers[dh].version + '</span></label>';
-                                html += '\n                           </div>';
-                                html += '\n                       </div>';
-                                html += '\n                   </div>';
+                                html += createAppDevTableItem(manifest.deviceHandlers[dh], 'device', false, devcnt);
                                 devcnt++;
                             }
                         }
 
+                        // Stop Here
+                        html += '\n                       </tbody>';
+                        html += '\n                   </table>';
                         html += '\n               </div>';
                         html += '\n           </div>';
                         html += '\n       </div>';

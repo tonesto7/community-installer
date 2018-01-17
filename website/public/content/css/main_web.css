@@ -115,6 +115,54 @@ ul:empty#resultUl {
     display: none;
 }
 
+ul#authResultUl {
+    text-align: left;
+    font-family: "Swiss 721 W01 Thin";
+    color: #c8c2c2;
+    list-style: none;
+    border: 2px solid gray;
+    border-radius: 25px;
+    padding: 10px 20px;
+    margin: 0;
+    display: inline-block;
+}
+
+ul:empty#authResultUl {
+    display: none;
+}
+
+ul#devResultUl {
+    text-align: left;
+    font-family: "Swiss 721 W01 Thin";
+    color: #c8c2c2;
+    list-style: none;
+    border: 2px solid gray;
+    border-radius: 25px;
+    padding: 10px 20px;
+    margin: 0;
+    display: inline-block;
+}
+
+ul:empty#devResultUl {
+    display: none;
+}
+
+ul#appResultUl {
+    text-align: left;
+    font-family: "Swiss 721 W01 Thin";
+    color: #c8c2c2;
+    list-style: none;
+    border: 2px solid gray;
+    border-radius: 25px;
+    padding: 10px 20px;
+    margin: 0;
+    display: inline-block;
+}
+
+ul:empty#appResultUl {
+    display: none;
+}
+
 .centered {
     margin: 0 auto;
 }

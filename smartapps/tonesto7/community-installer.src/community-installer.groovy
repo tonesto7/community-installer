@@ -17,8 +17,8 @@ definition(
     iconX2Url		: "https://community-installer-34dac.firebaseapp.com/content/images/app_logo.png",
     iconX3Url		: "https://community-installer-34dac.firebaseapp.com/content/images/app_logo.png")
 /**********************************************************************************************************************************************/
-private releaseVer() { return "5.0.014" }
-private appVerDate() { "1-14-2018" }
+private releaseVer() { return "5.0.016" }
+private appVerDate() { "1-16-2018" }
 /**********************************************************************************************************************************************/
 preferences {
     page name: "startPage"
@@ -76,6 +76,7 @@ def webHeadHtml(title, verStr="") {
         <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
         <script src="https://use.fontawesome.com/a81eef09c0.js" defer></script>
         <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js" async></script>
         <link href="${baseUrl('/content/css/main_mdb.min.css')}" rel="stylesheet">
         <link href="${baseUrl('/content/css/main_web.min.css')}" rel="stylesheet">
@@ -92,7 +93,6 @@ def webFooterHtml(verStr="") {
             </div>
         </footer>
         <script type="text/javascript" src="${baseUrl('/content/js/bootstrap.min.js')}" defer></script>
-        <script type="text/javascript" src="${baseUrl('/content/js/popper.min.js')}" defer></script>
         <script type="text/javascript" src="${baseUrl('/content/js/mdb.min.js')}" defer></script>
     """
 }
@@ -150,9 +150,9 @@ def installStartHtml() {
                             <!-- Links -->
 
                             <!-- Search form -->
-                            <form class="form-inline">
+                            <!-- <form class="form-inline">
                                 <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
-                            </form>
+                            </form> -->
                         </div>
                         <!-- Collapsible content -->
                 </nav>
@@ -176,6 +176,9 @@ def installStartHtml() {
                                         <div id="resultList">
                                             <h3 id="resultsTitle">Install Results</h3>
                                             <ul id="resultUl"></ul>
+                                            <ul id="authResultUl"></ul>
+                                            <ul id="devResultUl"></ul>
+                                            <ul id="appResultUl"></ul>
                                         </div>
                                     </div>
                                     <i id="finishedImg" class='fa fa-check' style="display: none;"></i>
