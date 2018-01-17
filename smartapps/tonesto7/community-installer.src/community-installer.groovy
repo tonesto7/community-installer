@@ -170,7 +170,7 @@ def installStartHtml() {
                             </div>
                             <div id="listContDiv" class="row fadeIn fadeOut pl-2 pr-2" style="display: none;"></div>
                             <div id="appViewDiv" class="row fadeIn fadeOut mb-5" style="display: none;"></div>
-                            <div id="actResultsDiv" class="row fadeIn fadeOut" style="display: none;">
+                            <div id="actResultsDiv" class="row fadeIn fadeOut mb-5" style="display: none;">
                                 <div class="col-lg-12 mb-r">
                                     <div class="listDiv">
                                         <div id="resultList">

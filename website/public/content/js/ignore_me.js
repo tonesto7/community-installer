@@ -32,7 +32,7 @@ const appsManifest = [{
         videoUrl: 'http://f.cl.ly/items/3O2L03471l2K3E3l3K1r/Zombie%20Kid%20Likes%20Turtles.mp4',
         photoUrl: 'https://raw.githubusercontent.com/tonesto7/nest-manager/master/Images/App/nst_manager_5.png',
         iconUrl: 'https://raw.githubusercontent.com/tonesto7/nest-manager/master/Images/App/nst_manager_5.png',
-        manifestUrl: 'https://raw.githubusercontent.com/tonesto7/nest-manager/master/installerManifest.json'
+        manifestUrl: 'https://cdn.rawgit.com/tonesto7/nest-manager/master/installerManifest.json'
     },
     {
         namespace: 'tonesto7',
@@ -557,37 +557,34 @@ function addRepoToIde(rname, branch) {
     });
 }
 
-function buildAppList() {
-    let html = '';
-    if (appsManifest.length > 0) {
+function findAppMatch(srchStr, data) {
+    if (srchStr === undefined) { return data; }
+    if (srchStr.length >= 3) {
+        return data.filter(appItem => JSON.stringify(appItem).toString().toLowerCase().includes(srchStr.toLowerCase()));
+    } else { return data; }
+}
 
-        html += '<div class="col-xs-12">';
-        html += '   <form class="navbar-form m-2" role="search">';
-        html += '       <div class="input-group add-on">';
-        html += '           <div class="input-group-btn"> <button type="button" class="btn btn-outline-grey btn-rounded dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Category</button>';
-        html += '               <div class="dropdown-menu" x-placement="bottom-start" style="position: absolute; transform: translate3d(6px, 52px, 0px); top: 0px; left: 0px; will-change: transform;">';
-        html += '                   <a class="dropdown-item" href="#">My Apps</a>';
-        html += '                   <a class="dropdown-item" href="#">Convenience</a>';
-        html += '                   <a class="dropdown-item" href="#">Family</a>';
-        html += '                   <a class="dropdown-item" href="#">Fun & Social</a>';
-        html += '                   <a class="dropdown-item" href="#">Green Living</a>';
-        html += '                   <a class="dropdown-item" href="#">Health & Wellness</a>';
-        html += '                   <a class="dropdown-item" href="#">Mode Magic</a>';
-        html += '                   <a class="dropdown-item" href="#">Pets</a>';
-        html += '                   <a class="dropdown-item" href="#">Safety & Security</a>';
-        html += '                   <a class="dropdown-item" href="#">SmartThings Lab</a>';
-        html += '               </div>';
-        html += '           </div>';
-        html += '           <input class="form-control white-text" placeholder="Search" name="srch-term" id="srch-term" type="text">';
-        html += '        <div class="input-group-btn">';
-        html += '            <button class="btn btn-outline-grey btn-rounded waves-effect" type="submit"><i class="fa fa-search" aria-hidden="true"></i></button>';
-        html += '        </div>';
-        html += '    </div>';
-        html += '</div>';
-        html += '<div id=listDiv class="col-lg-12 mb-r dark">';
-        html += '   <div class="listGroup">';
-        for (let i in appsManifest) {
-            let instApp = availableApps.filter(app => app.name.toString() === appsManifest[i].appName.toString());
+function buildAppList(filterStr = undefined) {
+    let html = '';
+    let appData = findAppMatch(filterStr, appsManifest);
+    if (appData.length > 0) {
+        html += '\n<div id=listDiv class="col-lg-12">';
+        html += '\n   <div class="listGroup">';
+        html += '\n       <div class="card" style="background-color: transparent;">';
+        html += '\n           <div class="card-body">';
+        html += '\n               <div class="row">';
+        html += '\n                   <div class="col-md-12 mt-4">';
+        html += '\n                       <div class="input-group md-form form-sm form-2 pl-0">';
+        html += '\n                           <input id="appSearchBox" class="form-control my-0 py-1 grey-border" type="text" placeholder="Search" aria-label="Search">';
+        html += '\n                           <span class="input-group-addon waves-effect grey lighten-3" id="basic-addon1"><a><i class="fa fa-search text-grey" aria-hidden="true"></i></a></span>';
+        html += '\n                       </div>';
+        html += '\n                   </div>';
+        html += '\n               </div>';
+        html += '\n               <table class="table table-sm">';
+        html += '\n                   <tbody>';
+
+        for (let i in appData) {
+            let instApp = availableApps.filter(app => app.name.toString() === appData[i].appName.toString());
             let appInstalled = instApp[0] !== undefined && instApp.length;
             let updAvail = false;
             if (appInstalled && instApp[0].id !== undefined) {
@@ -600,24 +597,36 @@ function buildAppList() {
             if (instApp[0] !== undefined) {
                 console.log('appInstalled: ' + appInstalled, 'instApp: ' + instApp[0].id);
             }
-            html += '\n     <a href="#" id="' + appsManifest[i].repoName + '" onclick="appItemClicked(this)" class="list-group-item list-group-item-action flex-column align-items-start">';
+            html += '\n   <tr>';
+            html += '\n     <a href="#" id="' + appData[i].repoName + '" onclick="appItemClicked(this)" class="list-group-item list-group-item-action flex-column align-items-start my-1">';
 
             html += '\n         <div class="d-flex w-100 justify-content-between align-items-center">';
             html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
-            html += '\n               <h6 class="h6-responsive"><img src="' + appsManifest[i].iconUrl + '" height="40" class="d-inline-block align-middle" alt=""> ' + appsManifest[i].name + '</h6>';
+            html += '\n                 <div class="d-flex flex-row">';
+            html += '\n                     <div class="d-flex justify-content-start align-items-center">';
+            html += '\n                         <h6 class="h6-responsive"><img src="' + appData[i].iconUrl + '" height="40" class="d-inline-block align-middle" alt=""> ' + appData[i].name + '</h6>';
+            html += '\n                     </div>';
+            html += '\n                 </div>';
+            html += '\n             </div>';
+            html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
+            html += '\n                 <div class="d-flex flex-row">';
+            html += '\n                 </div>';
+            html += '\n                 <div class="d-flex flex-row">';
+            html += '\n                 </div>';
             html += '\n             </div>';
             html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
             html += '\n                 <div class="d-flex flex-row">';
             html += '\n                     <small class="align-middle"><u><b>Author:</b></u></small>';
             html += '\n                 </div>';
             html += '\n                 <div class="d-flex flex-row">';
-            html += '\n                     <small class="align-middle"><em>' + appsManifest[i].author + '</em></small>';
+            html += '\n                     <small class="align-middle" style="font-size: 12px;"><em>' + appData[i].author + '</em></small>';
             html += '\n                 </div>';
             html += '\n             </div>';
             html += '\n         </div>';
 
-            html += '\n         <div class="d-flex justify-content-start">';
-            html += '\n             <p class="d-flex my-3 mx-6 justify-content-center"><small class="align-middle">' + appsManifest[i].description + '</small></p>';
+
+            html += '\n         <div class="d-flex justify-content-start align-items-center">';
+            html += '\n             <p class="d-flex my-1 mx-6 justify-content-center"><small class="align-middle">' + appData[i].description + '</small></p>';
             html += '\n         </div>';
 
             html += '\n         <div class="d-flex w-100 justify-content-between align-items-center">';
@@ -626,7 +635,7 @@ function buildAppList() {
             html += '\n                     <small class="align-middle"><u><b>Category:</b></u></small>';
             html += '\n                 </div>';
             html += '\n                 <div class="d-flex flex-row">';
-            html += '\n                     <small class="align-middle"><em>' + appsManifest[i].category + '</em></small>';
+            html += '\n                     <small class="align-middle"><em>' + appData[i].category + '</em></small>';
             html += '\n                 </div>';
             html += '\n             </div>';
             html += appInstalled || updAvail ? '\n                      <div class="d-flex flex-column justify-content-center align-items-center">\n<div class="d-flex flex-row">\n<small class="align-middle"><u><b>Category:</b></u></small>\n</div>\n<div class="d-flex flex-row">' : '';
@@ -643,12 +652,17 @@ function buildAppList() {
             html += '\n             </div>';
             html += '\n         </div>';
             html += '\n     </a>';
+            html += '\n   </tr>';
         }
+        html += '\n                </table>';
+        html += '\n             </tbody>';
+        html += '\n         </div>';
+        html += '\n      </div>';
         html += '\n   </div>';
         html += '\n</div>';
     }
     updSectTitle('Select an Item');
-    $('#listContDiv').append(html);
+    $('#listContDiv').html('').html(html);
     $('#listContDiv').css({ display: 'block' });
     $('#loaderDiv').css({ display: 'none' });
     $('#actResultsDiv').css({ display: 'none' });
@@ -656,6 +670,11 @@ function buildAppList() {
     $('#homeBtn').click(function() {
         console.log(homeUrl);
         window.location.replace(homeUrl);
+    });
+    $('#basic-addon1').click(function() {
+        let srchVal = $('#appSearchBox').val();
+        console.log('search clicked: ' + srchVal);
+        buildAppList(srchVal);
     });
     new WOW().init();
 }
@@ -752,9 +771,9 @@ function renderAppView(appName) {
                         html += '\n                   <table class="table table-sm">';
                         html += '\n                       <thead>';
                         html += '\n                           <tr>';
-                        html += '\n                               <th><small class="align-middle"><u><b>Name:</b></u></small></th>';
-                        html += '\n                               <th><small class="align-middle"><u><b>Version:</b></u></small></th>';
-                        html += '\n                               <th><small class="align-middle"><u><b>Options:</b></u></small></th>';
+                        html += '\n                               <th><div class="flex-column justify-content-center"><small class="align-middle">Name:</small></div></th>';
+                        html += '\n                               <th><small class="align-middle">Version:</small></th>';
+                        html += '\n                               <th><small class="align-middle">Options:</small></th>';
                         html += '\n                           </tr>';
                         html += '\n                       </thead>';
                         html += '\n                       <tbody>';
@@ -784,9 +803,9 @@ function renderAppView(appName) {
                             html += '\n                   <table class="table table-sm">';
                             html += '\n                       <thead>';
                             html += '\n                           <tr>';
-                            html += '\n                               <th><small class="align-middle"><u><b>Name:</b></u></small></th>';
-                            html += '\n                               <th><small class="align-middle"><u><b>Version:</b></u></small></th>';
-                            html += '\n                               <th><small class="align-middle"><u><b>Options:</b></u></small></th>';
+                            html += '\n                               <th><small class="align-middle">Name:</small></th>';
+                            html += '\n                               <th><small class="align-middle">Version:</small></th>';
+                            html += '\n                               <th><small class="align-middle">Options:</small></th>';
                             html += '\n                           </tr>';
                             html += '\n                       </thead>';
                             html += '\n                       <tbody>';
@@ -802,12 +821,12 @@ function renderAppView(appName) {
                         html += '\n                   </table>';
                         html += '\n               </div>';
                         html += '\n           </div>';
+                        html += '\n           <div class="d-flex flex-row justify-content-center">';
+                        html += '\n             <button id="installBtn" type="button" class="btn btn-success">Install</button>';
+                        html += '\n           </div>';
                         html += '\n       </div>';
 
                         html += '\n   </div>';
-                        html += '\n</div>';
-                        html += '\n<div class="d-flex flex-row justify-content-center">';
-                        html += '\n    <button id="installBtn" type="button" class="btn btn-success">Install</button>';
                         html += '\n</div>';
                     }
                     html += '\n</div>';
@@ -822,6 +841,7 @@ function renderAppView(appName) {
                         $('#appViewDiv').html('');
                         $('#appViewDiv').css({ display: 'none' });
                         $('#listContDiv').css({ display: 'block' });
+                        buildAppList();
                     });
                     $('#installBtn').click(function() {
                         updSectTitle('Install Progress');
