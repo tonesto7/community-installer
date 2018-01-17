@@ -571,7 +571,7 @@ function buildAppList(filterStr = undefined) {
         html += '\n<div id=listDiv class="col-lg-12">';
         html += '\n   <div class="listGroup">';
         html += '\n       <div class="card" style="background-color: transparent;">';
-        html += '\n           <div class="card-body">';
+        html += '\n           <div class="card-body p-1">';
         html += '\n               <div class="row">';
         html += '\n                   <div class="col-md-12 mt-4">';
         html += '\n                       <div class="input-group md-form form-sm form-2 pl-0">';
