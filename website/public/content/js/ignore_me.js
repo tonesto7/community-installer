@@ -180,7 +180,7 @@ function installComplete(text, red = false) {
 
 function updSectTitle(str, hide = false) {
     $('#sectTitle').html(str).css({ display: hide ? 'none' : 'block' });
-    $('#sectTitleHr').css({ display: hide ? 'none' : 'block' });
+    // $('#sectTitleHr').css({ display: hide ? 'none' : 'block' });
 }
 
 function updLoaderText(str1, str2) {
@@ -572,7 +572,7 @@ function buildAppList(filterStr = undefined) {
     let html = '';
     let appData = findAppMatch(filterStr, appsManifest);
     if (appData.length > 0) {
-        html += '\n<div id=listDiv class="col-lg-12">';
+        html += '\n<div id=listDiv class="clearfix">';
         html += '\n   <div class="listGroup">';
         html += '\n       <div class="card" style="background-color: transparent;">';
         html += '\n           <div class="card-body p-1">';
@@ -670,10 +670,6 @@ function buildAppList(filterStr = undefined) {
     $('#loaderDiv').css({ display: 'none' });
     $('#actResultsDiv').css({ display: 'none' });
     $('#appViewDiv').css({ display: 'none' });
-    $('#homeBtn').click(function() {
-        console.log(homeUrl);
-        window.location.replace(homeUrl);
-    });
     $('#basic-addon1').click(function() {
         let srchVal = $('#appSearchBox').val();
         console.log('search clicked: ' + srchVal);
@@ -740,18 +736,18 @@ function renderAppView(appName) {
                     manifest = resp;
                     // console.log('manifest: ', manifest);
                     if (manifest !== undefined && Object.keys(manifest).length) {
-                        html += '\n<div class="col-lg-12 mb-r">';
+                        html += '\n<div class="clearfix">';
                         updSectTitle('', true);
                         let cnt = 1;
                         html += '\n     <!--App Description Panel-->';
-                        html += '\n     <div class="card card-body" style="background-color: transparent;">';
-                        html += '\n        <div class="flex-row align-right">';
+                        html += '\n     <div class="card card-body p-1" style="background-color: transparent;">';
+                        html += '\n        <div class="flex-row align-right mr-1 mt-1">';
                         html += '\n           <button type="button" id="appCloseBtn" class="close white-text" aria-label="Close">';
                         html += '\n               <span aria-hidden="true">&times;</span>';
                         html += '\n           </button>';
                         html += '\n       </div>';
-                        html += '\n       <div class="flex-row align-center">';
-                        html += '\n           <img class="align-center" src="' + manifest.bannerUrl + '" style="width: 90%; height: auto; max-width: 300px; max-height: 100px;">';
+                        html += '\n       <div class="flex-row align-center mt-0 mb-1">';
+                        html += '\n           <img class="align-center" src="' + manifest.bannerUrl + '" style="height: auto; max-height: 75px;">';
                         html += '\n       </div>';
                         html += '\n       <small class="white-text"><b>Author:</b> ' + manifest.author + '</small>';
                         html += '\n       <div class="flex-column align-items-center">';
@@ -765,7 +761,7 @@ function renderAppView(appName) {
                         // Column 1 start
 
                         html += '\n<!--App Options Panel-->';
-                        html += '\n<div class="card card-body" style="background-color: transparent;">';
+                        html += '\n<div class="card card-body" style="background-color: transparent; margin-bottom: 80px;">';
                         html += '\n   <div class="row">';
                         html += '\n       <div class="' + (manifest.deviceHandlers.length ? 'col-sm-6' : 'col-sm-12') + ' mb-4">';
                         html += '\n           <h6 class="h6-responsive white-text"><u>SmartApps</u></h6>';

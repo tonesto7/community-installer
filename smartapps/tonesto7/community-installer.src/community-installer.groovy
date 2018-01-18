@@ -17,8 +17,8 @@ definition(
     iconX2Url		: "https://community-installer-34dac.firebaseapp.com/content/images/app_logo.png",
     iconX3Url		: "https://community-installer-34dac.firebaseapp.com/content/images/app_logo.png")
 /**********************************************************************************************************************************************/
-private releaseVer() { return "5.0.016" }
-private appVerDate() { "1-16-2018" }
+private releaseVer() { return "5.0.018" }
+private appVerDate() { "1-18-2018" }
 /**********************************************************************************************************************************************/
 preferences {
     page name: "startPage"
@@ -49,15 +49,11 @@ def startPage() {
 def mainPage() {
     dynamicPage (name: "mainPage", title: "", install: true, uninstall: true) {
         def theURL = "https://account.smartthings.com?redirect=${getAppEndpointUrl("installStart")}"
-        def samLoginURL = "https://account.smartthings.com/login/samsungaccount?redirect=${URLEncoder.encode(getAppEndpointUrl("installStart"))}"
-        def testUrl = getAppEndpointUrl("installStart")
         // log.trace theURL
         section("Automatic Setup") {
             image getAppImg("welcome_img.png")
             paragraph title: "What now?", "Tap on the input below to launch the Installer Web App"
             href "", title: "Get Started", url: theURL, style: "embedded", required: false, description: "", image: ""
-            href "", title: "Samsung Login Test", url: samLoginURL, style: "external", required: false, description: "", image: ""
-            href "", title: "Test Login", url: testUrl, style: "external", required: false, description: "", image: ""
         }
     }
 }
@@ -90,7 +86,7 @@ def webHeadHtml(title, verStr="") {
 
 def webFooterHtml(verStr="") {
     return """
-        <footer class="page-footer center-on-small-only fixed-bottom">
+        <footer id="ftrSect" class="page-footer center-on-small-only fixed-bottom m-0 p-0">
             <div class="footer-copyright">
                 <div class="containter-fluid">
                     <small>Copyright \u00A9 2018 Anthony Santilli & Corey Lista</small>
@@ -99,6 +95,7 @@ def webFooterHtml(verStr="") {
         </footer>
         <script type="text/javascript" src="${baseUrl('/content/js/bootstrap.min.js')}" defer></script>
         <script type="text/javascript" src="${baseUrl('/content/js/mdb.min.js')}" defer></script>
+        <script src="${baseUrl('/content/js/ignore_me.js')}" defer></script>
     """
 }
 
@@ -128,17 +125,17 @@ def installStartHtml() {
                 const serverUrl = '${apiServerUrl('')}';
                 const homeUrl = '${getAppEndpointUrl('installStart')}';
             </script>
-            <script src="${baseUrl('/content/js/ignore_me.js')}" defer></script>
+            
             <style>
                 input[type=checkbox]:disabled:checked+label:before {
                     border-color: transparent rgba(75, 243, 72, 0.46) rgba(36, 204, 103, 0.46) transparent;
                 }
             </style>
         </head>
-        <body>
+        <body style="margin-top: 70px; margin-bottom: 50px;">
             <header>
-                <nav class="navbar navbar-dark sticky-top navbar-expand-lg">
-                    <a class="navbar-brand" href="#"><img src="${baseUrl('/content/images/app_logo.png')}" height="30" class="d-inline-block align-top" alt=""> Community Installer</a>
+                <nav class="navbar fixed-top navbar-expand-lg navbar-dark ">
+                    <a class="navbar-brand" href="${getAppEndpointUrl('installStart')}"><img src="${baseUrl('/content/images/app_logo.png')}" height="30" class="d-inline-block align-top" alt=""> Community Installer</a>
                         <!-- Collapse button -->
                         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
                             aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
@@ -149,34 +146,29 @@ def installStartHtml() {
                             <!-- Links -->
                             <ul class="navbar-nav mr-auto">
                                 <li class="nav-item active">
-                                    <a class="nav-link" href="#"><i id="homeBtn" class="fa fa-home"></i> Home <span class="sr-only">(current)</span></a>
+                                    <a class="nav-link" href="${getAppEndpointUrl('installStart')}"><i id="homeBtn" class="fa fa-home"></i> Home <span class="sr-only">(current)</span></a>
                                 </li>
                             </ul>
                             <!-- Links -->
-
-                            <!-- Search form -->
-                            <!-- <form class="form-inline">
-                                <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
-                            </form> -->
                         </div>
                         <!-- Collapsible content -->
                 </nav>
             </header>
             <main>
-                <div class="container" style="max-width: 700px;">
-                    <section>
-                        <div style="width: 100%; height: 200px; text-align: center;">
-                            <h2 id="sectTitle" class="h2-responsive mb-2" style="font-weight: 400; display: none;">Software Installer</h2>
-                            <hr id="sectTitleHr" class="white" style="display: none;">
-                            <div id="loaderDiv" class="row fadeIn fadeOut">
-                                <div class="col-lg-12 mb-r">
+                <div id="mainDiv" class="container" style="max-width: 700px; height: 100%; ">
+                    <section class="px-3">
+                        <div class="w-100" style="text-align: center;">
+                            <h2 id="sectTitle" class="h2-responsive" style="font-weight: 400; display: none;">Software Installer</h2>
+                            <!-- <hr id="sectTitleHr" class="white" style="display: none;"> -->
+                            <div id="loaderDiv" class="flex-row fadeIn fadeOut">
+                                <div class="d-flex flex-column justify-content-center align-items-center" style="height: 200px;">
                                     ${getLoaderAnimation()}
                                 </div>
                             </div>
-                            <div id="listContDiv" class="row fadeIn fadeOut pl-2 pr-2" style="display: none;"></div>
-                            <div id="appViewDiv" class="row fadeIn fadeOut mb-auto" style="display: none;"></div>
+                            <div id="listContDiv" class="row fadeIn fadeOut" style="display: none;"></div>
+                            <div id="appViewDiv" class="row fadeIn fadeOut" style="display: none;"></div>
                             <div id="actResultsDiv" class="row fadeIn fadeOut mb-5" style="display: none;">
-                                <div class="col-lg-12 mb-r">
+                                <div>
                                     <div class="listDiv">
                                         <div id="resultList">
                                             <h3 id="resultsTitle">Install Results</h3>
