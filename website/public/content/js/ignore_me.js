@@ -558,10 +558,14 @@ function addRepoToIde(rname, branch) {
 }
 
 function findAppMatch(srchStr, data) {
-    if (srchStr === undefined) { return data; }
+    if (srchStr === undefined) {
+        return data;
+    }
     if (srchStr.length >= 3) {
         return data.filter(appItem => JSON.stringify(appItem).toString().toLowerCase().includes(srchStr.toLowerCase()));
-    } else { return data; }
+    } else {
+        return data;
+    }
 }
 
 function buildAppList(filterStr = undefined) {
@@ -623,7 +627,6 @@ function buildAppList(filterStr = undefined) {
             html += '\n                 </div>';
             html += '\n             </div>';
             html += '\n         </div>';
-
 
             html += '\n         <div class="d-flex justify-content-start align-items-center">';
             html += '\n             <p class="d-flex my-1 mx-6 justify-content-center"><small class="align-middle">' + appData[i].description + '</small></p>';
@@ -821,11 +824,13 @@ function renderAppView(appName) {
                         html += '\n                   </table>';
                         html += '\n               </div>';
                         html += '\n           </div>';
-                        html += '\n           <div class="d-flex flex-row justify-content-center">';
-                        html += '\n             <button id="installBtn" type="button" class="btn btn-success">Install</button>';
+
+                        html += '\n       </div>';
+                        html += '\n       <div class="col-sm-12">';
+                        html += '\n           <div class="d-flex flex-column justify-content-center align-items-center">';
+                        html += '\n               <button id="installBtn" type="button" class="btn btn-success">Install</button>';
                         html += '\n           </div>';
                         html += '\n       </div>';
-
                         html += '\n   </div>';
                         html += '\n</div>';
                     }
