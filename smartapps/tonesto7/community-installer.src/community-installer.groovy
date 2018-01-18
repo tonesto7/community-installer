@@ -48,11 +48,16 @@ def startPage() {
 
 def mainPage() {
     dynamicPage (name: "mainPage", title: "", install: true, uninstall: true) {
-        def theURL = "https://account.smartthings.com/?redirect=${getAppEndpointUrl("installStart")}"
-        log.trace theURL
+        def theURL = "https://account.smartthings.com?redirect=${getAppEndpointUrl("installStart")}"
+        def samLoginURL = "https://account.smartthings.com/login/samsungaccount?redirect=${URLEncoder.encode(getAppEndpointUrl("installStart"))}"
+        def testUrl = getAppEndpointUrl("installStart")
+        // log.trace theURL
         section("Automatic Setup") {
+            image getAppImg("welcome_img.png")
             paragraph title: "What now?", "Tap on the input below to launch the Installer Web App"
             href "", title: "Get Started", url: theURL, style: "embedded", required: false, description: "", image: ""
+            href "", title: "Samsung Login Test", url: samLoginURL, style: "external", required: false, description: "", image: ""
+            href "", title: "Test Login", url: testUrl, style: "external", required: false, description: "", image: ""
         }
     }
 }
@@ -232,7 +237,7 @@ def getAccessToken() {
     }
 }
 
-def getAppImg(file)	    { return "https://echosistant.com/es5_content/images/$file" }
-def getAppVideo(file)	{ return "https://echosistant.com/es5_content/videos/$file" }
+def getAppImg(file)	    { return "${baseUrl("/content/images/$file")}" }
+def getAppVideo(file)	{ return "${baseUrl("/content/videos/$file")}" }
 def getAppEndpointUrl(subPath)	{ return "${apiServerUrl("/api/smartapps/installations/${app.id}${subPath ? "/${subPath}" : ""}?access_token=${atomicState.accessToken}")}" }
 
