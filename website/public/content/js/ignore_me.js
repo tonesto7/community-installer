@@ -579,7 +579,7 @@ function buildAppList(filterStr = undefined) {
         html += '\n               <div class="row">';
         html += '\n                   <div class="col-md-12 mt-4">';
         html += '\n                       <div class="input-group md-form form-sm form-2 pl-0">';
-        html += '\n                           <input id="appSearchBox" class="form-control my-0 py-1 grey-border" type="text" placeholder="Search" aria-label="Search">';
+        html += '\n                           <input id="appSearchBox" class="form-control grey-border white-text" type="text" placeholder="Search" aria-label="Search">';
         html += '\n                           <span class="input-group-addon waves-effect grey lighten-3" id="basic-addon1"><a><i class="fa fa-search text-grey" aria-hidden="true"></i></a></span>';
         html += '\n                       </div>';
         html += '\n                   </div>';
@@ -628,8 +628,8 @@ function buildAppList(filterStr = undefined) {
             html += '\n             </div>';
             html += '\n         </div>';
 
-            html += '\n         <div class="d-flex justify-content-start align-items-center">';
-            html += '\n             <p class="d-flex my-1 mx-6 justify-content-center"><small class="align-middle">' + appData[i].description + '</small></p>';
+            html += '\n         <div class="d-flex justify-content-start align-items-center my-3" style="border-style: inset; border: 1px solid grey; border-radius: 5px;">';
+            html += '\n             <p class="d-flex m-2 justify-content-center"><small class="align-middle">' + appData[i].description + '</small></p>';
             html += '\n         </div>';
 
             html += '\n         <div class="d-flex w-100 justify-content-between align-items-center">';
@@ -687,23 +687,29 @@ function createAppDevTableItem(objData, type, parent = false, idNum) {
 
     let html = '';
     html += '\n        <tr>';
-    html += '\n           <td class="align-middle">';
-    html += '\n               <div class="d-flex flex-column justify-content-start my-0 form-check' + disabled + '">';
-    html += '\n                   <div class="flex-column justify-content-start">';
-    html += '\n                       <div class="d-flex flex-row">';
-    html += '\n                           <input class="form-check-input align-middle" type="checkbox" value="" id="smartapp' + idNum + '"' + checked + disabled + '>';
-    html += '\n                           <label class="form-check-label align-middle" for="smartapp' + idNum + '"><small class="align-middle">' + objData.name + '</small></label>';
+    html += '\n           <td class="align-middle" style="border: 1px solid grey">';
+    html += '\n               <div class="d-flex flex-column ml-2">';
+    html += '\n                   <div class="d-flex flex-column justify-content-start my-1 form-check' + disabled + '">';
+    html += '\n                       <div class="flex-column justify-content-start">';
+    html += '\n                           <div class="d-flex flex-row">';
+    html += '\n                               <input class="form-check-input align-middle" type="checkbox" value="" id="smartapp' + idNum + '"' + checked + disabled + '>';
+    html += '\n                               <label class="form-check-label align-middle" for="smartapp' + idNum + '"><small class="align-middle">' + objData.name + '</small></label>';
+    html += '\n                           </div>';
     html += '\n                       </div>';
     html += '\n                   </div>';
-    html += '\n              </div>';
+    html += '\n               </div>';
     html += '\n           </td>';
-    html += '\n           <td class="align-middle">';
-    html += '\n               <small class="align-middle"><span class="badge grey white-text align-middle">v' + objData.version + '</span></small>';
+    html += '\n           <td class="align-middle" style="border: 1px solid grey">';
+    html += '\n               <div class="d-flex flex-column align-items-center">';
+    html += '\n                   <small class="align-middle"><span class="badge grey white-text align-middle">v' + objData.version + '</span></small>';
+    html += '\n               </div>';
     html += '\n           </td>';
-    html += '\n           <td class="align-middle">';
-    html += parent === true ? '\n               <small class="align-middle"><span class="badge badge-pill purple white-text align-middle">Parent</span></small>' : '';
-    html += appPub === true ? '\n               <small class="align-middle"><span class="badge badge-pill green white-text align-middle">Publish</span></small>' : '';
-    html += appOauth === true ? '\n               <small class="align-middle"><span class="badge badge-pill red white-text align-middle">OAuth</span></small>' : '';
+    html += '\n           <td class="align-middle" style="border: 1px solid grey">';
+    html += '\n               <div class="d-flex flex-column align-items-center">';
+    html += parent === true ? '\n               <small style="margin: 2px auto;"><span class="badge blue white-text">Parent</span></small>' : '';
+    html += appPub === true ? '\n               <small style="margin: 2px auto;"><span class="badge green white-text">Publish</span></small>' : '';
+    html += appOauth === true ? '\n               <small style="margin: 2px auto;"><span class="badge orange white-text">OAuth</span></small>' : '';
+    html += '\n               </div>';
     html += '\n           </td>';
     html += '\n       </tr>';
 
@@ -749,10 +755,12 @@ function renderAppView(appName) {
                         html += '\n       <div class="flex-row align-center mt-0 mb-1">';
                         html += '\n           <img class="align-center" src="' + manifest.bannerUrl + '" style="height: auto; max-height: 75px;">';
                         html += '\n       </div>';
-                        html += '\n       <small class="white-text"><b>Author:</b> ' + manifest.author + '</small>';
-                        html += '\n       <div class="flex-column align-items-center">';
-                        html += '\n           <div class="d-flex w-100 justify-content-center align-items-center">';
-                        html += '\n               <p class="card-text">' + manifest.description + '</p>';
+                        html += '\n       <div class="flex-row align-center m-3">';
+                        html += '\n           <small class="white-text"><b>Author:</b> ' + manifest.author + '</small>';
+                        html += '\n           <div class="flex-column align-items-center">';
+                        html += '\n               <div class="d-flex w-100 justify-content-center align-items-center">';
+                        html += '\n                   <p class="card-text">' + manifest.description + '</p>';
+                        html += '\n               </div>';
                         html += '\n           </div>';
                         html += '\n       </div>';
                         html += '\n     </div>';
@@ -763,16 +771,16 @@ function renderAppView(appName) {
                         html += '\n<!--App Options Panel-->';
                         html += '\n<div class="card card-body" style="background-color: transparent; margin-bottom: 80px;">';
                         html += '\n   <div class="row">';
-                        html += '\n       <div class="' + (manifest.deviceHandlers.length ? 'col-sm-6' : 'col-sm-12') + ' mb-4">';
+                        html += '\n       <div class="col-xs-12 ' + (manifest.deviceHandlers.length ? 'col-md-6' : 'col-sm-12') + ' mb-4">';
                         html += '\n           <h6 class="h6-responsive white-text"><u>SmartApps</u></h6>';
                         html += '\n           <div class="d-flex justify-content-center">';
-                        html += '\n               <div class="d-flex justify-content-center align-items-center">';
-                        html += '\n                   <table class="table table-sm">';
+                        html += '\n               <div class="d-flex w-100 justify-content-center align-items-center mx-2">';
+                        html += '\n                   <table class="table table-sm table-bordered">';
                         html += '\n                       <thead>';
                         html += '\n                           <tr>';
-                        html += '\n                               <th><div class="flex-column justify-content-center"><small class="align-middle">Name:</small></div></th>';
-                        html += '\n                               <th><small class="align-middle">Version:</small></th>';
-                        html += '\n                               <th><small class="align-middle">Options:</small></th>';
+                        html += '\n                               <th style="border: 1px solid grey;"><div class="text-center"><small class="align-middle">Name:</small></div></th>';
+                        html += '\n                               <th style="border: 1px solid grey;"><div class="text-center"><small class="align-middle">Version:</small></div></th>';
+                        html += '\n                               <th style="border: 1px solid grey;"><div class="text-center"><small class="align-middle">IDE Options:</small></div></th>';
                         html += '\n                           </tr>';
                         html += '\n                       </thead>';
                         html += '\n                       <tbody>';
@@ -795,16 +803,16 @@ function renderAppView(appName) {
 
                         let devcnt = 1;
                         if (manifest.deviceHandlers.length) {
-                            html += '\n       <div class="col-sm-6 mb-4">';
+                            html += '\n       <div class="col-xs-12 col-md-6 mb-4">';
                             html += '\n           <h6 class="h6-responsive white-text"><u>Devices</u></h6>';
                             html += '\n           <div class="d-flex justify-content-center">';
-                            html += '\n               <div class="d-flex justify-content-center align-items-center">';
-                            html += '\n                   <table class="table table-sm">';
+                            html += '\n               <div class="d-flex w-100 justify-content-center align-items-center mx-2">';
+                            html += '\n                   <table class="table table-sm table-bordered">';
                             html += '\n                       <thead>';
                             html += '\n                           <tr>';
-                            html += '\n                               <th><small class="align-middle">Name:</small></th>';
-                            html += '\n                               <th><small class="align-middle">Version:</small></th>';
-                            html += '\n                               <th><small class="align-middle">Options:</small></th>';
+                            html += '\n                               <th style="border: 1px solid grey;"><div class="text-center"><small class="align-middle">Name:</small></div></th>';
+                            html += '\n                               <th style="border: 1px solid grey;"><div class="text-center"><small class="align-middle">Version:</small></div></th>';
+                            html += '\n                               <th style="border: 1px solid grey;"><div class="text-center"><small class="align-middle">IDE Options:</small></div></th>';
                             html += '\n                           </tr>';
                             html += '\n                       </thead>';
                             html += '\n                       <tbody>';

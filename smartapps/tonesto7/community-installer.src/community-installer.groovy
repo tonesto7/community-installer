@@ -50,7 +50,7 @@ def mainPage() {
     dynamicPage (name: "mainPage", title: "", install: true, uninstall: true) {
         def theURL = "https://account.smartthings.com?redirect=${getAppEndpointUrl("installStart")}"
         // log.trace theURL
-        section("Automatic Setup") {
+        section("") {
             image getAppImg("welcome_img.png")
             paragraph title: "What now?", "Tap on the input below to launch the Installer Web App"
             href "", title: "Get Started", url: theURL, style: "embedded", required: false, description: "", image: ""
@@ -132,7 +132,7 @@ def installStartHtml() {
                 }
             </style>
         </head>
-        <body style="margin-top: 70px; margin-bottom: 50px;">
+        <body style="margin-top: 70px; margin-bottom: 50px; overflow-y: hidden;">
             <header>
                 <nav class="navbar fixed-top navbar-expand-lg navbar-dark ">
                     <a class="navbar-brand" href="${getAppEndpointUrl('installStart')}"><img src="${baseUrl('/content/images/app_logo.png')}" height="30" class="d-inline-block align-top" alt=""> Community Installer</a>
@@ -155,9 +155,9 @@ def installStartHtml() {
                 </nav>
             </header>
             <main>
-                <div id="mainDiv" class="container" style="max-width: 700px; height: 100%; ">
+                <div id="mainDiv" class="container" style="min-width: 380px; max-width: 700px; height: 100%; ">
                     <section class="px-3">
-                        <div class="w-100" style="text-align: center;">
+                        <div class="w-100 text-center">
                             <h2 id="sectTitle" class="h2-responsive" style="font-weight: 400; display: none;">Software Installer</h2>
                             <!-- <hr id="sectTitleHr" class="white" style="display: none;"> -->
                             <div id="loaderDiv" class="flex-row fadeIn fadeOut">
@@ -166,7 +166,9 @@ def installStartHtml() {
                                 </div>
                             </div>
                             <div id="listContDiv" class="row fadeIn fadeOut" style="display: none;"></div>
-                            <div id="appViewDiv" class="row fadeIn fadeOut" style="display: none;"></div>
+                            <div id="appViewDiv" class="row fadeIn fadeOut" style="display: none;">
+                            
+                            </div>
                             <div id="actResultsDiv" class="row fadeIn fadeOut mb-5" style="display: none;">
                                 <div>
                                     <div class="listDiv">
