@@ -175,9 +175,12 @@ def installStartHtml() {
                                         <div id="resultList">
                                             <h3 id="resultsTitle">Install Results</h3>
                                             <ul id="resultUl"></ul>
+                                            <h5 id="authResultsTitle">Auth Results</h5>
                                             <ul id="authResultUl"></ul>
-                                            <ul id="devResultUl"></ul>
+                                            <h5 id="appResultsTitle">SmartApp Results</h5>
                                             <ul id="appResultUl"></ul>
+                                            <h5 id="devResultsTitle">Device Results</h5>
+                                            <ul id="devResultUl"></ul>
                                         </div>
                                     </div>
                                     <i id="finishedImg" class='fa fa-check' style="display: none;"></i>

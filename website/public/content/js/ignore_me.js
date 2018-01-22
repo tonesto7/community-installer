@@ -130,12 +130,7 @@ function capitalize(value) {
 }
 
 function addResult(str, good, type = '') {
-    // $('#results').css({ display: 'none' });
-
     $('#listDiv').css({
-        display: 'block'
-    });
-    $('#resultsTitle').css({
         display: 'block'
     });
     let s = "<li><span style='color: " + (good !== false ? '#25c225' : '#FF0000') + ";'>";
@@ -143,15 +138,19 @@ function addResult(str, good, type = '') {
     s += '</span> ' + str + '</li>';
     switch (type) {
         case 'auth':
+            $('#authResultsTitle').css({ display: 'block' });
             $('#authResultUl').append(s);
             break;
         case 'app':
+            $('#appResultsTitle').css({ display: 'block' });
             $('#appResultUl').append(s);
             break;
         case 'device':
+            $('#devResultsTitle').css({ display: 'block' });
             $('#devResultUl').append(s);
             break;
         default:
+            $('#resultsTitle').css({ display: 'block' });
             $('#resultUl').append(s);
             break;
     }
@@ -261,7 +260,7 @@ function processIntall(repoData) {
                                 installError(err, false);
                             })
                             .then(function(resp) {
-                                // console.log('checkIfItemsInstalled: ', resp);
+                                console.log('checkIfItemsInstalled: ', resp);
                                 if (Object.keys(resp).length) {
                                     installAppsToIde(resp)
                                         .catch(function(err) {
@@ -276,7 +275,7 @@ function processIntall(repoData) {
                                                     for (const dh in repoData.deviceHandlers) {
                                                         devItems.push(repoData.deviceHandlers[dh]);
                                                     }
-                                                    checkIfItemsInstalled(devItems, 'app')
+                                                    checkIfItemsInstalled(devItems, 'device')
                                                         .catch(function(err) {
                                                             installError(err, false);
                                                         })
@@ -299,6 +298,32 @@ function processIntall(repoData) {
                                                 } else {
                                                     installComplete('Installs are Complete!<br/>Everything is Good!');
                                                 }
+                                            }
+                                        });
+                                } else if (repoData.deviceHandlers) {
+                                    let devItems = [];
+                                    devItems.push(repoData.deviceHandlers);
+                                    for (const dh in repoData.deviceHandlers) {
+                                        devItems.push(repoData.deviceHandlers[dh]);
+                                    }
+                                    checkIfItemsInstalled(devItems, 'device')
+                                        .catch(function(err) {
+                                            installError(err, false);
+                                        })
+                                        .then(function(resp) {
+                                            if (Object.keys(resp).length) {
+                                                installDevsToIde(resp)
+                                                    .catch(function(err) {
+                                                        installError(err, false);
+                                                    })
+                                                    .then(function(resp) {
+                                                        // console.log('installDevsToIde: ', resp);
+                                                        if (resp === true) {
+                                                            if (Object.keys(repoData.deviceHandlers).length) {
+                                                                installComplete('Installs are Complete!<br/>Everything is Good!');
+                                                            }
+                                                        }
+                                                    });
                                             }
                                         });
                                 } else {
@@ -330,14 +355,14 @@ function installAppsToIde(appNames) {
             makeRequest(doAppRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
                 .catch(function(err) {
                     installError(err, false);
-                    addResult(err + ' Install Apps IDE Issue', false);
+                    addResult(err + ' Install Apps IDE Issue', false, 'app');
                     installComplete('Error!<br/>Try Again Later!', true);
                     reject(err);
                 })
                 .then(function(resp) {
                     updLoaderText('Apps', 'Installed');
                     for (let i in appNames) {
-                        addResult(i + ' App Installed/Published', true);
+                        addResult(i + ' App Installed/Published', true, 'app');
                     }
                     resolve(true);
                 });
@@ -354,14 +379,14 @@ function installDevsToIde(devNames) {
             makeRequest(doDevRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
                 .catch(function(err) {
                     installError(err, false);
-                    addResult(err + ' Install Devices IDE Issue', false);
+                    addResult(err + ' Install Devices IDE Issue', false, 'device');
                     installComplete('Error!<br/>Try Again Later!', true);
                     reject(err);
                 })
                 .then(function(resp) {
                     updLoaderText('Devices', 'Installed');
                     for (let i in devNames) {
-                        addResult(i + ' Device Installed/Published', true);
+                        addResult(i + ' Device Installed/Published', true, 'device');
                     }
                     resolve(true);
                 });
@@ -475,7 +500,7 @@ function checkIfItemsInstalled(itemObj, type) {
         makeRequest(url, 'GET', null)
             .catch(function(err) {
                 installError(err, false);
-                addResult(err + ' Getting ' + capitalize(type) + ' Issue', false);
+                addResult(err + ' Getting ' + capitalize(type) + ' Issue', false, type);
                 reject(err);
             })
             .then(function(resp) {
@@ -492,7 +517,7 @@ function checkIfItemsInstalled(itemObj, type) {
                         for (let i in itemsFnd) {
                             // console.log('itemsFnd: ', itemsFnd[i].name, ' | requested ' + type + ': ' + itemObj[a].name);
                             if (itemsFnd[i].name === itemObj[a].name) {
-                                addResult(itemObj[a].name + ' Exists Already', true);
+                                addResult(itemObj[a].name + ' Exists Already', true, type);
                                 delete itemObj[a];
                                 break;
                             }
@@ -602,7 +627,7 @@ function buildAppList(filterStr = undefined) {
                 console.log('appInstalled: ' + appInstalled, 'instApp: ' + instApp[0].id);
             }
             html += '\n   <tr>';
-            html += '\n     <a href="#" id="' + appData[i].repoName + '" onclick="appItemClicked(this)" class="list-group-item list-group-item-action flex-column align-items-start my-1">';
+            html += '\n     <a href="#" id="' + appData[i].repoName + '" onclick="appItemClicked(this)" class="list-group-item list-group-item-action flex-column align-items-start my-1" style="border-radius: 10px;">';
 
             html += '\n         <div class="d-flex w-100 justify-content-between align-items-center">';
             html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
