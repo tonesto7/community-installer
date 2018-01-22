@@ -111,7 +111,7 @@ function getStAuth() {
             })
             .then(function(response) {
                 if (response !== undefined) {
-                    $('#results').text('');
+                    $('#results').html('');
                     addResult('SmartThings Authentication', true);
                     resolve(true);
                 }
@@ -133,27 +133,33 @@ function addResult(str, good, type = '') {
     $('#listDiv').css({
         display: 'block'
     });
-    let s = "<li><span style='color: " + (good !== false ? '#25c225' : '#FF0000') + ";'>";
+    let s = "<li><small><span style='color: " + (good !== false ? '#25c225' : '#FF0000') + ";'>";
     s += "<i class='fa fa-" + (good !== false ? 'check' : 'exclamation') + "'></i>";
-    s += '</span> ' + str + '</li>';
+    s += '</span> ' + str + '</small></li>';
     switch (type) {
-        case 'auth':
-            $('#authResultsTitle').css({ display: 'block' });
-            $('#authResultUl').append(s);
-            break;
         case 'app':
             $('#appResultsTitle').css({ display: 'block' });
-            $('#appResultUl').append(s);
+            $('#appResultUl').css({ display: 'block' }).append(s);
             break;
         case 'device':
             $('#devResultsTitle').css({ display: 'block' });
-            $('#devResultUl').append(s);
+            $('#devResultUl').css({ display: 'block' }).append(s);
             break;
         default:
-            $('#resultsTitle').css({ display: 'block' });
-            $('#resultUl').append(s);
+            $('#ideResultsTitle').css({ display: 'block' });
+            if (!checkListForDuplicate('#ideResultUl li', str)) {
+                $('#ideResultUl').css({ display: 'block' }).append(s);
+            }
             break;
     }
+}
+
+function checkListForDuplicate(element, str) {
+    let items = [];
+    $(element).each(function() {
+        items.push($(this).text().trim());
+    });
+    return items.includes(str);
 }
 
 function installError(err, reload = true) {
@@ -171,7 +177,7 @@ function installComplete(text, red = false) {
         $('#finishedImg').removeClass('fa-check').addClass('fa-exclamation-circle').css({ color: 'red' });
     }
     $('#actResultsDiv').css({ display: 'block' });
-    $('#results').css({ display: 'block' }).html(text + '<br/><br/>Press Back/Done Now');
+    $('#results').css({ display: 'block' }).html('<small>' + text + '<br/><br/>Press Back/Done Now</small>');
     updSectTitle('', true);
     sessionStorage.removeItem('appsDone');
     sessionStorage.removeItem('refreshCount');
@@ -270,11 +276,7 @@ function processIntall(repoData) {
                                             // console.log('installAppsToIde: ', resp);
                                             if (resp === true) {
                                                 if (repoData.deviceHandlers) {
-                                                    let devItems = [];
-                                                    devItems.push(repoData.deviceHandlers);
-                                                    for (const dh in repoData.deviceHandlers) {
-                                                        devItems.push(repoData.deviceHandlers[dh]);
-                                                    }
+                                                    let devItems = repoData.deviceHandlers;
                                                     checkIfItemsInstalled(devItems, 'device')
                                                         .catch(function(err) {
                                                             installError(err, false);
@@ -293,6 +295,8 @@ function processIntall(repoData) {
                                                                             }
                                                                         }
                                                                     });
+                                                            } else {
+                                                                installComplete('Installs are Complete!<br/>Everything is Good!');
                                                             }
                                                         });
                                                 } else {
@@ -301,11 +305,7 @@ function processIntall(repoData) {
                                             }
                                         });
                                 } else if (repoData.deviceHandlers) {
-                                    let devItems = [];
-                                    devItems.push(repoData.deviceHandlers);
-                                    for (const dh in repoData.deviceHandlers) {
-                                        devItems.push(repoData.deviceHandlers[dh]);
-                                    }
+                                    let devItems = repoData.deviceHandlers;
                                     checkIfItemsInstalled(devItems, 'device')
                                         .catch(function(err) {
                                             installError(err, false);
@@ -324,6 +324,8 @@ function processIntall(repoData) {
                                                             }
                                                         }
                                                     });
+                                            } else {
+                                                installComplete('Installs are Complete!<br/>Everything is Good!');
                                             }
                                         });
                                 } else {
@@ -386,7 +388,7 @@ function installDevsToIde(devNames) {
                 .then(function(resp) {
                     updLoaderText('Devices', 'Installed');
                     for (let i in devNames) {
-                        addResult(i + ' Device Installed/Published', true, 'device');
+                        addResult(devNames[i].name + ' Device Installed/Published', true, 'device');
                     }
                     resolve(true);
                 });
@@ -600,10 +602,10 @@ function buildAppList(filterStr = undefined) {
         html += '\n<div id=listDiv class="clearfix">';
         html += '\n   <div class="listGroup">';
         html += '\n       <div class="card" style="background-color: transparent;">';
-        html += '\n           <div class="card-body p-1">';
-        html += '\n               <div class="row">';
-        html += '\n                   <div class="col-md-12 mt-4">';
-        html += '\n                       <div class="input-group md-form form-sm form-2 pl-0">';
+        html += '\n           <div class="card-body p-2">';
+        html += '\n               <div class="d-flex flex-row justify-content-center align-items-center">';
+        html += '\n                   <div class="col-md-12">';
+        html += '\n                       <div class="input-group md-form form-sm form-2 m-1">';
         html += '\n                           <input id="appSearchBox" class="form-control grey-border white-text" type="text" placeholder="Search" aria-label="Search">';
         html += '\n                           <span class="input-group-addon waves-effect grey lighten-3" id="basic-addon1"><a><i class="fa fa-search text-grey" aria-hidden="true"></i></a></span>';
         html += '\n                       </div>';
@@ -627,7 +629,7 @@ function buildAppList(filterStr = undefined) {
                 console.log('appInstalled: ' + appInstalled, 'instApp: ' + instApp[0].id);
             }
             html += '\n   <tr>';
-            html += '\n     <a href="#" id="' + appData[i].repoName + '" onclick="appItemClicked(this)" class="list-group-item list-group-item-action flex-column align-items-start my-1" style="border-radius: 10px;">';
+            html += '\n     <a href="#" id="' + appData[i].repoName + '" onclick="appItemClicked(this)" class="list-group-item list-group-item-action flex-column align-items-start p-2 mb-2" style="border-radius: 20px;">';
 
             html += '\n         <div class="d-flex w-100 justify-content-between align-items-center">';
             html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
@@ -771,7 +773,7 @@ function renderAppView(appName) {
                         updSectTitle('', true);
                         let cnt = 1;
                         html += '\n     <!--App Description Panel-->';
-                        html += '\n     <div class="card card-body p-1" style="background-color: transparent;">';
+                        html += '\n     <div id="appViewCard" class="card card-body p-1" style="background-color: transparent;">';
                         html += '\n        <div class="flex-row align-right mr-1 mt-1">';
                         html += '\n           <button type="button" id="appCloseBtn" class="close white-text" aria-label="Close">';
                         html += '\n               <span aria-hidden="true">&times;</span>';
@@ -794,7 +796,7 @@ function renderAppView(appName) {
                         // Column 1 start
 
                         html += '\n<!--App Options Panel-->';
-                        html += '\n<div class="card card-body" style="background-color: transparent; margin-bottom: 80px;">';
+                        html += '\n<div class="card card-body" style="background-color: transparent;">';
                         html += '\n   <div class="row">';
                         html += '\n       <div class="col-xs-12 ' + (manifest.deviceHandlers.length ? 'col-md-6' : 'col-sm-12') + ' mb-4">';
                         html += '\n           <h6 class="h6-responsive white-text"><u>SmartApps</u></h6>';
@@ -869,6 +871,8 @@ function renderAppView(appName) {
                     $('#loaderDiv').css({ display: 'none' });
                     $('#actResultsDiv').css({ display: 'none' });
                     $('#appViewDiv').css({ display: 'block' });
+                    // $('#appViewCard').height($('#appViewCard').height() + 50 + 'px');
+
                     $('#appCloseBtn').click(function() {
                         console.log('appCloseBtn');
                         updSectTitle('Select an Item');
@@ -901,10 +905,13 @@ function appItemClicked(appItem) {
 }
 
 function loaderFunc() {
-    $('#results').text('Waiting for connection...');
+    $('#results').html('<small>Waiting for connection...</small>');
     if (sessionStorage.refreshCount === undefined) {
         sessionStorage.refreshCount = '0';
     }
+    $(document).ready(function() {
+        $(this).scrollTop(0);
+    });
     sessionStorage.refreshCount = Number(sessionStorage.refreshCount) + 1;
     updSectTitle('App Details', true);
     // $('#loaderDiv').css({ display: 'block' });
@@ -935,5 +942,7 @@ function loaderFunc() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    buildCoreHtml();
+    console.log($('#bodyDiv').html());
     loaderFunc();
 });

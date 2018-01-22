@@ -17,8 +17,8 @@ definition(
     iconX2Url		: "https://community-installer-34dac.firebaseapp.com/content/images/app_logo.png",
     iconX3Url		: "https://community-installer-34dac.firebaseapp.com/content/images/app_logo.png")
 /**********************************************************************************************************************************************/
-private releaseVer() { return "5.0.018" }
-private appVerDate() { "1-18-2018" }
+private releaseVer() { return "5.0.0122" }
+private appVerDate() { "1-22-2018" }
 /**********************************************************************************************************************************************/
 preferences {
     page name: "startPage"
@@ -61,138 +61,49 @@ def mainPage() {
 def baseUrl(path) {
     return "https://community-installer-34dac.firebaseapp.com${path}"
 }
-def webHeadHtml(title, verStr="") {
-    return """
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <meta name="description" content="${title}">
-        <meta name="author" content="Anthony S.">
-        <meta http-equiv="cleartype" content="on">
-        <meta name="MobileOptimized" content="320">
-        <meta name="HandheldFriendly" content="True">
-        <meta name="apple-mobile-web-app-capable" content="yes">
-        <title>${title}</title>
-        
-        <link rel="shortcut icon" type="image/x-icon" href="${baseUrl('/content/images/app_logo.ico')}" />
-        <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
-        <script src="https://use.fontawesome.com/a81eef09c0.js" defer></script>
-        <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous" defer></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js" async></script>
-        <link href="${baseUrl('/content/css/main_mdb.min.css')}" rel="stylesheet">
-        <link href="${baseUrl('/content/css/main_web.min.css')}" rel="stylesheet">
-    """
-}
-
-def webFooterHtml(verStr="") {
-    return """
-        <footer id="ftrSect" class="page-footer center-on-small-only fixed-bottom m-0 p-0">
-            <div class="footer-copyright">
-                <div class="containter-fluid">
-                    <small>Copyright \u00A9 2018 Anthony Santilli & Corey Lista</small>
-                </div>
-            </div>
-        </footer>
-        <script type="text/javascript" src="${baseUrl('/content/js/bootstrap.min.js')}" defer></script>
-        <script type="text/javascript" src="${baseUrl('/content/js/mdb.min.js')}" defer></script>
-        <script src="${baseUrl('/content/js/ignore_me.js')}" defer></script>
-    """
-}
-
-def getLoaderAnimation() {
-    return """
-        <svg id="loader" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid" class="lds-double-ring">
-            <circle cx="50" cy="50" ng-attr-r="{{config.radius}}" ng-attr-stroke-width="{{config.width}}" ng-attr-stroke="{{config.c1}}" ng-attr-stroke-dasharray="{{config.dasharray}}" fill="none" stroke-linecap="round" r="40" stroke-width="7" stroke="#18B9FF" stroke-dasharray="62.83185307179586 62.83185307179586" transform="rotate(139.357 50 50)">
-            <animateTransform attributeName="transform" type="rotate" calcMode="linear" values="0 50 50;360 50 50" keyTimes="0;1" dur="1.8s" begin="0s" repeatCount="indefinite"></animateTransform>
-            </circle>
-            <circle cx="50" cy="50" ng-attr-r="{{config.radius2}}" ng-attr-stroke-width="{{config.width}}" ng-attr-stroke="{{config.c2}}" ng-attr-stroke-dasharray="{{config.dasharray2}}" ng-attr-stroke-dashoffset="{{config.dashoffset2}}" fill="none" stroke-linecap="round" r="32" stroke-width="7" stroke="#FF7F27" stroke-dasharray="50.26548245743669 50.26548245743669" stroke-dashoffset="50.26548245743669" transform="rotate(-139.357 50 50)">
-            <animateTransform attributeName="transform" type="rotate" calcMode="linear" values="0 50 50;-360 50 50" keyTimes="0;1" dur="1.8s" begin="0s" repeatCount="indefinite"></animateTransform>
-            </circle>
-            <text id="loaderText1" fill="gray" stroke-width="0" x="50%" y="50%" text-anchor="middle" class="loaderText">Please</text>
-            <text id="loaderText2" fill="gray" stroke-width="0" x="50%" y="60%" text-anchor="middle" class="loaderText">Wait</text>
-        </svg>
-    """
-}
 
 def installStartHtml() {
     def randVerStr = "?=${now()}"
     def html = """
         <html lang="en">
-        <head>
-            ${webHeadHtml("SmartThings Community Installer", randVerStr)}
-            <script type="text/javascript">
-                const functionType = "addRepo";
-                const serverUrl = '${apiServerUrl('')}';
-                const homeUrl = '${getAppEndpointUrl('installStart')}';
-            </script>
-            
-            <style>
-                input[type=checkbox]:disabled:checked+label:before {
-                    border-color: transparent rgba(75, 243, 72, 0.46) rgba(36, 204, 103, 0.46) transparent;
-                }
-            </style>
-        </head>
-        <body style="margin-top: 70px; margin-bottom: 50px; overflow-y: hidden;">
-            <header>
-                <nav class="navbar fixed-top navbar-expand-lg navbar-dark ">
-                    <a class="navbar-brand" href="${getAppEndpointUrl('installStart')}"><img src="${baseUrl('/content/images/app_logo.png')}" height="30" class="d-inline-block align-top" alt=""> Community Installer</a>
-                        <!-- Collapse button -->
-                        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-                            aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
-
-                        <!-- Collapsible content -->
-                        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-
-                            <!-- Links -->
-                            <ul class="navbar-nav mr-auto">
-                                <li class="nav-item active">
-                                    <a class="nav-link" href="${getAppEndpointUrl('installStart')}"><i id="homeBtn" class="fa fa-home"></i> Home <span class="sr-only">(current)</span></a>
-                                </li>
-                            </ul>
-                            <!-- Links -->
-                        </div>
-                        <!-- Collapsible content -->
-                </nav>
-            </header>
-            <main>
-                <div id="mainDiv" class="container" style="min-width: 380px; max-width: 700px; height: 100%; ">
-                    <section class="px-3">
-                        <div class="w-100 text-center">
-                            <h2 id="sectTitle" class="h2-responsive" style="font-weight: 400; display: none;">Software Installer</h2>
-                            <!-- <hr id="sectTitleHr" class="white" style="display: none;"> -->
-                            <div id="loaderDiv" class="flex-row fadeIn fadeOut">
-                                <div class="d-flex flex-column justify-content-center align-items-center" style="height: 200px;">
-                                    ${getLoaderAnimation()}
-                                </div>
-                            </div>
-                            <div id="listContDiv" class="row fadeIn fadeOut" style="display: none;"></div>
-                            <div id="appViewDiv" class="row fadeIn fadeOut" style="display: none;">
-                            
-                            </div>
-                            <div id="actResultsDiv" class="row fadeIn fadeOut mb-5" style="display: none;">
-                                <div>
-                                    <div class="listDiv">
-                                        <div id="resultList">
-                                            <h3 id="resultsTitle">Install Results</h3>
-                                            <ul id="resultUl"></ul>
-                                            <h5 id="authResultsTitle">Auth Results</h5>
-                                            <ul id="authResultUl"></ul>
-                                            <h5 id="appResultsTitle">SmartApp Results</h5>
-                                            <ul id="appResultUl"></ul>
-                                            <h5 id="devResultsTitle">Device Results</h5>
-                                            <ul id="devResultUl"></ul>
-                                        </div>
-                                    </div>
-                                    <i id="finishedImg" class='fa fa-check' style="display: none;"></i>
-                                    <div id="results"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-            </main>
-            ${webFooterHtml(randVerStr)}
-        </body>
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+                <meta name="description" content="SmartThings Community Installer">
+                <meta name="author" content="Anthony S.">
+                <meta http-equiv="cleartype" content="on">
+                <meta name="MobileOptimized" content="320">
+                <meta name="HandheldFriendly" content="True">
+                <meta name="apple-mobile-web-app-capable" content="yes">
+                <titleSmartThings Community Installer</title>
+                
+                <link rel="shortcut icon" type="image/x-icon" href="${baseUrl('/content/images/app_logo.ico')}" />
+                <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+                <script src="https://use.fontawesome.com/a81eef09c0.js" defer></script>
+                <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous" async></script>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js" async></script>
+                <link href="${baseUrl('/content/css/main_mdb.min.css')}" rel="stylesheet">
+                <link href="${baseUrl('/content/css/main_web.min.css')}" rel="stylesheet">
+                <script type="text/javascript">
+                    const functionType = "addRepo";
+                    const serverUrl = '${apiServerUrl('')}';
+                    const homeUrl = '${getAppEndpointUrl('installStart')}';
+                    const baseAppUrl = "${baseUrl('')}"
+                </script>
+                <style>
+                    input[type=checkbox]:disabled:checked+label:before {
+                        border-color: transparent rgba(75, 243, 72, 0.46) rgba(36, 204, 103, 0.46) transparent;
+                    }
+                </style>
+            </head>
+            <body style="margin-top: 70px; margin-bottom: 50px; overflow-x: hidden; overflow-y: auto;">
+                <div id="bodyDiv"></div>
+                <script type="text/javascript" src="${baseUrl('/content/js/core_html.js')}"></script>
+                <script type="text/javascript" src="${baseUrl('/content/js/bootstrap.min.js')}" defer></script>
+                <script type="text/javascript" src="${baseUrl('/content/js/mdb.min.js')}" defer></script>
+                <script type="text/javascript" src="${baseUrl('/content/js/ignore_me.js')}" defer></script>
+            </body>
         </html>"""
     render contentType: "text/html", data: html
 }

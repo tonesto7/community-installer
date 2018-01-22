@@ -115,7 +115,7 @@ ul:empty#resultUl {
     display: none;
 }
 
-ul#authResultUl {
+ul#ideResultUl {
     text-align: left;
     font-family: "Swiss 721 W01 Thin";
     color: #c8c2c2;
@@ -127,7 +127,7 @@ ul#authResultUl {
     display: inline-block;
 }
 
-ul:empty#authResultUl {
+ul:empty#ideResultUl {
     display: none;
 }
 
