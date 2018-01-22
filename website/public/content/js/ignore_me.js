@@ -871,8 +871,9 @@ function renderAppView(appName) {
                     $('#loaderDiv').css({ display: 'none' });
                     $('#actResultsDiv').css({ display: 'none' });
                     $('#appViewDiv').css({ display: 'block' });
-                    // $('#appViewCard').height($('#appViewCard').height() + 50 + 'px');
-
+                    console.log('appViewCard (before): ', $('#appViewCard').height());
+                    $('#appViewCard').height($('#appViewCard').height() + 50 + 'px');
+                    console.log('appViewCard (after): ', $('#appViewCard').height());
                     $('#appCloseBtn').click(function() {
                         console.log('appCloseBtn');
                         updSectTitle('Select an Item');
@@ -943,6 +944,5 @@ function loaderFunc() {
 
 document.addEventListener('DOMContentLoaded', function() {
     buildCoreHtml();
-    console.log($('#bodyDiv').html());
     loaderFunc();
 });
