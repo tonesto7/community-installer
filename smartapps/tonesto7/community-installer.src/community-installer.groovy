@@ -3,9 +3,6 @@
 *   Copyright 2018 Anthony Santilli, Corey Lista
 *
 // /**********************************************************************************************************************************************/
-import groovy.json.*
-import java.text.SimpleDateFormat
-
 definition(
     name			: "Community-Installer",
     namespace		: "tonesto7",
@@ -75,7 +72,7 @@ def installStartHtml() {
                 <meta name="MobileOptimized" content="320">
                 <meta name="HandheldFriendly" content="True">
                 <meta name="apple-mobile-web-app-capable" content="yes">
-                <titleSmartThings Community Installer</title>
+                <title>SmartThings Community Installer</title>
                 
                 <link rel="shortcut icon" type="image/x-icon" href="${baseUrl('/content/images/app_logo.ico')}" />
                 <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
