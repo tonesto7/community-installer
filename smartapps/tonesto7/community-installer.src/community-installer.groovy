@@ -65,7 +65,7 @@ def installStartHtml() {
         <html lang="en">
             <head>
                 <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+                <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=0">
                 <meta name="description" content="SmartThings Community Installer">
                 <meta name="author" content="Anthony S.">
                 <meta http-equiv="cleartype" content="on">
