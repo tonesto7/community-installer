@@ -4,12 +4,14 @@ var repoId = '';
 var writableRepos = [];
 var availableApps;
 var availableDevs;
+var currentManifest;
 var retryCnt = 0;
 const authUrl = generateStUrl('hub');
 const fetchReposUrl = generateStUrl('github/writeableRepos');
 const updRepoUrl = generateStUrl('githubAuth/updateRepos');
 const updFormUrl = generateStUrl('githubAuth/updateForm');
 const doAppRepoUpdUrl = generateStUrl('ide/app/doRepoUpdates');
+const doAppRemoveUrl = generateStUrl('ide/app/delete/');
 const doDevRepoUpdUrl = generateStUrl('ide/device/doRepoUpdates');
 const doDevSettingUpdUrl = generateStUrl('ide/device/update');
 const doAppSettingUpdUrl = generateStUrl('ide/app/update');
@@ -26,6 +28,7 @@ function generateStUrl(path) {
 const appsManifest = [{
         namespace: 'tonesto7',
         repoName: 'nest-manager',
+        repoBranch: 'master',
         name: 'NST Manager',
         appName: 'Nest Manager',
         author: 'Anthony S.',
@@ -39,6 +42,7 @@ const appsManifest = [{
     {
         namespace: 'tonesto7',
         repoName: 'echosistant-alpha',
+        repoBranch: 'master',
         name: 'EchoSistant Evolution',
         appName: 'EchoSistant5',
         author: 'EchoSistant Team',
@@ -195,22 +199,22 @@ function updLoaderText(str1, str2) {
     $('#loaderText2').text(str2);
 }
 
-function buildRepoParamString(rdata) {
+function buildRepoParamString(newRepo, existData) {
     let objs = [];
     objs.push('referringController=appIde');
     objs.push('referringAction=apps');
     // objs.push('defaultNamespace=' + repoData.namespace);
     objs.push('repos.id=0');
-    objs.push('repos.owner=' + rdata.namespace);
-    objs.push('repos.name=' + rdata.repoName);
-    objs.push('branch=' + rdata.branch);
-    for (let i in rdata) {
-        objs.push('repos.id=' + rdata[i].id);
-        if (rdata[i].owner !== undefined) {
-            objs.push('repos.owner=' + rdata[i].owner);
+    objs.push('repos.owner=' + newRepo.namespace);
+    objs.push('repos.name=' + newRepo.repoName);
+    objs.push('repos.branch=' + newRepo.repoBranch);
+    for (let i in existData) {
+        objs.push('repos.id=' + existData[i].id);
+        if (existData[i].owner !== undefined) {
+            objs.push('repos.owner=' + existData[i].owner);
         }
-        objs.push('repos.name=' + rdata[i].name);
-        objs.push('repos.branch=' + rdata[i].branch);
+        objs.push('repos.name=' + existData[i].name);
+        objs.push('repos.branch=' + existData[i].branch);
     }
     return objs.join('&');
 }
@@ -219,19 +223,34 @@ function buildInstallParams(repoid, items) {
     let objs = [];
     objs.push('id=' + repoid);
     for (let i in items) {
-        objs.push('added=' + items[i]);
+        objs.push('added=' + items[i].appUrl.toLowerCase());
     }
     objs.push('publishUpdates=true');
     objs.push('execute=Execute+Update');
     return objs.join('&');
 }
 
-function buildSettingParams(objId, item, repoId, objType) {
+function buildSettingParams(objId, item, repoId, repoData, objType) {
     let objs = [];
     objs.push('id=' + objId);
-    objs.push('publishUpdates=true');
-    if (repoId) { objs.push('gitRepo.id=' + repoId); }
+    if (repoId) {
+        objs.push('gitRepo.id=' + repoId);
+    }
+    objs.push('name=' + item.name);
+    objs.push('author=' + repoData.author);
+    objs.push('namespace=' + repoData.namespace);
+    objs.push('description=' + repoData.description);
     if (objType === 'app') {
+        // objs.push('smartAppSettings.name=apiUrl');
+        // objs.push('smartAppSettings.value=');
+        // objs.push('smartAppSettings.name=appUrl');
+        // objs.push('smartAppSettings.value=');
+        // objs.push('smartAppSettings.name=clientId');
+        // objs.push('smartAppSettings.value=');
+        // objs.push('smartAppSettings.name=clientSecret');
+        // objs.push('smartAppSettings.value=');
+        // objs.push('smartAppSettings.name=serverUrl');
+        // objs.push('smartAppSettings.value=');
         if (item.oAuth === true) {
             objs.push('oauthEnabled=true');
         }
@@ -244,23 +263,28 @@ function buildSettingParams(objId, item, repoId, objType) {
 }
 
 function processIntall(repoData) {
+    var allAppItems = [];
+    allAppItems.push(repoData.smartApps.parent);
+    for (const ca in repoData.smartApps.children) {
+        allAppItems.push(repoData.smartApps.children[ca]);
+    }
     retryCnt++;
     getStAuth().then(function(resp) {
         if (resp === true) {
-            checkIdeForRepo(repoData.repoName, 'master')
+            checkIdeForRepo(repoData.repoName, repoData.repoBranch)
                 .catch(function(err) {
                     installError(err, false);
                 })
                 .then(function(resp) {
                     // console.log(resp);
                     if (resp === false) {
-                        addRepoToIde(repoData.repoName, 'master')
+                        addRepoToIde(repoData)
                             .catch(function(err) {
                                 installError(err, false);
                             })
                             .then(function(resp) {
                                 // console.log(resp);
-                                checkIdeForRepo(repoData.repoName, 'master')
+                                checkIdeForRepo(repoData.repoName, repoData.repoBranch, true)
                                     .catch(function(err) {
                                         installError(err, false);
                                     })
@@ -272,20 +296,14 @@ function processIntall(repoData) {
                                     });
                             });
                     } else {
-                        addResult('Repo Exists: (' + repoData.repoName + ')', true);
-                        let appItems = [];
-                        appItems.push(repoData.smartApps.parent);
-                        for (const ca in repoData.smartApps.children) {
-                            appItems.push(repoData.smartApps.children[ca]);
-                        }
-
-                        console.log('appItems: ', appItems);
+                        let appItems = allAppItems;
+                        // console.log('appItems: ', appItems);
                         checkIfItemsInstalled(appItems, 'app')
                             .catch(function(err) {
                                 installError(err, false);
                             })
                             .then(function(resp) {
-                                console.log('checkIfItemsInstalled: ', resp);
+                                // console.log('checkIfItemsInstalled: ', resp);
                                 if (Object.keys(resp).length) {
                                     installAppsToIde(resp)
                                         .catch(function(err) {
@@ -294,36 +312,56 @@ function processIntall(repoData) {
                                         .then(function(resp) {
                                             // console.log('installAppsToIde: ', resp);
                                             if (resp === true) {
-                                                if (repoData.deviceHandlers) {
-                                                    let devItems = repoData.deviceHandlers;
-                                                    checkIfItemsInstalled(devItems, 'device')
-                                                        .catch(function(err) {
-                                                            installError(err, false);
-                                                        })
-                                                        .then(function(resp) {
-                                                            if (Object.keys(resp).length) {
-                                                                installDevsToIde(resp)
-                                                                    .catch(function(err) {
-                                                                        installError(err, false);
-                                                                    })
-                                                                    .then(function(resp) {
-                                                                        // console.log('installDevsToIde: ', resp);
-                                                                        if (resp === true) {
-                                                                            if (Object.keys(repoData.deviceHandlers).length) {
+                                                checkIfItemsInstalled(appItems, 'app', true)
+                                                    .catch(function(err) {
+                                                        installError(err, false);
+                                                    })
+                                                    .then(function(resp) {
+                                                        updateAppSettings(repoData)
+                                                            .catch(function(err) {
+                                                                installError(err, false);
+                                                            })
+                                                            .then(function(resp) {
+                                                                if (repoData.deviceHandlers && repoData.deviceHandlers.length) {
+                                                                    let devItems = repoData.deviceHandlers;
+                                                                    checkIfItemsInstalled(devItems, 'device')
+                                                                        .catch(function(err) {
+                                                                            installError(err, false);
+                                                                        })
+                                                                        .then(function(resp) {
+                                                                            if (Object.keys(resp).length) {
+                                                                                installDevsToIde(resp)
+                                                                                    .catch(function(err) {
+                                                                                        installError(err, false);
+                                                                                    })
+                                                                                    .then(function(resp) {
+                                                                                        // console.log('installDevsToIde: ', resp);
+                                                                                        if (resp === true) {
+                                                                                            checkIfItemsInstalled(devItems, 'device', true)
+                                                                                                .catch(function(err) {
+                                                                                                    installError(err, false);
+                                                                                                })
+                                                                                                .then(function(resp) {
+                                                                                                    if (Object.keys(resp).length) {
+                                                                                                        if (Object.keys(repoData.deviceHandlers).length) {
+                                                                                                            installComplete('Installs are Complete!<br/>Everything is Good!');
+                                                                                                        }
+                                                                                                    }
+                                                                                                });
+                                                                                        }
+                                                                                    });
+                                                                            } else {
                                                                                 installComplete('Installs are Complete!<br/>Everything is Good!');
                                                                             }
-                                                                        }
-                                                                    });
-                                                            } else {
-                                                                installComplete('Installs are Complete!<br/>Everything is Good!');
-                                                            }
-                                                        });
-                                                } else {
-                                                    installComplete('Installs are Complete!<br/>Everything is Good!');
-                                                }
+                                                                        });
+                                                                } else {
+                                                                    installComplete('Installs are Complete!<br/>Everything is Good!');
+                                                                }
+                                                            });
+                                                    });
                                             }
                                         });
-                                } else if (repoData.deviceHandlers) {
+                                } else if (repoData.deviceHandlers && repoData.deviceHandlers.length) {
                                     let devItems = repoData.deviceHandlers;
                                     checkIfItemsInstalled(devItems, 'device')
                                         .catch(function(err) {
@@ -338,9 +376,17 @@ function processIntall(repoData) {
                                                     .then(function(resp) {
                                                         // console.log('installDevsToIde: ', resp);
                                                         if (resp === true) {
-                                                            if (Object.keys(repoData.deviceHandlers).length) {
-                                                                installComplete('Installs are Complete!<br/>Everything is Good!');
-                                                            }
+                                                            checkIfItemsInstalled(devItems, 'device', true)
+                                                                .catch(function(err) {
+                                                                    installError(err, false);
+                                                                })
+                                                                .then(function(resp) {
+                                                                    if (Object.keys(resp).length) {
+                                                                        if (Object.keys(repoData.deviceHandlers).length) {
+                                                                            installComplete('Installs are Complete!<br/>Everything is Good!');
+                                                                        }
+                                                                    }
+                                                                });
                                                         }
                                                     });
                                             } else {
@@ -348,7 +394,13 @@ function processIntall(repoData) {
                                             }
                                         });
                                 } else {
-                                    installComplete('Installs are Complete!<br/>Everything is Good!');
+                                    updateAppSettings(repoData)
+                                        .catch(function(err) {
+                                            installError(err, false);
+                                        })
+                                        .then(function(resp) {
+                                            installComplete('Installs are Complete!<br/>Everything is Good!');
+                                        });
                                 }
                             });
                     }
@@ -363,11 +415,103 @@ function processIntall(repoData) {
     });
 }
 
+function addRepoToIde(repoData) {
+    return new Promise(function(resolve, reject) {
+        updLoaderText('Adding', 'Repo to ST');
+        let repoParams = buildRepoParamString(repoData, writableRepos);
+        // console.log('repoParams: ', repoParams);
+        addResult('Repo Not Found - Adding to IDE', true);
+        makeRequest(updRepoUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
+            .catch(function(err) {
+                installError(err, false);
+                addResult(err + ' Add IDE Github Repo Issue', false);
+                installComplete('Error!<br/>Try Again Later!', true);
+                reject(err);
+            })
+            .then(function(resp) {
+                console.log(resp);
+                updLoaderText('Verifying', 'Repo');
+                checkIdeForRepo(repoData.repoName, repoData.repoBranch)
+                    .catch(function(err) {
+                        installError(err, false);
+                        reject(err);
+                    })
+                    .then(function(resp) {
+                        if (resp === true) {
+                            addResult('Added Repo to IDE', true);
+                            addResult('Verified Repo Added', true);
+                        }
+                        resolve(resp);
+                    });
+                resolve(false);
+            });
+    });
+}
+
+function checkRepoUpdateStatus(objId, type) {
+    let url = '';
+    switch (type) {
+        case 'device':
+            url = devRepoChkUrl;
+            break;
+        case 'app':
+            url = appRepoChkUrl;
+            break;
+    }
+    return new Promise(function(resolve, reject) {
+        makeRequest(url + objId, 'GET', null)
+            .catch(function(err) {
+                reject(err);
+            })
+            .then(function(resp) {
+                // console.log(resp);
+                let data = JSON.parse(resp);
+                if (data.length) {
+                    resolve(data.hasDifference === true);
+                }
+                resolve(false);
+            });
+    });
+}
+
+function checkIdeForRepo(rname, branch, secondPass = false) {
+    return new Promise(function(resolve, reject) {
+        let repoFound = false;
+        updLoaderText('Checking', 'Repos');
+        makeRequest(fetchReposUrl, 'GET', null)
+            .catch(function(err) {
+                installError(err, false);
+                addResult(err + ' Check Repo Issue', false);
+                reject(err);
+            })
+            .then(function(resp) {
+                // console.log(resp);
+                updLoaderText('Analyzing', 'Repos');
+                let respData = JSON.parse(resp);
+                writableRepos = respData;
+                if (respData.length) {
+                    for (let i in respData) {
+                        // console.log(respData[i]);
+                        if (respData[i].name === rname && respData[i].branch === branch) {
+                            if (!secondPass) {
+                                addResult('Repo Exists: (' + respData[i].name + ')', true);
+                            }
+                            repoId = respData[i].id;
+                            repoFound = true;
+                        }
+                    }
+                }
+                resolve(repoFound);
+            });
+    });
+}
+
 function installAppsToIde(appNames) {
     return new Promise(function(resolve, reject) {
         updLoaderText('Beginning', 'Installs');
         // console.log('repoParams: ', repoParams);
         if (appNames) {
+            updLoaderText('Installing', 'SmartApps');
             let repoParams = buildInstallParams(repoId, appNames);
             makeRequest(doAppRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
                 .catch(function(err) {
@@ -379,10 +523,85 @@ function installAppsToIde(appNames) {
                 .then(function(resp) {
                     updLoaderText('Apps', 'Installed');
                     for (let i in appNames) {
-                        addResult(i + ' App Installed/Published', true, 'app');
+                        addResult(appNames[i].name + ' App Installed/Published', true, 'app');
                     }
                     resolve(true);
                 });
+        }
+    });
+}
+
+function removeAppsFromIde(appNames) {
+    return new Promise(function(resolve, reject) {
+        let allAppItems = [];
+        for (const ca in appNames.smartApps.children) {
+            allAppItems.push(appNames.smartApps.children[ca]);
+        }
+        allAppItems.push(appNames.smartApps.parent);
+        updLoaderText('Beginning', 'Removal');
+        // console.log('repoParams: ', repoParams);
+        if (allAppItems) {
+            for (const i in allAppItems) {
+                let appId = availableApps.filter(app => app.name === allAppItems[i].name);
+                if (appId.length && appId[0] && appId[0].id) {
+                    makeRequest(doAppRemoveUrl + appId[0].id, 'GET', null)
+                        .catch(function(err) {
+                            installError(err, false);
+                            addResult(err + ' App Removal IDE Issue', false, 'app');
+                            installComplete('Error!<br/>Try Again Later!', true);
+                            reject(err);
+                        })
+                        .then(function(resp) {
+                            updLoaderText('Apps', 'Removed');
+                            addResult(allAppItems[i].name + ' App Removed', true, 'app');
+                            installComplete('Removals are Complete!<br/>Everything is Good!');
+                        });
+                } else {
+                    installComplete('Removals are Complete!<br/>Everything is Good!');
+                }
+            }
+        } else {
+            installComplete('Removals are Complete!<br/>Everything is Good!');
+        }
+    });
+}
+
+function updateAppSettings(repoData) {
+    return new Promise(function(resolve, reject) {
+        updLoaderText('Modifying', 'Settings');
+        var allAppItems = [];
+        allAppItems.push(repoData.smartApps.parent);
+        for (const ca in repoData.smartApps.children) {
+            allAppItems.push(repoData.smartApps.children[ca]);
+        }
+        let updApps = allAppItems.filter(app => app.oAuth === true);
+        if (updApps.length) {
+            for (const i in updApps) {
+                let appList = availableApps.filter(app => app.name === updApps[i].name);
+                if (appList.length) {
+                    for (const al in appList) {
+                        let appParams = buildSettingParams(appList[al].id, updApps[i], repoId, repoData, 'app');
+                        makeRequest(doAppSettingUpdUrl, 'POST', appParams, null, null, 'application/x-www-form-urlencoded', '', true)
+                            .catch(function(err) {
+                                installError(err, false);
+                                addResult(err + 'App Settings Update Issue', false, 'app');
+                                installComplete('Error!<br/>Try Again Later!', true);
+                                reject(err);
+                            })
+                            .then(function(resp) {
+                                // updLoaderText('Apps', 'Installed');
+                                for (let i in updApps) {
+                                    addResult(updApps[i].name + ' OAuth Enabled', true, 'app');
+                                }
+                                if (i + 1 === updApps.length) {
+                                    resolve(true);
+                                }
+                            });
+                    }
+                }
+            }
+        } else {
+            resolve(true);
         }
     });
 }
@@ -392,6 +611,7 @@ function installDevsToIde(devNames) {
         updLoaderText('Beginning', 'Installs');
         // console.log('repoParams: ', repoParams);
         if (devNames) {
+            updLoaderText('Installing', 'Devices');
             let repoParams = buildInstallParams(repoId, devNames);
             makeRequest(doDevRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
                 .catch(function(err) {
@@ -446,62 +666,7 @@ function getAvailableAppsDevices(updDom = false) {
     });
 }
 
-function checkRepoUpdateStatus(objId, type) {
-    let url = '';
-    switch (type) {
-        case 'device':
-            url = devRepoChkUrl;
-            break;
-        case 'app':
-            url = appRepoChkUrl;
-            break;
-    }
-    return new Promise(function(resolve, reject) {
-        makeRequest(url + objId, 'GET', null)
-            .catch(function(err) {
-                reject(err);
-            })
-            .then(function(resp) {
-                // console.log(resp);
-                let data = JSON.parse(resp);
-                if (data.length) {
-                    resolve(data.hasDifference === true);
-                }
-                resolve(false);
-            });
-    });
-}
-
-function checkIdeForRepo(rname, branch) {
-    return new Promise(function(resolve, reject) {
-        let repoFound = false;
-        updLoaderText('Checking', 'Repos');
-        makeRequest(fetchReposUrl, 'GET', null)
-            .catch(function(err) {
-                installError(err, false);
-                addResult(err + ' Check Repo Issue', false);
-                reject(err);
-            })
-            .then(function(resp) {
-                // console.log(resp);
-                updLoaderText('Analyzing', 'Repos');
-                let respData = JSON.parse(resp);
-                writableRepos = respData;
-                if (respData.length) {
-                    for (let i in respData) {
-                        // console.log(respData[i]);
-                        if (respData[i].name === rname && respData[i].branch === branch) {
-                            repoId = respData[i].id;
-                            repoFound = true;
-                        }
-                    }
-                }
-                resolve(repoFound);
-            });
-    });
-}
-
-function checkIfItemsInstalled(itemObj, type) {
+function checkIfItemsInstalled(itemObj, type, secondPass = false) {
     let url = '';
     switch (type) {
         case 'device':
@@ -534,7 +699,9 @@ function checkIfItemsInstalled(itemObj, type) {
                         for (let i in itemsFnd) {
                             // console.log('itemsFnd: ', itemsFnd[i].name, ' | requested ' + type + ': ' + itemObj[a].name);
                             if (itemsFnd[i].name === itemObj[a].name) {
-                                addResult(itemObj[a].name + ' Exists Already', true, type);
+                                if (!secondPass) {
+                                    addResult(itemObj[a].name + ' Exists Already', true, type);
+                                }
                                 delete itemObj[a];
                                 break;
                             }
@@ -548,7 +715,6 @@ function checkIfItemsInstalled(itemObj, type) {
 
 function getProjectManifest(url) {
     return new Promise(function(resolve, reject) {
-        // console.log('apps:', apps);
         updLoaderText('Getting', 'Manifest');
         makeRequest(url, 'GET', null)
             .catch(function(err) {
@@ -562,39 +728,6 @@ function getProjectManifest(url) {
                     resolve(mani);
                 }
                 resolve(undefined);
-            });
-    });
-}
-
-function addRepoToIde(rname, branch) {
-    return new Promise(function(resolve, reject) {
-        updLoaderText('Adding', 'Repo to ST');
-        let repoParams = buildRepoParamString(writableRepos);
-        // console.log('repoParams: ', repoParams);
-        addResult('Repo Not Found - Adding to IDE', true);
-        makeRequest(updRepoUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
-            .catch(function(err) {
-                installError(err, false);
-                addResult(err + ' Add IDE Github Repo Issue', false);
-                installComplete('Error!<br/>Try Again Later!', true);
-                reject(err);
-            })
-            .then(function(resp) {
-                console.log(resp);
-                updLoaderText('Verifying', 'Repo');
-                checkIdeForRepo(rname, 'master')
-                    .catch(function(err) {
-                        installError(err, false);
-                        reject(err);
-                    })
-                    .then(function(resp) {
-                        if (resp === true) {
-                            addResult('Added Repo to IDE', true);
-                            addResult('Verified Repo Added', true);
-                        }
-                        resolve(resp);
-                    });
-                resolve(false);
             });
     });
 }
@@ -613,6 +746,7 @@ function findAppMatch(srchStr, data) {
 function buildAppList(filterStr = undefined) {
     let html = '';
     let appData = findAppMatch(filterStr, appsManifest);
+    currentManifest = appData;
     if (appData.length > 0) {
         html += '\n<div id=listDiv class="clearfix">';
         html += '\n   <div class="listGroup">';
@@ -622,7 +756,7 @@ function buildAppList(filterStr = undefined) {
         html += '\n                   <div class="col-md-12">';
         html += '\n                       <div class="input-group md-form form-sm form-2 m-1">';
         html += '\n                           <input id="appSearchBox" class="form-control grey-border white-text" type="text" placeholder="Search" aria-label="Search">';
-        html += '\n                           <span class="input-group-addon waves-effect grey lighten-3" id="basic-addon1"><a><i class="fa fa-search text-grey" aria-hidden="true"></i></a></span>';
+        html += '\n                           <span class="input-group-addon waves-effect grey lighten-3" id="search-bar"><a><i class="fa fa-search text-grey" aria-hidden="true"></i></a></span>';
         html += '\n                       </div>';
         html += '\n                   </div>';
         html += '\n               </div>';
@@ -712,7 +846,7 @@ function buildAppList(filterStr = undefined) {
     $('#loaderDiv').css({ display: 'none' });
     $('#actResultsDiv').css({ display: 'none' });
     $('#appViewDiv').css({ display: 'none' });
-    $('#basic-addon1').click(function() {
+    $('#search-bar').click(function() {
         let srchVal = $('#appSearchBox').val();
         console.log('search clicked: ' + srchVal);
         buildAppList(srchVal);
@@ -788,7 +922,7 @@ function renderAppView(appName) {
                         updSectTitle('', true);
                         let cnt = 1;
                         html += '\n     <!--App Description Panel-->';
-                        html += '\n     <div id="appViewCard" class="card card-body p-1" style="background-color: transparent;">';
+                        html += '\n     <div class="card card-body p-1" style="background-color: transparent;">';
                         html += '\n        <div class="flex-row align-right mr-1 mt-1">';
                         html += '\n           <button type="button" id="appCloseBtn" class="close white-text" aria-label="Close">';
                         html += '\n               <span aria-hidden="true">&times;</span>';
@@ -811,7 +945,7 @@ function renderAppView(appName) {
                         // Column 1 start
 
                         html += '\n<!--App Options Panel-->';
-                        html += '\n<div class="card card-body" style="background-color: transparent;">';
+                        html += '\n<div id="appViewCard" class="card card-body" style="background-color: transparent;">';
                         html += '\n   <div class="row">';
                         html += '\n       <div class="col-xs-12 ' + (manifest.deviceHandlers.length ? 'col-md-6' : 'col-sm-12') + ' mb-4">';
                         html += '\n           <h6 class="h6-responsive white-text"><u>SmartApps</u></h6>';
@@ -875,6 +1009,7 @@ function renderAppView(appName) {
                         html += '\n       <div class="col-sm-12">';
                         html += '\n           <div class="d-flex flex-column justify-content-center align-items-center">';
                         html += '\n               <button id="installBtn" type="button" class="btn btn-success">Install</button>';
+                        html += '\n               <button id="removeBtn" type="button" class="btn btn-danger">Remove</button>';
                         html += '\n           </div>';
                         html += '\n       </div>';
                         html += '\n   </div>';
@@ -886,9 +1021,10 @@ function renderAppView(appName) {
                     $('#loaderDiv').css({ display: 'none' });
                     $('#actResultsDiv').css({ display: 'none' });
                     $('#appViewDiv').css({ display: 'block' });
-                    console.log('appViewCard (before): ', $('#appViewCard').height());
-                    $('#appViewCard').height($('#appViewCard').height() + 50 + 'px');
-                    console.log('appViewCard (after): ', $('#appViewCard').height());
+                    let appViewCard = $('#appViewCard');
+                    if (appViewCard.height() > 390) {
+                        appViewCard.height(appViewCard.height() + 50 + 'px');
+                    }
                     $('#appCloseBtn').click(function() {
                         console.log('appCloseBtn');
                         updSectTitle('Select an Item');
@@ -904,7 +1040,19 @@ function renderAppView(appName) {
                         $('#listContDiv').css({ display: 'none' });
                         $('#loaderDiv').css({ display: 'block' });
                         $('#actResultsDiv').css({ display: 'block' });
+                        scrollToTop();
                         processIntall(manifest);
+                        // alert("I'm not ready to do this yet");
+                    });
+                    $('#removeBtn').click(function() {
+                        updSectTitle('Removal Progress');
+                        $('#appViewDiv').html('');
+                        $('#appViewDiv').css({ display: 'none' });
+                        $('#listContDiv').css({ display: 'none' });
+                        $('#loaderDiv').css({ display: 'block' });
+                        $('#actResultsDiv').css({ display: 'block' });
+                        scrollToTop();
+                        removeAppsFromIde(manifest);
                         // alert("I'm not ready to do this yet");
                     });
                     new WOW().init();
@@ -920,14 +1068,18 @@ function appItemClicked(appItem) {
     }
 }
 
+function scrollToTop() {
+    $(document).ready(function() {
+        $(this).scrollTop(0);
+    });
+}
+
 function loaderFunc() {
     $('#results').html('<small>Waiting for connection...</small>');
     if (sessionStorage.refreshCount === undefined) {
         sessionStorage.refreshCount = '0';
     }
-    $(document).ready(function() {
-        $(this).scrollTop(0);
-    });
+    scrollToTop();
     sessionStorage.refreshCount = Number(sessionStorage.refreshCount) + 1;
     updSectTitle('App Details', true);
     // $('#loaderDiv').css({ display: 'block' });

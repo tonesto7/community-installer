@@ -45,7 +45,7 @@ function buildCoreHtml() {
     html += '\n                       <div id="actResultsDiv" class="row fadeIn fadeOut mb-5" style="display: none;">';
     html += '\n                           <div class="listDiv">';
     html += '\n                               <div id="resultList">';
-    html += '\n                                   <div class="card card-body" style="background-color: transparent;">';
+    html += '\n                                   <div class="card card-body" style="background-color: transparent; line-height:1.0;">';
 
     html += '\n                                       <div class="row">';
     html += '\n                                           <div class="d-flex w-100 flex-column mb-3">';
