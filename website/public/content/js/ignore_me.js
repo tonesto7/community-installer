@@ -26,9 +26,6 @@ function generateStUrl(path) {
 }
 
 const appsManifest = [{
-        namespace: 'tonesto7',
-        repoName: 'nest-manager',
-        repoBranch: 'master',
         name: 'NST Manager',
         appName: 'Nest Manager',
         author: 'Anthony S.',
@@ -37,25 +34,24 @@ const appsManifest = [{
         videoUrl: 'http://f.cl.ly/items/3O2L03471l2K3E3l3K1r/Zombie%20Kid%20Likes%20Turtles.mp4',
         photoUrl: 'https://raw.githubusercontent.com/tonesto7/nest-manager/master/Images/App/nst_manager_5.png',
         iconUrl: 'https://raw.githubusercontent.com/tonesto7/nest-manager/master/Images/App/nst_manager_5.png',
-        manifestUrl: 'https://cdn.rawgit.com/tonesto7/nest-manager/master/installerManifest.json'
+        manifestUrl: 'https://rawgit.com/tonesto7/nest-manager/master/installerManifest.json',
+        repoName: 'nest-manager'
     },
     {
-        namespace: 'tonesto7',
-        repoName: 'echosistant-alpha',
-        repoBranch: 'master',
         name: 'EchoSistant Evolution',
         appName: 'EchoSistant5',
-        author: 'EchoSistant Team',
+        author: 'Echosistant Team',
         description: 'The Ultimate Voice Controlled Assistant Using Alexa Enabled Devices.',
         category: 'My Apps',
         videoUrl: 'http://f.cl.ly/items/3O2L03471l2K3E3l3K1r/Zombie%20Kid%20Likes%20Turtles.mp4',
         photoUrl: 'https://echosistant.com/es5_content/images/Echosistant_V5.png',
         iconUrl: 'https://echosistant.com/es5_content/images/Echosistant_V5.png',
-        manifestUrl: 'https://raw.githubusercontent.com/BamaRayne/Echosistant/master/installerManifest.json'
+        manifestUrl: 'https://raw.githubusercontent.com/BamaRayne/Echosistant/master/installerManifest.json',
+        repoName: 'echosistant-alpha'
     }
 ];
 
-function makeRequest(url, method, message, appId = null, appDesc = null, contentType = null, responseType = null, allow500 = false) {
+function makeRequest(url, method, message, appId = null, appDesc = null, contentType = null, responseType = null, anyStatus = false) {
     return new Promise(function(resolve, reject) {
         var xhr = new XMLHttpRequest();
         url += appId || '';
@@ -72,7 +68,7 @@ function makeRequest(url, method, message, appId = null, appDesc = null, content
                     } else {
                         resolve(xhr.response);
                     }
-                } else if (xhr.status === 500 && allow500 === true) {
+                } else if ((xhr.status === 500 || xhr.status === 302) && anyStatus === true) {
                     resolve(xhr.response);
                 } else {
                     reject(Error(xhr.statusText));
@@ -205,7 +201,7 @@ function buildRepoParamString(newRepo, existData) {
     objs.push('referringAction=apps');
     // objs.push('defaultNamespace=' + repoData.namespace);
     objs.push('repos.id=0');
-    objs.push('repos.owner=' + newRepo.namespace);
+    objs.push('repos.owner=' + newRepo.repoOwner);
     objs.push('repos.name=' + newRepo.repoName);
     objs.push('repos.branch=' + newRepo.repoBranch);
     for (let i in existData) {
@@ -230,30 +226,35 @@ function buildInstallParams(repoid, items) {
     return objs.join('&');
 }
 
-function buildSettingParams(objId, item, repoId, repoData, objType) {
+function buildSettingParams(objData, item, repoId, repoData, objType) {
     let objs = [];
-    objs.push('id=' + objId);
+    objs.push('id=' + objData.id);
     if (repoId) {
         objs.push('gitRepo.id=' + repoId);
     }
-    objs.push('name=' + item.name);
-    objs.push('author=' + repoData.author);
+    objs.push('name=' + objData.name);
+    objs.push('author=' + objData.author);
     objs.push('namespace=' + repoData.namespace);
     objs.push('description=' + repoData.description);
+    objs.push('iconUrl=' + objData.iconUrl);
+    objs.push('iconX2Url=' + objData.iconX2Url);
+    objs.push('iconX3Url=' + objData.iconX3Url);
     if (objType === 'app') {
-        // objs.push('smartAppSettings.name=apiUrl');
-        // objs.push('smartAppSettings.value=');
-        // objs.push('smartAppSettings.name=appUrl');
-        // objs.push('smartAppSettings.value=');
-        // objs.push('smartAppSettings.name=clientId');
-        // objs.push('smartAppSettings.value=');
-        // objs.push('smartAppSettings.name=clientSecret');
-        // objs.push('smartAppSettings.value=');
-        // objs.push('smartAppSettings.name=serverUrl');
-        // objs.push('smartAppSettings.value=');
         if (item.oAuth === true) {
             objs.push('oauthEnabled=true');
+            objs.push('webServerRedirectUri=');
+            objs.push('displayName=');
+            objs.push('displayLink=');
         }
+        if (item.appSettings.length) {
+            for (const as in item.appSettings) {
+                objs.push('smartAppSettings.name=' + as);
+                objs.push('smartAppSettings.value=' + item.appSettings[as]);
+            }
+        }
+        objs.push('photoUrls=');
+        objs.push('videoUrls.0.videoUrl=');
+        objs.push('videoUrls.0.thumbnailUrl=');
         objs.push('update=Update');
     }
     if (objType === 'device') {
@@ -276,7 +277,7 @@ function processIntall(repoData) {
                     installError(err, false);
                 })
                 .then(function(resp) {
-                    // console.log(resp);
+                    console.log(resp);
                     if (resp === false) {
                         addRepoToIde(repoData)
                             .catch(function(err) {
@@ -394,13 +395,7 @@ function processIntall(repoData) {
                                             }
                                         });
                                 } else {
-                                    updateAppSettings(repoData)
-                                        .catch(function(err) {
-                                            installError(err, false);
-                                        })
-                                        .then(function(resp) {
-                                            installComplete('Installs are Complete!<br/>Everything is Good!');
-                                        });
+                                    installComplete('Installs are Complete!<br/>Everything is Good!');
                                 }
                             });
                     }
@@ -580,8 +575,8 @@ function updateAppSettings(repoData) {
                 let appList = availableApps.filter(app => app.name === updApps[i].name);
                 if (appList.length) {
                     for (const al in appList) {
-                        let appParams = buildSettingParams(appList[al].id, updApps[i], repoId, repoData, 'app');
-                        makeRequest(doAppSettingUpdUrl, 'POST', appParams, null, null, 'application/x-www-form-urlencoded', '', true)
+                        let appParams = buildSettingParams(appList[al], updApps[i], repoId, repoData, 'app');
+                        makeRequest(doAppSettingUpdUrl, 'POST', appParams, null, null, 'application/x-www-form-urlencoded', 'text/html,application/xhtml+xml,application/xml;', true)
                             .catch(function(err) {
                                 installError(err, false);
                                 addResult(err + 'App Settings Update Issue', false, 'app');
@@ -598,6 +593,8 @@ function updateAppSettings(repoData) {
                                 }
                             });
                     }
+                } else {
+                    resolve(true);
                 }
             }
         } else {
@@ -678,11 +675,11 @@ function checkIfItemsInstalled(itemObj, type, secondPass = false) {
     }
     return new Promise(function(resolve, reject) {
         // console.log('apps:', apps);
-        updLoaderText('Getting', capitalize(type));
+        updLoaderText('Getting', capitalize(type) + ' Data');
         makeRequest(url, 'GET', null)
             .catch(function(err) {
                 installError(err, false);
-                addResult(err + ' Getting ' + capitalize(type) + ' Issue', false, type);
+                addResult(err + ' Getting ' + capitalize(type) + 's Issue', false, type);
                 reject(err);
             })
             .then(function(resp) {
@@ -743,25 +740,32 @@ function findAppMatch(srchStr, data) {
     }
 }
 
+function searchForApp(evtSender) {
+    let srchVal = $('#appSearchBox').val();
+    console.log('AppSearch Event (' + evtSender + '): ' + srchVal);
+    buildAppList(srchVal);
+}
+
 function buildAppList(filterStr = undefined) {
     let html = '';
     let appData = findAppMatch(filterStr, appsManifest);
     currentManifest = appData;
+    html += '\n           <div class="d-flex flex-row justify-content-center align-items-center">';
+    html += '\n               <div class="d-flex w-100 flex-column ml-2">';
+    html += '\n                <form>';
+    html += '\n                   <div class="input-group md-form form-sm form-2 mb-0">';
+    html += '\n                       <input id="appSearchBox" class="form-control grey-border white-text" type="text" placeholder="Search" aria-label="Search">';
+    html += '\n                       <span class="input-group-addon waves-effect grey lighten-3" id="searchBtn"><a><i class="fa fa-search text-grey" aria-hidden="true"></i></a></span>';
+    html += '\n                   </div>';
+    html += '\n                </form>';
+    html += '\n               </div>';
+    html += '\n           </div>';
     if (appData.length > 0) {
         html += '\n<div id=listDiv class="clearfix">';
         html += '\n   <div class="listGroup">';
-        html += '\n       <div class="card" style="background-color: transparent;">';
-        html += '\n           <div class="card-body p-2">';
-        html += '\n               <div class="d-flex flex-row justify-content-center align-items-center">';
-        html += '\n                   <div class="col-md-12">';
-        html += '\n                       <div class="input-group md-form form-sm form-2 m-1">';
-        html += '\n                           <input id="appSearchBox" class="form-control grey-border white-text" type="text" placeholder="Search" aria-label="Search">';
-        html += '\n                           <span class="input-group-addon waves-effect grey lighten-3" id="search-bar"><a><i class="fa fa-search text-grey" aria-hidden="true"></i></a></span>';
-        html += '\n                       </div>';
-        html += '\n                   </div>';
-        html += '\n               </div>';
-        html += '\n               <table class="table table-sm">';
-        html += '\n                   <tbody>';
+        html += '\n       <div class="card card-body card-outline p-2 mb-0" style="background-color: transparent;">';
+        html += '\n           <table class="table table-sm mb-0">';
+        html += '\n               <tbody>';
 
         for (let i in appData) {
             let instApp = availableApps.filter(app => app.name.toString() === appData[i].appName.toString());
@@ -777,8 +781,9 @@ function buildAppList(filterStr = undefined) {
             if (instApp[0] !== undefined) {
                 console.log('appInstalled: ' + appInstalled, 'instApp: ' + instApp[0].id);
             }
-            html += '\n   <tr>';
-            html += '\n     <a href="#" id="' + appData[i].repoName + '" onclick="appItemClicked(this)" class="list-group-item list-group-item-action flex-column align-items-start p-2 mb-2" style="border-radius: 20px;">';
+            html += '\n   <tr style="border-bottom-style: hidden; border-top-style: hidden;">';
+            html += '\n   <td class="py-1">';
+            html += '\n     <a href="#" id="' + appData[i].repoName + '" onclick="appItemClicked(this)" class="list-group-item list-group-item-action flex-column align-items-start p-2" style="border-radius: 20px;">';
 
             html += '\n         <div class="d-flex w-100 justify-content-between align-items-center">';
             html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
@@ -831,25 +836,33 @@ function buildAppList(filterStr = undefined) {
             html += '\n             </div>';
             html += '\n         </div>';
             html += '\n     </a>';
+            html += '\n   </td>';
             html += '\n   </tr>';
         }
-        html += '\n                </table>';
-        html += '\n             </tbody>';
-        html += '\n         </div>';
+        html += '\n            </table>';
+        html += '\n         </tbody>';
         html += '\n      </div>';
         html += '\n   </div>';
         html += '\n</div>';
+    } else {
+        html += '\n  <h6>No Items Found</h6>';
     }
+
     updSectTitle('Select an Item');
     $('#listContDiv').html('').html(html);
     $('#listContDiv').css({ display: 'block' });
     $('#loaderDiv').css({ display: 'none' });
     $('#actResultsDiv').css({ display: 'none' });
     $('#appViewDiv').css({ display: 'none' });
-    $('#search-bar').click(function() {
-        let srchVal = $('#appSearchBox').val();
-        console.log('search clicked: ' + srchVal);
-        buildAppList(srchVal);
+
+    $('#appSearchBox').keypress(function(e) {
+        if (e.which == 13) {
+            searchForApp('KeyPress');
+            return false;
+        }
+    });
+    $('#searchBtn').click(function() {
+        searchForApp('Clicked');
     });
     new WOW().init();
 }

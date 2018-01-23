@@ -1,71 +1,82 @@
 {
-    "namespace": "github UserName",
-    "repoName": "github AppName",
-    "name": "SmartApp",
-    "author": "Who Dis?",
-    "description": "This SmartApp is used to do FUN things!",
+    "namespace": "tonesto7",
+    "repoOwner": "tonesto7",
+    "repoName": "nest-manager",
+    "repoBranch": "master",
+    "name": "NST Manager",
+    "author": "Anthony S.",
+    "description": "The Best Solution to integrate your Nest Products with SmartThings.",
     "category": "My Apps",
     "videoUrl": "http://f.cl.ly/items/3O2L03471l2K3E3l3K1r/Zombie%20Kid%20Likes%20Turtles.mp4",
-    "photoUrl": "https://s3.amazonaws.com/smartapp-icons/Convenience/App.png",
-    "bannerUrl": "https://echosistant.com/es5_content/images/es5_banner.png",
-    "smartApp": {
+    "photoUrl": "https://raw.githubusercontent.com/tonesto7/nest-manager/master/Images/App/nst_manager_5.png",
+    "bannerUrl": "https://raw.githubusercontent.com/tonesto7/nest-manager/master/Images/App/nst_manager_5_banner.png",
+    "keywords": ["nest", "thermostat", "nst"],
+    "smartApps": {
         "parent": {
-            "name": "SmartAppName",
-            "iconUrl": "https://s3.amazonaws.com/smartapp-icons/Convenience/App.png",
+            "name": "Nest Manager",
+            "iconUrl": "https://raw.githubusercontent.com/master/Images/App/nst_manager_5.png",
             "published": true,
             "oAuth": true,
-            "appUrl": "smartapps/namespace/smartappname.src/smartappname.groovy"
+            "version": "5.3.2",
+            "appSettings": {
+                "someKey": "someValue",
+                "someKey2": "someValue2"
+            },
+            "appUrl": "smartapps/tonesto7/nest-manager.src/nest-manager.groovy"
         },
         "children": [{
-                "name": "child1",
-                "iconUrl": "https://s3.amazonaws.com/smartapp-icons/Convenience/App.png",
-                "published": false,
-                "oAuth": false,
-                "appUrl": "smartapps/namespace/smartappname.src/smartappname.groovy",
-                "optional": false
+            "name": "NST Automations",
+            "iconUrl": "https://raw.githubusercontent.com/master/Images/App/nst_automations_5.png",
+            "published": true,
+            "oAuth": false,
+            "version": "5.3.1",
+            "appSettings": {
+                "someKey": "someValue",
+                "someKey2": "someValue2"
             },
-            {
-                "name": "child2",
-                "iconUrl": "https://s3.amazonaws.com/smartapp-icons/Convenience/App.png",
-                "published": false,
-                "oAuth": false,
-                "appUrl": "smartapps/namespace/smartappname.src/smartappname.groovy",
-                "optional": false,
-                "children": [{
-                    "name": "child1",
-                    "iconUrl": "https://s3.amazonaws.com/smartapp-icons/Convenience/App.png",
-                    "published": false,
-                    "oAuth": false,
-                    "appUrl": "smartapps/namespace/smartappname.src/smartappname.groovy",
-                    "optional": false
-                }]
-            }
-        ]
+            "appUrl": "smartapps/tonesto7/nst-automations.src/nst-automations.groovy",
+            "optional": false
+        }]
     },
-    "deviceHandler": {
-        "parent": {
-            "name": "Device Handler Name",
+    "deviceHandlers": [{
+            "name": "Nest Thermostat",
             "iconUrl": "https://s3.amazonaws.com/smartapp-icons/Convenience/App.png",
             "published": true,
-            "oAuth": true,
-            "appUrl": "deviceTypes/namespace/smartappname.src/smartappname.groovy"
+            "version": "5.3.1",
+            "appUrl": "deviceTypes/tonesto7/nest-thermostat.src/nest-thermostat.groovy",
+            "optional": false
         },
-        "children": [{
-                "name": "child1",
-                "iconUrl": "https://s3.amazonaws.com/smartapp-icons/Convenience/App.png",
-                "published": false,
-                "oAuth": false,
-                "appUrl": "deviceTypes/namespace/smartappname.src/smartappname.groovy",
-                "optional": false
-            },
-            {
-                "name": "child2",
-                "iconUrl": "https://s3.amazonaws.com/smartapp-icons/Convenience/App.png",
-                "published": false,
-                "oAuth": false,
-                "appUrl": "deviceTypes/namespace/smartappname.src/smartappname.groovy",
-                "optional": false
-            }
-        ]
-    }
+        {
+            "name": "Nest Protect",
+            "iconUrl": "https://s3.amazonaws.com/smartapp-icons/Convenience/App.png",
+            "published": true,
+            "version": "5.3.1",
+            "appUrl": "deviceTypes/tonesto7/nest-protect.src/nest-protect.groovy",
+            "optional": false
+        },
+        {
+            "name": "Nest Camera",
+            "iconUrl": "https://s3.amazonaws.com/smartapp-icons/Convenience/App.png",
+            "published": false,
+            "version": "5.3.1",
+            "appUrl": "deviceTypes/tonesto7/nest-camera.src/nest-camera.groovy",
+            "optional": false
+        },
+        {
+            "name": "Nest Presence",
+            "iconUrl": "https://s3.amazonaws.com/smartapp-icons/Convenience/App.png",
+            "published": false,
+            "version": "5.3.1",
+            "appUrl": "deviceTypes/tonesto7/nest-presence.src/nest-presence.groovy",
+            "optional": false
+        },
+        {
+            "name": "Nest Weather",
+            "iconUrl": "https://s3.amazonaws.com/smartapp-icons/Convenience/App.png",
+            "published": false,
+            "version": "5.3.1",
+            "appUrl": "deviceTypes/tonesto7/nest-weather.src/nest-weather.groovy",
+            "optional": false
+        }
+    ]
 }
