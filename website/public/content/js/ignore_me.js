@@ -11,6 +11,8 @@ const updRepoUrl = generateStUrl('githubAuth/updateRepos');
 const updFormUrl = generateStUrl('githubAuth/updateForm');
 const doAppRepoUpdUrl = generateStUrl('ide/app/doRepoUpdates');
 const doDevRepoUpdUrl = generateStUrl('ide/device/doRepoUpdates');
+const doDevSettingUpdUrl = generateStUrl('ide/device/update');
+const doAppSettingUpdUrl = generateStUrl('ide/app/update');
 const smartappsListUrl = generateStUrl('ide/apps');
 const appRepoChkUrl = generateStUrl('github/appRepoStatus?appId=');
 const devRepoChkUrl = generateStUrl('github/deviceRepoStatus?deviceTypeId=');
@@ -213,14 +215,31 @@ function buildRepoParamString(rdata) {
     return objs.join('&');
 }
 
-function buildAppInstallParams(repoid, apps) {
+function buildInstallParams(repoid, items) {
     let objs = [];
     objs.push('id=' + repoid);
-    for (let i in apps) {
-        objs.push('added=' + apps[i]);
+    for (let i in items) {
+        objs.push('added=' + items[i]);
     }
     objs.push('publishUpdates=true');
     objs.push('execute=Execute+Update');
+    return objs.join('&');
+}
+
+function buildSettingParams(objId, item, repoId, objType) {
+    let objs = [];
+    objs.push('id=' + objId);
+    objs.push('publishUpdates=true');
+    if (repoId) { objs.push('gitRepo.id=' + repoId); }
+    if (objType === 'app') {
+        if (item.oAuth === true) {
+            objs.push('oauthEnabled=true');
+        }
+        objs.push('update=Update');
+    }
+    if (objType === 'device') {
+        objs.push('_action_update=Update');
+    }
     return objs.join('&');
 }
 
@@ -332,10 +351,6 @@ function processIntall(repoData) {
                                     installComplete('Installs are Complete!<br/>Everything is Good!');
                                 }
                             });
-                        // installAppToIde(repoData.smartApps.parent);
-                        // for (const app in repoData.smartApps.children) {
-                        //     installAppToIde(repoData.smartApps.children[app]);
-                        // }
                     }
                 });
         } else {
@@ -353,7 +368,7 @@ function installAppsToIde(appNames) {
         updLoaderText('Beginning', 'Installs');
         // console.log('repoParams: ', repoParams);
         if (appNames) {
-            let repoParams = buildAppInstallParams(repoId, appNames);
+            let repoParams = buildInstallParams(repoId, appNames);
             makeRequest(doAppRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
                 .catch(function(err) {
                     installError(err, false);
@@ -377,7 +392,7 @@ function installDevsToIde(devNames) {
         updLoaderText('Beginning', 'Installs');
         // console.log('repoParams: ', repoParams);
         if (devNames) {
-            let repoParams = buildAppInstallParams(repoId, devNames);
+            let repoParams = buildInstallParams(repoId, devNames);
             makeRequest(doDevRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
                 .catch(function(err) {
                     installError(err, false);
