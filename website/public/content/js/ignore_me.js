@@ -1115,6 +1115,12 @@ function loaderFunc() {
                     })
                     .then(function(resp) {
                         if (resp && resp.apps && Object.keys(resp).length) {
+                            var app = new Vue({
+                                el: '#app',
+                                data: {
+                                    message: 'Hello Vue!'
+                                }
+                            });
                             buildAppList();
                         }
                     });
