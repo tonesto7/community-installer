@@ -52,21 +52,21 @@ function buildCoreHtml() {
     html += '\n                                               <h6 id="ideResultsTitle" class="mt-3 mb-0">Process Results</h6>';
     html += '\n                                               <div class="d-flex justify-content-center">';
     html += '\n                                                   <div class="d-flex w-100 justify-content-center align-items-center mx-2">';
-    html += '\n                                                       <ul id="ideResultUl"></ul>';
+    html += '\n                                                       <ul id="ideResultUl" style="border-radius: 10px;"></ul>';
     html += '\n                                                   </div>';
     html += '\n                                               </div>';
 
     html += '\n                                               <h6 id="appResultsTitle" class="mt-3 mb-0" style="display: none;">SmartApps</h6>';
     html += '\n                                               <div class="d-flex justify-content-center">';
     html += '\n                                                   <div class="d-flex w-100 justify-content-center align-items-center mx-2">';
-    html += '\n                                                       <ul id="appResultUl" style="display: none;"></ul>';
+    html += '\n                                                       <ul id="appResultUl" style="display: none; border-radius: 10px;"></ul>';
     html += '\n                                                   </div>';
     html += '\n                                               </div>';
 
     html += '\n                                               <h6 id="devResultsTitle" class="mt-3 mb-0" style="display: none;">Devices</h6>';
     html += '\n                                               <div class="d-flex justify-content-center">';
     html += '\n                                                   <div class="d-flex w-100 justify-content-center align-items-center mx-2">';
-    html += '\n                                                       <ul id="devResultUl" style="display: none;"></ul>';
+    html += '\n                                                       <ul id="devResultUl" style="display: none; border-radius: 10px;"></ul>';
     html += '\n                                                   </div>';
     html += '\n                                               </div>';
     html += '\n                                           </div>';
