@@ -2,7 +2,7 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=0">
     <meta name="description" content="SmartThings Community Installer">
     <meta name="author" content="Anthony S.">
     <meta http-equiv="cleartype" content="on">
@@ -14,573 +14,116 @@
     <link rel="shortcut icon" type="image/x-icon" href="https://community-installer-34dac.firebaseapp.com/content/images/app_logo.ico">
     <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
     <script src="https://use.fontawesome.com/a81eef09c0.js" defer=""></script>
-    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous" defer=""></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous" async=""></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js" async=""></script>
-    <link href="https://use.fontawesome.com/a81eef09c0.css" media="all" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
     <link href="https://community-installer-34dac.firebaseapp.com/content/css/main_mdb.min.css" rel="stylesheet">
     <link href="https://community-installer-34dac.firebaseapp.com/content/css/main_web.min.css" rel="stylesheet">
-    <script type="text/javascript" src="https://community-installer-34dac.firebaseapp.com/content/js/bootstrap.min.js" defer=""></script>
-    <script type="text/javascript" src="https://community-installer-34dac.firebaseapp.com/content/js/mdb.min.js" defer=""></script>
-
     <script type="text/javascript">
         const functionType = "addRepo";
         const serverUrl = 'https://graph.api.smartthings.com:443/';
         const homeUrl = 'https://graph.api.smartthings.com:443/api/smartapps/installations/4b54f1b4-7a3f-40f1-b9cd-291ee5870479/installStart?access_token=fdffbbbd-cd0e-4f94-955a-7c64fa379a37';
+        const baseAppUrl = "https://community-installer-34dac.firebaseapp.com"
     </script>
-
     <style>
         input[type=checkbox]:disabled:checked+label:before {
             border-color: transparent rgba(75, 243, 72, 0.46) rgba(36, 204, 103, 0.46) transparent;
         }
     </style>
-
+    <link href="https://use.fontawesome.com/a81eef09c0.css" media="all" rel="stylesheet">
 </head>
 
-<body style="">
-    <header>
-        <nav class="navbar navbar-dark sticky-top navbar-expand-lg">
-            <a class="navbar-brand" href="#">
-                <img src="https://community-installer-34dac.firebaseapp.com/content/images/app_logo.png" height="30" class="d-inline-block align-top" alt=""> Community Installer</a>
-            <!-- Collapse button -->
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+<body style="margin-top: 70px; margin-bottom: 50px; overflow-x: hidden; overflow-y: auto;">
+    <div id="bodyDiv">
+        <header>
+            <nav class="navbar fixed-top navbar-expand-lg navbar-dark ">
+                <a class="navbar-brand" href="https://graph.api.smartthings.com:443/api/smartapps/installations/4b54f1b4-7a3f-40f1-b9cd-291ee5870479/installStart?access_token=fdffbbbd-cd0e-4f94-955a-7c64fa379a37"><img src="https://community-installer-34dac.firebaseapp.com/content/images/app_logo.png" height="30" class="d-inline-block align-top" alt=""> Community Installer</a>
+                <!-- Collapse button -->
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+                <!-- Collapsible content -->
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <!-- Links -->
+                    <ul class="navbar-nav mr-auto">
+                        <li class="nav-item active">
+                            <a class="nav-link" href="https://graph.api.smartthings.com:443/api/smartapps/installations/4b54f1b4-7a3f-40f1-b9cd-291ee5870479/installStart?access_token=fdffbbbd-cd0e-4f94-955a-7c64fa379a37"><i id="homeBtn" class="fa fa-home"></i> Home <span class="sr-only">(current)</span></a>
+                        </li>
+                    </ul>
+                    <!-- Links -->
+                </div>
+                <!-- Collapsible content -->
+            </nav>
+        </header>
+        <main>
+            <div id="mainDiv" class="container" style="min-width: 380px; max-width: 700px; height: auto; min-height: 100%; ">
+                <section class="px-3">
+                    <div class="w-100 text-center">
+                        <h2 id="sectTitle" class="h2-responsive" style="font-weight: 400; display: none;"></h2>
 
-            <!-- Collapsible content -->
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-
-                <!-- Links -->
-                <ul class="navbar-nav mr-auto">
-                    <li class="nav-item active">
-                        <a class="nav-link waves-effect waves-light" href="#">
-                            <i id="homeBtn" class="fa fa-home"></i> Home
-                            <span class="sr-only">(current)</span>
-                        </a>
-                    </li>
-                </ul>
-                <!-- Links -->
-            </div>
-            <!-- Collapsible content -->
-        </nav>
-    </header>
-    <main>
-        <div class="container" style="max-width: 700px;">
-            <section>
-                <div style="width: 100%; height: 200px; text-align: center;">
-                    <h2 id="sectTitle" class="h2-responsive mb-2" style="font-weight: 400; display: none;"></h2>
-                    <hr id="sectTitleHr" class="white" style="display: none;">
-                    <div id="loaderDiv" class="row fadeIn fadeOut" style="display: none;">
-                        <div class="col-lg-12 mb-r">
-
-                            <svg id="loader" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid" class="lds-double-ring">
-                                <circle cx="50" cy="50" ng-attr-r="{{config.radius}}" ng-attr-stroke-width="{{config.width}}" ng-attr-stroke="{{config.c1}}" ng-attr-stroke-dasharray="{{config.dasharray}}" fill="none" stroke-linecap="round" r="40" stroke-width="7" stroke="#18B9FF" stroke-dasharray="62.83185307179586 62.83185307179586"
-                                    transform="rotate(272.211 50 50)">
-                                    <animateTransform attributeName="transform" type="rotate" calcMode="linear" values="0 50 50;360 50 50" keyTimes="0;1" dur="1.8s" begin="0s" repeatCount="indefinite"></animateTransform>
-                                </circle>
-                                <circle cx="50" cy="50" ng-attr-r="{{config.radius2}}" ng-attr-stroke-width="{{config.width}}" ng-attr-stroke="{{config.c2}}" ng-attr-stroke-dasharray="{{config.dasharray2}}" ng-attr-stroke-dashoffset="{{config.dashoffset2}}" fill="none" stroke-linecap="round" r="32" stroke-width="7" stroke="#FF7F27"
-                                    stroke-dasharray="50.26548245743669 50.26548245743669" stroke-dashoffset="50.26548245743669" transform="rotate(-272.211 50 50)">
-                                    <animateTransform attributeName="transform" type="rotate" calcMode="linear" values="0 50 50;-360 50 50" keyTimes="0;1" dur="1.8s" begin="0s" repeatCount="indefinite"></animateTransform>
-                                </circle>
-                                <text id="loaderText1" fill="gray" stroke-width="0" x="50%" y="50%" text-anchor="middle" class="loaderText">Getting</text>
-                                <text id="loaderText2" fill="gray" stroke-width="0" x="50%" y="60%" text-anchor="middle" class="loaderText">Manifest</text>
-                            </svg>
-
-                        </div>
-                    </div>
-                    <div id="listContDiv" class="row fadeIn fadeOut pl-2 pr-2" style="display: none;">
-                        <div id="listDiv" class="col-lg-12">
-                            <div class="listGroup">
-                                <div class="card" style="background-color: transparent;">
-                                    <div class="card-body p-1">
-                                        <div class="row">
-                                            <div class="col-md-12 mt-4">
-                                                <div class="input-group md-form form-sm form-2 pl-0">
-                                                    <input id="appSearchBox" class="form-control my-0 py-1 grey-border" type="text" placeholder="Search" aria-label="Search">
-                                                    <span class="input-group-addon waves-effect grey lighten-3" id="basic-addon1">
-                                                        <a>
-                                                            <i class="fa fa-search text-grey" aria-hidden="true"></i>
-                                                        </a>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <a href="#" id="nest-manager" onclick="appItemClicked(this)" class="list-group-item list-group-item-action flex-column align-items-start my-1">
-                                            <div class="d-flex w-100 justify-content-between align-items-center">
-                                                <div class="d-flex flex-column justify-content-center align-items-center">
-                                                    <div class="d-flex flex-row">
-                                                        <div class="d-flex justify-content-start align-items-center">
-                                                            <h6 class="h6-responsive">
-                                                                <img src="https://raw.githubusercontent.com/tonesto7/nest-manager/master/Images/App/nst_manager_5.png" height="40" class="d-inline-block align-middle" alt=""> NST Manager</h6>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex flex-column justify-content-center align-items-center">
-                                                    <div class="d-flex flex-row">
-                                                    </div>
-                                                    <div class="d-flex flex-row">
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex flex-column justify-content-center align-items-center">
-                                                    <div class="d-flex flex-row">
-                                                        <small class="align-middle">
-                                                            <u>
-                                                                <b>Author:</b>
-                                                            </u>
-                                                        </small>
-                                                    </div>
-                                                    <div class="d-flex flex-row">
-                                                        <small class="align-middle" style="font-size: 12px;">
-                                                            <em>Anthony S.</em>
-                                                        </small>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="d-flex justify-content-start align-items-center">
-                                                <p class="d-flex my-1 mx-6 justify-content-center">
-                                                    <small class="align-middle">This SmartApp is used to integrate your Nest devices with SmartThings and to enable built-in automations</small>
-                                                </p>
-                                            </div>
-                                            <div class="d-flex w-100 justify-content-between align-items-center">
-                                                <div class="d-flex flex-column justify-content-center align-items-center">
-                                                    <div class="d-flex flex-row">
-                                                        <small class="align-middle">
-                                                            <u>
-                                                                <b>Category:</b>
-                                                            </u>
-                                                        </small>
-                                                    </div>
-                                                    <div class="d-flex flex-row">
-                                                        <small class="align-middle">
-                                                            <em>Convenience</em>
-                                                        </small>
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex flex-column justify-content-center align-items-center">
-                                                    <div class="d-flex flex-row">
-                                                        <small class="align-middle">
-                                                            <u>
-                                                                <b>Category:</b>
-                                                            </u>
-                                                        </small>
-                                                    </div>
-                                                    <div class="d-flex flex-row">
-                                                        <small-medium class="align-middle">
-                                                            <span class="badge green white-text align-middle">Installed</span>
-                                                        </small-medium>
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex flex-column justify-content-center align-items-center">
-                                                    <div class="d-flex flex-row">
-                                                        <small class="align-middle">
-                                                            <u>
-                                                                <b>Installs:</b>
-                                                            </u>
-                                                        </small>
-                                                    </div>
-                                                    <div class="d-flex flex-row">
-                                                        <small class="align-middle">
-                                                            <span class="badge badge-pill grey white-text align-middle">20</span>
-                                                        </small>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </a>
-                                        <a href="#" id="echosistant-alpha" onclick="appItemClicked(this)" class="list-group-item list-group-item-action flex-column align-items-start my-1">
-                                            <div class="d-flex w-100 justify-content-between align-items-center">
-                                                <div class="d-flex flex-column justify-content-center align-items-center">
-                                                    <div class="d-flex flex-row">
-                                                        <div class="d-flex justify-content-start align-items-center">
-                                                            <h6 class="h6-responsive">
-                                                                <img src="https://echosistant.com/es5_content/images/Echosistant_V5.png" height="40" class="d-inline-block align-middle" alt=""> EchoSistant Evolution</h6>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex flex-column justify-content-center align-items-center">
-                                                    <div class="d-flex flex-row">
-                                                    </div>
-                                                    <div class="d-flex flex-row">
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex flex-column justify-content-center align-items-center">
-                                                    <div class="d-flex flex-row">
-                                                        <small class="align-middle">
-                                                            <u>
-                                                                <b>Author:</b>
-                                                            </u>
-                                                        </small>
-                                                    </div>
-                                                    <div class="d-flex flex-row">
-                                                        <small class="align-middle" style="font-size: 12px;">
-                                                            <em>EchoSistant Team</em>
-                                                        </small>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="d-flex justify-content-start align-items-center">
-                                                <p class="d-flex my-1 mx-6 justify-content-center">
-                                                    <small class="align-middle">The Ultimate Voice Controlled Assistant Using Alexa Enabled Devices.</small>
-                                                </p>
-                                            </div>
-                                            <div class="d-flex w-100 justify-content-between align-items-center">
-                                                <div class="d-flex flex-column justify-content-center align-items-center">
-                                                    <div class="d-flex flex-row">
-                                                        <small class="align-middle">
-                                                            <u>
-                                                                <b>Category:</b>
-                                                            </u>
-                                                        </small>
-                                                    </div>
-                                                    <div class="d-flex flex-row">
-                                                        <small class="align-middle">
-                                                            <em>My Apps</em>
-                                                        </small>
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex flex-column justify-content-center align-items-center">
-                                                    <div class="d-flex flex-row">
-                                                        <small class="align-middle">
-                                                            <u>
-                                                                <b>Category:</b>
-                                                            </u>
-                                                        </small>
-                                                    </div>
-                                                    <div class="d-flex flex-row">
-                                                        <small-medium class="align-middle">
-                                                            <span class="badge green white-text align-middle">Installed</span>
-                                                        </small-medium>
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex flex-column justify-content-center align-items-center">
-                                                    <div class="d-flex flex-row">
-                                                        <small class="align-middle">
-                                                            <u>
-                                                                <b>Installs:</b>
-                                                            </u>
-                                                        </small>
-                                                    </div>
-                                                    <div class="d-flex flex-row">
-                                                        <small class="align-middle">
-                                                            <span class="badge badge-pill grey white-text align-middle">20</span>
-                                                        </small>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </a>
-                                        <table class="table table-sm">
-                                            <tbody>
-                                                <tr>
-
-                                                </tr>
-                                                <tr>
-
-                                                </tr>
-                                            </tbody>
-                                        </table>
-
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="appViewDiv" class="row fadeIn fadeOut mb-auto" style="display: block;">
-                        <div class="col-lg-12 mb-r">
-                            <!--App Description Panel-->
-                            <div class="card card-body" style="background-color: transparent;">
-                                <div class="flex-row align-right">
-                                    <button type="button" id="appCloseBtn" class="close white-text" aria-label="Close">
-                                        <span aria-hidden="true">×</span>
-                                    </button>
-                                </div>
-                                <div class="flex-row align-center">
-                                    <img class="align-center" src="https://raw.githubusercontent.com/tonesto7/nest-manager/master/Images/App/nst_manager_5_banner.png" style="width: 90%; height: auto; max-width: 300px; max-height: 100px;">
-                                </div>
-                                <small class="white-text">
-                                    <b>Author:</b> Anthony S.</small>
-                                <div class="flex-column align-items-center">
-                                    <div class="d-flex w-100 justify-content-center align-items-center">
-                                        <p class="card-text">The Best Solution to integrate your Nest Products with SmartThings.</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <!--/.App Description Panel-->
-                            <!--App Options Panel-->
-                            <div class="card card-body" style="background-color: transparent;">
-                                <div class="row">
-                                    <div class="col-sm-6 mb-4">
-                                        <h6 class="h6-responsive white-text">
-                                            <u>SmartApps</u>
-                                        </h6>
-                                        <div class="d-flex justify-content-center">
-                                            <div class="d-flex justify-content-center align-items-center">
-                                                <table class="table table-sm">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>
-                                                                <div class="flex-column justify-content-center">
-                                                                    <small class="align-middle">Name:</small>
-                                                                </div>
-                                                            </th>
-                                                            <th>
-                                                                <small class="align-middle">Version:</small>
-                                                            </th>
-                                                            <th>
-                                                                <small class="align-middle">Options:</small>
-                                                            </th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <tr>
-                                                            <td class="align-middle">
-                                                                <div class="d-flex flex-column justify-content-start my-0 form-check disabled">
-                                                                    <div class="flex-column justify-content-start">
-                                                                        <div class="d-flex flex-row">
-                                                                            <input class="form-check-input align-middle" type="checkbox" value="" id="smartapp1" checked="" disabled="">
-                                                                            <label class="form-check-label align-middle" for="smartapp1">
-                                                                                <small class="align-middle">Nest Manager</small>
-                                                                            </label>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                            <td class="align-middle">
-                                                                <small class="align-middle">
-                                                                    <span class="badge grey white-text align-middle">v5.3.2</span>
-                                                                </small>
-                                                            </td>
-                                                            <td class="align-middle">
-                                                                <small class="align-middle">
-                                                                    <span class="badge badge-pill purple white-text align-middle">Parent</span>
-                                                                </small>
-                                                                <small class="align-middle">
-                                                                    <span class="badge badge-pill green white-text align-middle">Publish</span>
-                                                                </small>
-                                                                <small class="align-middle">
-                                                                    <span class="badge badge-pill red white-text align-middle">OAuth</span>
-                                                                </small>
-                                                            </td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td class="align-middle">
-                                                                <div class="d-flex flex-column justify-content-start my-0 form-check disabled">
-                                                                    <div class="flex-column justify-content-start">
-                                                                        <div class="d-flex flex-row">
-                                                                            <input class="form-check-input align-middle" type="checkbox" value="" id="smartapp2" checked="" disabled="">
-                                                                            <label class="form-check-label align-middle" for="smartapp2">
-                                                                                <small class="align-middle">NST Automations</small>
-                                                                            </label>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                            <td class="align-middle">
-                                                                <small class="align-middle">
-                                                                    <span class="badge grey white-text align-middle">v5.3.1</span>
-                                                                </small>
-                                                            </td>
-                                                            <td class="align-middle">
-                                                                <small class="align-middle">
-                                                                    <span class="badge badge-pill green white-text align-middle">Publish</span>
-                                                                </small>
-                                                            </td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-6 mb-4">
-                                        <h6 class="h6-responsive white-text">
-                                            <u>Devices</u>
-                                        </h6>
-                                        <div class="d-flex justify-content-center">
-                                            <div class="d-flex justify-content-center align-items-center">
-
-                                                <table class="table table-sm">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>
-                                                                <small class="align-middle">Name:</small>
-                                                            </th>
-                                                            <th>
-                                                                <small class="align-middle">Version:</small>
-                                                            </th>
-                                                            <th>
-                                                                <small class="align-middle">Options:</small>
-                                                            </th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-
-                                                        <tr>
-                                                            <td class="align-middle">
-                                                                <div class="d-flex flex-column justify-content-start my-0 form-check disabled">
-                                                                    <div class="flex-column justify-content-start">
-                                                                        <div class="d-flex flex-row">
-                                                                            <input class="form-check-input align-middle" type="checkbox" value="" id="smartapp1" checked="" disabled="">
-                                                                            <label class="form-check-label align-middle" for="smartapp1">
-                                                                                <small class="align-middle">Nest Thermostat</small>
-                                                                            </label>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                            <td class="align-middle">
-                                                                <small class="align-middle">
-                                                                    <span class="badge grey white-text align-middle">v5.3.1</span>
-                                                                </small>
-                                                            </td>
-                                                            <td class="align-middle">
-                                                                <small class="align-middle">
-                                                                    <span class="badge badge-pill green white-text align-middle">Publish</span>
-                                                                </small>
-                                                            </td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td class="align-middle">
-                                                                <div class="d-flex flex-column justify-content-start my-0 form-check disabled">
-                                                                    <div class="flex-column justify-content-start">
-                                                                        <div class="d-flex flex-row">
-                                                                            <input class="form-check-input align-middle" type="checkbox" value="" id="smartapp2" checked="" disabled="">
-                                                                            <label class="form-check-label align-middle" for="smartapp2">
-                                                                                <small class="align-middle">Nest Protect</small>
-                                                                            </label>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                            <td class="align-middle">
-                                                                <small class="align-middle">
-                                                                    <span class="badge grey white-text align-middle">v5.3.1</span>
-                                                                </small>
-                                                            </td>
-                                                            <td class="align-middle">
-                                                                <small class="align-middle">
-                                                                    <span class="badge badge-pill green white-text align-middle">Publish</span>
-                                                                </small>
-                                                            </td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td class="align-middle">
-                                                                <div class="d-flex flex-column justify-content-start my-0 form-check disabled">
-                                                                    <div class="flex-column justify-content-start">
-                                                                        <div class="d-flex flex-row">
-                                                                            <input class="form-check-input align-middle" type="checkbox" value="" id="smartapp3" checked="" disabled="">
-                                                                            <label class="form-check-label align-middle" for="smartapp3">
-                                                                                <small class="align-middle">Nest Camera</small>
-                                                                            </label>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                            <td class="align-middle">
-                                                                <small class="align-middle">
-                                                                    <span class="badge grey white-text align-middle">v5.3.1</span>
-                                                                </small>
-                                                            </td>
-                                                            <td class="align-middle">
-                                                                <small class="align-middle">
-                                                                    <span class="badge badge-pill green white-text align-middle">Publish</span>
-                                                                </small>
-                                                            </td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td class="align-middle">
-                                                                <div class="d-flex flex-column justify-content-start my-0 form-check disabled">
-                                                                    <div class="flex-column justify-content-start">
-                                                                        <div class="d-flex flex-row">
-                                                                            <input class="form-check-input align-middle" type="checkbox" value="" id="smartapp4" checked="" disabled="">
-                                                                            <label class="form-check-label align-middle" for="smartapp4">
-                                                                                <small class="align-middle">Nest Presence</small>
-                                                                            </label>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                            <td class="align-middle">
-                                                                <small class="align-middle">
-                                                                    <span class="badge grey white-text align-middle">v5.3.1</span>
-                                                                </small>
-                                                            </td>
-                                                            <td class="align-middle">
-                                                                <small class="align-middle">
-                                                                    <span class="badge badge-pill green white-text align-middle">Publish</span>
-                                                                </small>
-                                                            </td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td class="align-middle">
-                                                                <div class="d-flex flex-column justify-content-start my-0 form-check disabled">
-                                                                    <div class="flex-column justify-content-start">
-                                                                        <div class="d-flex flex-row">
-                                                                            <input class="form-check-input align-middle" type="checkbox" value="" id="smartapp5" checked="" disabled="">
-                                                                            <label class="form-check-label align-middle" for="smartapp5">
-                                                                                <small class="align-middle">Nest Weather</small>
-                                                                            </label>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                            <td class="align-middle">
-                                                                <small class="align-middle">
-                                                                    <span class="badge grey white-text align-middle">v5.3.1</span>
-                                                                </small>
-                                                            </td>
-                                                            <td class="align-middle">
-                                                                <small class="align-middle">
-                                                                    <span class="badge badge-pill green white-text align-middle">Publish</span>
-                                                                </small>
-                                                            </td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-
-                                    </div>
-                                    <div class="col-sm-12">
-                                        <div class="d-flex flex-column justify-content-center align-items-center">
-                                            <button id="installBtn" type="button" class="btn btn-success">Install</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="actResultsDiv" class="row fadeIn fadeOut mb-5" style="display: none;">
-                        <div class="col-lg-12 mb-r">
+                        <div id="actResultsDiv" class="row fadeIn fadeOut mb-5" style="display: block;">
                             <div class="listDiv">
                                 <div id="resultList">
-                                    <h3 id="resultsTitle" style="display: block;">Install Results</h3>
-                                    <ul id="resultUl">
-                                        <li>
-                                            <span style="color: #25c225;">
-                                                <i class="fa fa-check"></i>
-                                            </span> SmartThings Authentication</li>
-                                    </ul>
-                                    <ul id="authResultUl"></ul>
-                                    <ul id="devResultUl"></ul>
-                                    <ul id="appResultUl"></ul>
+                                    <div class="card card-body" style="background-color: transparent; line-height:1.0;">
+                                        <div class="row">
+                                            <div class="d-flex w-100 flex-column mb-3">
+                                                <i id="finishedImg" class="fa fa-check" style="display: block;"></i>
+                                                <div id="results" style="display: block;"><small>Install Process Completed!</small></div>
+                                                <h6 id="ideResultsTitle" class="mt-2" style="display: none;">Install Results</h6>
+
+                                                <div class="d-flex justify-content-center">
+                                                    <div class="d-flex flex-column justify-content-center align-items-center mx-2 px-3" style="border: 1px solid gray; border-radius: 10px;">
+                                                        <div class="d-flex justify-content-center">
+                                                            <div class="d-flex flex-column justify-content-center align-items-center mx-2">
+                                                                <h6 class="mt-2 mb-0" style="display: block;"><u>Repo Results</u></h6>
+                                                                <ul id="ideResultUl" style="display: block; border-radius: 10px;">
+                                                                    <li><small><span style="color: #25c225;"><i class="fa fa-check"></i></span> SmartThings Authentication</small></li>
+                                                                    <li><small><span style="color: #25c225;"><i class="fa fa-check"></i></span> Repo Exists: (nest-manager)</small></li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                        <h6 id="appResultsTitle" class="mt-2 mb-0" style="display: block;"><u>SmartApps</u></h6>
+                                                        <div class="d-flex justify-content-center">
+                                                            <div class="d-flex justify-content-center align-items-center mx-2">
+                                                                <ul id="appResultUl" style="display: block; border-radius: 10px;">
+                                                                    <li>
+                                                                        <small><span style="color: #25c225;"><i class="fa fa-check"></i></span> Nest Manager Exists Already</small>
+                                                                    </li>
+                                                                    <li><small><span style="color: #25c225;"><i class="fa fa-check"></i></span> NST Automations Exists Already</small></li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                        <h6 id="devResultsTitle" class="mt-2 mb-0" style="display: block;"><u>Devices</u></h6>
+                                                        <div class="d-flex justify-content-center">
+                                                            <div class="d-flex w-100 justify-content-center align-items-center mx-2">
+                                                                <ul id="devResultUl" style="display: block; border-radius: 10px;">
+                                                                    <li><small><span style="color: #25c225;"><i class="fa fa-check"></i></span> Nest Thermostat Exists Already</small></li>
+                                                                    <li><small><span style="color: #25c225;"><i class="fa fa-check"></i></span> Nest Protect Exists Already</small></li>
+                                                                    <li><small><span style="color: #25c225;"><i class="fa fa-check"></i></span> Nest Camera Exists Already</small></li>
+                                                                    <li><small><span style="color: #25c225;"><i class="fa fa-check"></i></span> Nest Presence Exists Already</small></li>
+                                                                    <li><small><span style="color: #25c225;"><i class="fa fa-check"></i></span> Nest Weather Exists Already</small></li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                        <div id="resultsDone" style="display: block;"><small>Press Back/Done Now</small></div>
+                                    </div>
                                 </div>
                             </div>
-                            <i id="finishedImg" class="fa fa-check" style="display: none;"></i>
-                            <div id="results"></div>
                         </div>
                     </div>
-                </div>
-            </section>
-        </div>
-    </main>
-
-    <footer class="page-footer center-on-small-only fixed-bottom">
-        <div class="footer-copyright">
-            <div class="containter-fluid">
-                <small>Copyright © 2018 Anthony Santilli &amp; Corey Lista</small>
+                </section>
             </div>
-        </div>
-    </footer>
+        </main>
+    </div>
+    <script type="text/javascript" src="https://community-installer-34dac.firebaseapp.com/content/js/bootstrap.min.js" defer=""></script>
+    <script type="text/javascript" src="https://community-installer-34dac.firebaseapp.com/content/js/mdb.min.js" defer=""></script>
+    <!-- 	<script type="text/javascript" src="https://community-installer-34dac.firebaseapp.com/content/js/ignore_me.js" defer=""></script> -->
+
     <div class="hiddendiv common"></div>
-    <script src="https://community-installer-34dac.firebaseapp.com/content/js/ignore_me.js" defer=""></script>
 </body>
 
 </html>

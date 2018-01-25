@@ -64,6 +64,14 @@ footer.page-footer {
     padding: 0 20px 20px 20px;
 }
 
+#resultsDone {
+    font-size: 1.5em;
+    font-family: "Swiss 721 W01 Thin";
+    color: #c8c2c2;
+    margin-bottom: 0;
+    padding: 0 20px 20px 20px;
+}
+
 #errResults {
     font-size: 1.3em;
     font-family: "Swiss 721 W01 Thin";
@@ -104,8 +112,8 @@ ul#resultUl {
     font-family: "Swiss 721 W01 Thin";
     color: #c8c2c2;
     list-style: none;
-    border: 2px solid gray;
-    border-radius: 25px;
+    /* border: 2px solid gray; */
+    /* border-radius: 25px; */
     padding: 10px 20px;
     margin: 0;
     display: inline-block;
@@ -120,8 +128,8 @@ ul#ideResultUl {
     font-family: "Swiss 721 W01 Thin";
     color: #c8c2c2;
     list-style: none;
-    border: 2px solid gray;
-    border-radius: 25px;
+    /* border: 2px solid gray; */
+    /* border-radius: 25px; */
     padding: 10px 20px;
     margin: 0;
     display: inline-block;
@@ -136,8 +144,8 @@ ul#devResultUl {
     font-family: "Swiss 721 W01 Thin";
     color: #c8c2c2;
     list-style: none;
-    border: 2px solid gray;
-    border-radius: 25px;
+    /* border: 2px solid gray; */
+    /* border-radius: 25px; */
     padding: 10px 20px;
     margin: 0;
     display: inline-block;
@@ -152,8 +160,8 @@ ul#appResultUl {
     font-family: "Swiss 721 W01 Thin";
     color: #c8c2c2;
     list-style: none;
-    border: 2px solid gray;
-    border-radius: 25px;
+    /* border: 2px solid gray; */
+    /* border-radius: 25px; */
     padding: 10px 20px;
     margin: 0;
     display: inline-block;
