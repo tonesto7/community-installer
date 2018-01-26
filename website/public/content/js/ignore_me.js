@@ -131,13 +131,30 @@ function capitalize(value) {
         '';
 }
 
-function addResult(str, good, type = '') {
+function addResult(str, good, type = '', str2 = '') {
     $('#listDiv').css({
         display: 'block'
     });
-    let s = "<li><small><span style='color: " + (good !== false ? '#25c225' : '#FF0000') + ";'>";
-    s += "<i class='fa fa-" + (good !== false ? 'check' : 'exclamation') + "'></i>";
-    s += '</span> ' + str + '</small></li>';
+    let s = '';
+    if (type === 'app' || type === 'device') {
+        s = '\n <li class="w-100 mb-0 pb-0">';
+        s += '\n     <div class="d-flex w-100 justify-content-between align-items-center">';
+        s += '\n         <div class="d-flex flex-column justify-content-center align-items-center">';
+        s += '\n             <div class="d-flex flex-row">';
+        s += '\n                 <div class="d-flex justify-content-start align-items-center">';
+        s += '\n                     <p class="align-middle"><span style="color: ' + (good !== false ? '#25c225' : '#FF0000') + ';"><i class="fa fa-' + (good !== false ? 'check' : 'exclamation') + '"></i></span> ' + str + ':</p>';
+        s += '\n                 </div>';
+        s += '\n             </div>';
+        s += '\n         </div>';
+
+        s += '\n         <div class="d-flex flex-column justify-content-end align-items-center">';
+        s += '\n             <div class="d-flex flex-row">';
+        s += '\n                 <p class="align-middle"><b><u>' + str2 + '</u></b></b>';
+        s += '\n             </div>';
+        s += '\n         </div>';
+        s += '\n     </div>';
+        s += '\n </li>';
+    }
     switch (type) {
         case 'app':
             $('#appResultsTitle').css({ display: 'block' });
@@ -148,6 +165,9 @@ function addResult(str, good, type = '') {
             $('#devResultUl').css({ display: 'block' }).append(s);
             break;
         default:
+            s = "<li><p><span style='color: " + (good !== false ? '#25c225' : '#FF0000') + ";'>";
+            s += "<i class='fa fa-" + (good !== false ? 'check' : 'exclamation') + "'></i>";
+            s += '</span> ' + str + '</p></li>';
             $('#ideResultsTitle').css({ display: 'block' });
             if (!checkListForDuplicate('#ideResultUl li', str)) {
                 $('#ideResultUl').css({ display: 'block' }).append(s);
@@ -179,7 +199,8 @@ function installComplete(text, red = false) {
         $('#finishedImg').removeClass('fa-check').addClass('fa-exclamation-circle').css({ color: 'red' });
     }
     $('#actResultsDiv').css({ display: 'block' });
-    $('#results').css({ display: 'block' }).html('<small>' + text + '<br/><br/>Press Back/Done Now</small>');
+    $('#results').css({ display: 'block' }).html('<small>' + text + '</small>');
+    $('#resultsDone').css({ display: 'block' });
     updSectTitle('', true);
     sessionStorage.removeItem('appsDone');
     sessionStorage.removeItem('refreshCount');
@@ -345,18 +366,18 @@ function processIntall(repoData) {
                                                                                                 .then(function(resp) {
                                                                                                     if (Object.keys(resp).length) {
                                                                                                         if (Object.keys(repoData.deviceHandlers).length) {
-                                                                                                            installComplete('Installs are Complete!<br/>Everything is Good!');
+                                                                                                            installComplete('Install Process Completed!');
                                                                                                         }
                                                                                                     }
                                                                                                 });
                                                                                         }
                                                                                     });
                                                                             } else {
-                                                                                installComplete('Installs are Complete!<br/>Everything is Good!');
+                                                                                installComplete('Install Process Completed!');
                                                                             }
                                                                         });
                                                                 } else {
-                                                                    installComplete('Installs are Complete!<br/>Everything is Good!');
+                                                                    installComplete('Install Process Completed!');
                                                                 }
                                                             });
                                                     });
@@ -384,18 +405,18 @@ function processIntall(repoData) {
                                                                 .then(function(resp) {
                                                                     if (Object.keys(resp).length) {
                                                                         if (Object.keys(repoData.deviceHandlers).length) {
-                                                                            installComplete('Installs are Complete!<br/>Everything is Good!');
+                                                                            installComplete('Install Process Completed!');
                                                                         }
                                                                     }
                                                                 });
                                                         }
                                                     });
                                             } else {
-                                                installComplete('Installs are Complete!<br/>Everything is Good!');
+                                                installComplete('Install Process Completed!');
                                             }
                                         });
                                 } else {
-                                    installComplete('Installs are Complete!<br/>Everything is Good!');
+                                    installComplete('Install Process Completed!');
                                 }
                             });
                     }
@@ -511,14 +532,14 @@ function installAppsToIde(appNames) {
             makeRequest(doAppRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
                 .catch(function(err) {
                     installError(err, false);
-                    addResult(err + ' Install Apps IDE Issue', false, 'app');
+                    addResult(err + ' Install Apps', false, 'app', 'IDE Issue');
                     installComplete('Error!<br/>Try Again Later!', true);
                     reject(err);
                 })
                 .then(function(resp) {
                     updLoaderText('Apps', 'Installed');
                     for (let i in appNames) {
-                        addResult(appNames[i].name + ' App Installed/Published', true, 'app');
+                        addResult(appNames[i].name, true, 'app', 'Installed');
                     }
                     resolve(true);
                 });
@@ -542,13 +563,13 @@ function removeAppsFromIde(appNames) {
                     makeRequest(doAppRemoveUrl + appId[0].id, 'GET', null)
                         .catch(function(err) {
                             installError(err, false);
-                            addResult(err + ' App Removal IDE Issue', false, 'app');
+                            addResult('App Removal Issue', false, 'app', err);
                             installComplete('Error!<br/>Try Again Later!', true);
                             reject(err);
                         })
                         .then(function(resp) {
                             updLoaderText('Apps', 'Removed');
-                            addResult(allAppItems[i].name + ' App Removed', true, 'app');
+                            addResult(allAppItems[i].name, true, 'app', 'App Removed');
                             installComplete('Removals are Complete!<br/>Everything is Good!');
                         });
                 } else {
@@ -579,14 +600,14 @@ function updateAppSettings(repoData) {
                         makeRequest(doAppSettingUpdUrl, 'POST', appParams, null, null, 'application/x-www-form-urlencoded', 'text/html,application/xhtml+xml,application/xml;', true)
                             .catch(function(err) {
                                 installError(err, false);
-                                addResult(err + 'App Settings Update Issue', false, 'app');
+                                addResult('App Settings Update', false, 'app', err);
                                 installComplete('Error!<br/>Try Again Later!', true);
                                 reject(err);
                             })
                             .then(function(resp) {
                                 // updLoaderText('Apps', 'Installed');
                                 for (let i in updApps) {
-                                    addResult(updApps[i].name + ' OAuth Enabled', true, 'app');
+                                    addResult(updApps[i].name, true, 'app', 'OAuth Enabled');
                                 }
                                 if (i + 1 === updApps.length) {
                                     resolve(true);
@@ -613,14 +634,14 @@ function installDevsToIde(devNames) {
             makeRequest(doDevRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
                 .catch(function(err) {
                     installError(err, false);
-                    addResult(err + ' Install Devices IDE Issue', false, 'device');
+                    addResult('Install Devices Issue', false, 'device', err);
                     installComplete('Error!<br/>Try Again Later!', true);
                     reject(err);
                 })
                 .then(function(resp) {
                     updLoaderText('Devices', 'Installed');
                     for (let i in devNames) {
-                        addResult(devNames[i].name + ' Device Installed/Published', true, 'device');
+                        addResult(devNames[i].name, true, 'device', 'Installed');
                     }
                     resolve(true);
                 });
@@ -679,7 +700,7 @@ function checkIfItemsInstalled(itemObj, type, secondPass = false) {
         makeRequest(url, 'GET', null)
             .catch(function(err) {
                 installError(err, false);
-                addResult(err + ' Getting ' + capitalize(type) + 's Issue', false, type);
+                addResult('Getting ' + capitalize(type) + 's Issue', false, type, err);
                 reject(err);
             })
             .then(function(resp) {
@@ -697,7 +718,7 @@ function checkIfItemsInstalled(itemObj, type, secondPass = false) {
                             // console.log('itemsFnd: ', itemsFnd[i].name, ' | requested ' + type + ': ' + itemObj[a].name);
                             if (itemsFnd[i].name === itemObj[a].name) {
                                 if (!secondPass) {
-                                    addResult(itemObj[a].name + ' Exists Already', true, type);
+                                    addResult(itemObj[a].name, true, type, 'Exists');
                                 }
                                 delete itemObj[a];
                                 break;
@@ -958,7 +979,6 @@ function renderAppView(appName) {
                     manifest = resp;
                     // console.log('manifest: ', manifest);
                     if (manifest !== undefined && Object.keys(manifest).length) {
-
                         html += '\n    <div id="appViewCard" class="p-0 mb-0" style="background-color: transparent;">';
                         updSectTitle('', true);
                         let cnt = 1;

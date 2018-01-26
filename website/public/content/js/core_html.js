@@ -45,40 +45,42 @@ function buildCoreHtml() {
     html += '\n                       <div id="actResultsDiv" class="row fadeIn fadeOut mb-5" style="display: none;">';
     html += '\n                           <div class="listDiv">';
     html += '\n                               <div id="resultList">';
-    html += '\n                                   <div class="card card-body" style="background-color: transparent; line-height:1.0;">';
+    html += '\n                                   <div class="card card-body card-outline" style="background-color: transparent; line-height:1.0;">';
 
     html += '\n                                       <div class="row">';
     html += '\n                                           <div class="d-flex w-100 flex-column mb-3">';
-    html += '\n                                               <h6 id="ideResultsTitle" class="mt-3 mb-0">Process Results</h6>';
-    html += '\n                                               <div class="d-flex justify-content-center">';
-    html += '\n                                                   <div class="d-flex w-100 justify-content-center align-items-center mx-2">';
-    html += '\n                                                       <ul id="ideResultUl" style="border-radius: 10px;"></ul>';
+    html += '\n                                               <i id="finishedImg" class="fa fa-check" style="display: none;"></i>';
+    html += '\n                                               <div id="results"></div>';
+
+    html += '\n                                               <div class="d-flex flex-column justify-content-center mx-5">';
+    html += '\n                                                   <div class="d-flex flex-column align-items-center" style="border: 1px solid gray; border-radius: 10px;">';
+
+    html += '\n                                                       <div class="justify-content-start align-items-center">';
+    html += '\n                                                           <h6 id="ideResultsTitle" class="mt-2 mb-0" style="display: none;"><u>Repo Results</u></h6>';
+    html += '\n                                                           <ul id="ideResultUl" class="w-100 mt-0 pt-1" style="display: none;"></ul>';
+    html += '\n                                                       </div>';
+
+
+    html += '\n                                                       <div class="d-flex w-100 flex-column justify-content-center align-items-center">';
+    html += '\n                                                           <h6 id="appResultsTitle" class="mt-2 mb-0" style="display: none;"><u>SmartApps</u></h6>';
+    html += '\n                                                           <ul id="appResultUl" class="w-100 px-4" style="display: none;"></ul>';
+    html += '\n                                                       </div>';
+
+    html += '\n                                                       <div class="d-flex w-100 flex-column justify-content-center align-items-center">';
+    html += '\n                                                           <h6 id="devResultsTitle" class="mt-2 mb-0" style="display: none;"><u>Devices</u></h6>';
+    html += '\n                                                           <ul id="devResultUl" class="w-100 px-4" style="display: none;"></ul>';
+    html += '\n                                                       </div>';
+
     html += '\n                                                   </div>';
     html += '\n                                               </div>';
 
-    html += '\n                                               <h6 id="appResultsTitle" class="mt-3 mb-0" style="display: none;">SmartApps</h6>';
-    html += '\n                                               <div class="d-flex justify-content-center">';
-    html += '\n                                                   <div class="d-flex w-100 justify-content-center align-items-center mx-2">';
-    html += '\n                                                       <ul id="appResultUl" style="display: none; border-radius: 10px;"></ul>';
-    html += '\n                                                   </div>';
-    html += '\n                                               </div>';
+    html += '\n                                               <div id="resultsDone" class="mt-4" style="display: none;"><small>Press Back/Done Now</small></div>';
+    html += '\n                                          </div>';
 
-    html += '\n                                               <h6 id="devResultsTitle" class="mt-3 mb-0" style="display: none;">Devices</h6>';
-    html += '\n                                               <div class="d-flex justify-content-center">';
-    html += '\n                                                   <div class="d-flex w-100 justify-content-center align-items-center mx-2">';
-    html += '\n                                                       <ul id="devResultUl" style="display: none; border-radius: 10px;"></ul>';
-    html += '\n                                                   </div>';
-    html += '\n                                               </div>';
-    html += '\n                                           </div>';
-    html += '\n                                       </div>';
-    html += '\n                                       <i id="finishedImg" class="fa fa-check" style="display: none;"></i>';
-    html += '\n                                       <div id="results"></div>';
-    html += '\n                                   </div>';
-
-    html += '\n                               </div>';
-    html += '\n                           </div>';
+    html += '\n                                     </div>';
+    html += '\n                                 </div>';
+    html += '\n                            </div>';
     html += '\n                       </div>';
-    html += '\n                   </div>';
     html += '\n               </section>';
     html += '\n           </div>';
     html += '\n       </main>';
