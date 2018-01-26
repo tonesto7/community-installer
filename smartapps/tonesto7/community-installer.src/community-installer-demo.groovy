@@ -4,7 +4,7 @@
 *
 // /**********************************************************************************************************************************************/
 definition(
-    name			: "Community-Installer",
+    name			: "Community-Installer-Demo",
     namespace		: "tonesto7",
     author			: "tonesto7",
     description		: "The Community Devices/SmartApp Installer",
@@ -59,6 +59,36 @@ def baseUrl(path) {
     return "https://community-installer-34dac.firebaseapp.com${path}"
 }
 
+def getDemoManifest() {
+    return """
+        const appsManifest = [{
+            name: 'NST Manager',
+            appName: 'Nest Manager',
+            author: 'Anthony S.',
+            description: 'This SmartApp is used to integrate your Nest devices with SmartThings and to enable built-in automations',
+            category: 'Convenience',
+            videoUrl: 'http://f.cl.ly/items/3O2L03471l2K3E3l3K1r/Zombie%20Kid%20Likes%20Turtles.mp4',
+            photoUrl: 'https://raw.githubusercontent.com/tonesto7/nest-manager/master/Images/App/nst_manager_5.png',
+            iconUrl: 'https://raw.githubusercontent.com/tonesto7/nest-manager/master/Images/App/nst_manager_5.png',
+            manifestUrl: 'https://rawgit.com/tonesto7/nest-manager/master/installerManifest.json',
+            repoName: 'nest-manager'
+        },
+        {
+            name: 'EchoSistant Evolution',
+            appName: 'EchoSistant5',
+            author: 'Echosistant Team',
+            description: 'The Ultimate Voice Controlled Assistant Using Alexa Enabled Devices.',
+            category: 'My Apps',
+            videoUrl: 'http://f.cl.ly/items/3O2L03471l2K3E3l3K1r/Zombie%20Kid%20Likes%20Turtles.mp4',
+            photoUrl: 'https://echosistant.com/es5_content/images/Echosistant_V5.png',
+            iconUrl: 'https://echosistant.com/es5_content/images/Echosistant_V5.png',
+            manifestUrl: 'https://raw.githubusercontent.com/BamaRayne/Echosistant/master/installerManifest.json',
+            repoName: 'echosistant'
+        }];
+    """
+}
+
+
 def installStartHtml() {
     def randVerStr = "?=${now()}"
     def html = """
@@ -79,6 +109,7 @@ def installStartHtml() {
                     const serverUrl = '${apiServerUrl('')}';
                     const homeUrl = '${getAppEndpointUrl('installStart')}';
                     const baseAppUrl = "${baseUrl('')}"
+                    ${getDemoManifest()}
                 </script>
                 <style>
                     input[type=checkbox]:disabled:checked+label:before {
@@ -91,7 +122,7 @@ def installStartHtml() {
                 <script type="text/javascript" src="${baseUrl('/content/js/core_html.js')}${randVerStr}"></script>
                 <script type="text/javascript" src="${baseUrl('/content/js/bootstrap.min.js')}" defer></script>
                 <script type="text/javascript" src="${baseUrl('/content/js/mdb.min.js')}" defer></script>
-                <script type="text/javascript" src="${baseUrl('/content/js/ignore_me.js')}${randVerStr}" defer></script>
+                <script type="text/javascript" src="${baseUrl('/content/js/app_demo.js')}${randVerStr}" defer></script>
             </body>
         </html>"""
     render contentType: "text/html", data: html

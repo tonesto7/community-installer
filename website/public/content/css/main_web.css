@@ -139,6 +139,22 @@ ul:empty#ideResultUl {
     display: none;
 }
 
+ul#repoResultUl {
+    text-align: left;
+    font-family: "Swiss 721 W01 Thin";
+    color: #c8c2c2;
+    list-style: none;
+    /* border: 2px solid gray; */
+    /* border-radius: 25px; */
+    padding: 10px 20px;
+    margin: 0;
+    display: inline-block;
+}
+
+ul:empty#repoResultUl {
+    display: none;
+}
+
 ul#devResultUl {
     text-align: left;
     font-family: "Swiss 721 W01 Thin";

@@ -1,8 +1,22 @@
+function updateHeadHtml() {
+    let html = '';
+    html += '\n                 <meta name="description" content="Community Installer">';
+    html += '\n                 <meta name="author" content="Anthony S.">';
+    html += '\n                 <title>Community Installer</title>';
+    html += '\n                 <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">';
+    html += '\n                 <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" rel="stylesheet"></link>';
+    html += '\n                 <script src="https://use.fontawesome.com/a81eef09c0.js" defer></script>';
+    html += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous" async></script>';
+    html += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js" async></script>';
+    html += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>';
+    $('head').append(html);
+}
+
 function buildCoreHtml() {
     let html = '';
     html += '\n       <header>';
     html += '\n           <nav class="navbar fixed-top navbar-expand-lg navbar-dark ">';
-    html += '\n               <a class="navbar-brand" href="' + homeUrl + '"><img src="' + baseAppUrl + '/content/images/app_logo.png" height="30" class="d-inline-block align-top" alt=""> Community Installer</a>';
+    html += '\n               <a class="navbar-brand" href="' + homeUrl + '"><img src="' + baseAppUrl + '/content/images/app_logo.png" height="30" class="d-inline-block align-top" alt=""> Installer</a>';
     html += '\n               <!-- Collapse button -->';
     html += '\n               <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>';
 
@@ -52,23 +66,27 @@ function buildCoreHtml() {
     html += '\n                                               <i id="finishedImg" class="fa fa-check" style="display: none;"></i>';
     html += '\n                                               <div id="results"></div>';
 
-    html += '\n                                               <div class="d-flex flex-column justify-content-center mx-5">';
+    html += '\n                                               <div class="d-flex flex-column justify-content-center mx-2">';
     html += '\n                                                   <div class="d-flex flex-column align-items-center" style="border: 1px solid gray; border-radius: 10px;">';
 
-    html += '\n                                                       <div class="justify-content-start align-items-center">';
-    html += '\n                                                           <h6 id="ideResultsTitle" class="mt-2 mb-0" style="display: none;"><u>Repo Results</u></h6>';
-    html += '\n                                                           <ul id="ideResultUl" class="w-100 mt-0 pt-1" style="display: none;"></ul>';
+    html += '\n                                                       <div class="d-flex flex-column justify-content-center align-items-center">';
+    html += '\n                                                           <h6 id="ideResultsTitle" class="mt-2 mb-0" style="display: none;"><u>IDE Authentication</u></h6>';
+    html += '\n                                                           <ul id="ideResultUl" class="w-100 px-4" style="display: none;"></ul>';
     html += '\n                                                       </div>';
 
+    html += '\n                                                       <div class="d-flex w-100 flex-column justify-content-center align-items-center">';
+    html += '\n                                                           <h6 id="repoResultsTitle" class="mt-2 mb-0" style="display: none;"><u>GitHub Integration</u></h6>';
+    html += '\n                                                           <ul id="repoResultUl" class="w-100 px-3" style="display: none;"></ul>';
+    html += '\n                                                       </div>';
 
     html += '\n                                                       <div class="d-flex w-100 flex-column justify-content-center align-items-center">';
     html += '\n                                                           <h6 id="appResultsTitle" class="mt-2 mb-0" style="display: none;"><u>SmartApps</u></h6>';
-    html += '\n                                                           <ul id="appResultUl" class="w-100 px-4" style="display: none;"></ul>';
+    html += '\n                                                           <ul id="appResultUl" class="w-100 px-3" style="display: none;"></ul>';
     html += '\n                                                       </div>';
 
     html += '\n                                                       <div class="d-flex w-100 flex-column justify-content-center align-items-center">';
     html += '\n                                                           <h6 id="devResultsTitle" class="mt-2 mb-0" style="display: none;"><u>Devices</u></h6>';
-    html += '\n                                                           <ul id="devResultUl" class="w-100 px-4" style="display: none;"></ul>';
+    html += '\n                                                           <ul id="devResultUl" class="w-100 px-3" style="display: none;"></ul>';
     html += '\n                                                       </div>';
 
     html += '\n                                                   </div>';
@@ -91,5 +109,6 @@ function buildCoreHtml() {
     html += '\n               </div>';
     html += '\n           </div>';
     html += '\n       </footer>';
+    $('body').css({ 'margin-top': '70px', 'overflow-x': 'hidden', 'overflow-y': 'auto', 'margin-bottom': '100px' });
     $('#bodyDiv').html(html);
 }

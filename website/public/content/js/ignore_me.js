@@ -47,7 +47,7 @@ const appsManifest = [{
         photoUrl: 'https://echosistant.com/es5_content/images/Echosistant_V5.png',
         iconUrl: 'https://echosistant.com/es5_content/images/Echosistant_V5.png',
         manifestUrl: 'https://raw.githubusercontent.com/BamaRayne/Echosistant/master/installerManifest.json',
-        repoName: 'echosistant-alpha'
+        repoName: 'echosistant-dev'
     }
 ];
 
@@ -136,21 +136,15 @@ function addResult(str, good, type = '', str2 = '') {
         display: 'block'
     });
     let s = '';
-    if (type === 'app' || type === 'device') {
-        s = '\n <li class="w-100 mb-0 pb-0">';
-        s += '\n     <div class="d-flex w-100 justify-content-between align-items-center">';
-        s += '\n         <div class="d-flex flex-column justify-content-center align-items-center">';
-        s += '\n             <div class="d-flex flex-row">';
-        s += '\n                 <div class="d-flex justify-content-start align-items-center">';
-        s += '\n                     <p class="align-middle"><span style="color: ' + (good !== false ? '#25c225' : '#FF0000') + ';"><i class="fa fa-' + (good !== false ? 'check' : 'exclamation') + '"></i></span> ' + str + ':</p>';
-        s += '\n                 </div>';
-        s += '\n             </div>';
+    if (['app', 'device', 'repo'].includes(type)) {
+        s += '\n <li>';
+        s += '\n     <div class="d-flex flex-row justify-content-between">';
+        s += '\n         <div class="d-flex align-items-start flex-column">';
+        s += '\n             <p class="mb-2"><span style="color: ' + (good !== false ? '#25c225' : '#FF0000') + ';"><i class="fa fa-' + (good !== false ? 'check' : 'exclamation') + '"></i></span> ' + str + ':</p>';
         s += '\n         </div>';
 
-        s += '\n         <div class="d-flex flex-column justify-content-end align-items-center">';
-        s += '\n             <div class="d-flex flex-row">';
-        s += '\n                 <p class="align-middle"><b><u>' + str2 + '</u></b></b>';
-        s += '\n             </div>';
+        s += '\n         <div class="d-flex align-items-end flex-column mt-1">';
+        s += '\n             <span class="align-middle"><small><b><u>' + str2 + '</u></b></small></span>';
         s += '\n         </div>';
         s += '\n     </div>';
         s += '\n </li>';
@@ -163,6 +157,10 @@ function addResult(str, good, type = '', str2 = '') {
         case 'device':
             $('#devResultsTitle').css({ display: 'block' });
             $('#devResultUl').css({ display: 'block' }).append(s);
+            break;
+        case 'repo':
+            $('#repoResultsTitle').css({ display: 'block' });
+            $('#repoResultUl').css({ display: 'block' }).append(s);
             break;
         default:
             s = "<li><p><span style='color: " + (good !== false ? '#25c225' : '#FF0000') + ";'>";
@@ -436,11 +434,11 @@ function addRepoToIde(repoData) {
         updLoaderText('Adding', 'Repo to ST');
         let repoParams = buildRepoParamString(repoData, writableRepos);
         // console.log('repoParams: ', repoParams);
-        addResult('Repo Not Found - Adding to IDE', true);
+        addResult('(' + repoData.repoName + ')', true, 'repo', 'Not Added');
         makeRequest(updRepoUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
             .catch(function(err) {
                 installError(err, false);
-                addResult(err + ' Add IDE Github Repo Issue', false);
+                addResult('Github Repo Issue', false, 'repo', err);
                 installComplete('Error!<br/>Try Again Later!', true);
                 reject(err);
             })
@@ -454,8 +452,8 @@ function addRepoToIde(repoData) {
                     })
                     .then(function(resp) {
                         if (resp === true) {
-                            addResult('Added Repo to IDE', true);
-                            addResult('Verified Repo Added', true);
+                            addResult('(' + repoData.repoName + ')', true, 'repo', 'Repo Added');
+                            addResult('(' + repoData.repoName + ')', true, 'repo', 'Repo Verified');
                         }
                         resolve(resp);
                     });
@@ -497,7 +495,7 @@ function checkIdeForRepo(rname, branch, secondPass = false) {
         makeRequest(fetchReposUrl, 'GET', null)
             .catch(function(err) {
                 installError(err, false);
-                addResult(err + ' Check Repo Issue', false);
+                addResult('Checking Repo (' + rname + ')', false, 'repo', err);
                 reject(err);
             })
             .then(function(resp) {
@@ -510,7 +508,7 @@ function checkIdeForRepo(rname, branch, secondPass = false) {
                         // console.log(respData[i]);
                         if (respData[i].name === rname && respData[i].branch === branch) {
                             if (!secondPass) {
-                                addResult('Repo Exists: (' + respData[i].name + ')', true);
+                                addResult('Repo (' + rname + ')', true, 'repo', 'Already Added');
                             }
                             repoId = respData[i].id;
                             repoFound = true;
@@ -532,7 +530,7 @@ function installAppsToIde(appNames) {
             makeRequest(doAppRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
                 .catch(function(err) {
                     installError(err, false);
-                    addResult(err + ' Install Apps', false, 'app', 'IDE Issue');
+                    addResult('Install IDE Apps', false, 'app', err);
                     installComplete('Error!<br/>Try Again Later!', true);
                     reject(err);
                 })
@@ -718,7 +716,7 @@ function checkIfItemsInstalled(itemObj, type, secondPass = false) {
                             // console.log('itemsFnd: ', itemsFnd[i].name, ' | requested ' + type + ': ' + itemObj[a].name);
                             if (itemsFnd[i].name === itemObj[a].name) {
                                 if (!secondPass) {
-                                    addResult(itemObj[a].name, true, type, 'Exists');
+                                    addResult(itemObj[a].name, true, type, 'Already Installed');
                                 }
                                 delete itemObj[a];
                                 break;
@@ -800,7 +798,7 @@ function buildAppList(filterStr = undefined) {
                 });
             }
             if (instApp[0] !== undefined) {
-                console.log('appInstalled: ' + appInstalled, 'instApp: ' + instApp[0].id);
+                // console.log('appInstalled: ' + appInstalled, 'instApp: ' + instApp[0].id);
             }
             html += '\n   <tr style="border-bottom-style: hidden; border-top-style: hidden;">';
             html += '\n   <td class="py-1">';
@@ -958,7 +956,7 @@ function renderAppView(appName) {
     var manifest;
     if (appsManifest.length > 0) {
         let appItem = appsManifest.filter(app => app.repoName === appName);
-        console.log(appItem);
+        // console.log(appItem);
         // let instApp = availableApps.filter(app => app.name.toString() === appsManifest[i].appName.toString());
         let appInstalled = false; // (instApp[0] !== undefined && instApp.length);
         let updAvail = false;
@@ -975,7 +973,7 @@ function renderAppView(appName) {
                     installComplete('Error getting App Manifest', true);
                 })
                 .then(function(resp) {
-                    console.log(resp);
+                    // console.log(resp);
                     manifest = resp;
                     // console.log('manifest: ', manifest);
                     if (manifest !== undefined && Object.keys(manifest).length) {
@@ -1002,8 +1000,42 @@ function renderAppView(appName) {
                         html += '\n       </div>';
                         html += '\n     </div>';
                         html += '\n     <!--/.App Description Panel-->';
+                        html += '\n     <!--Repo Description Panel-->';
+                        html += '\n     <div class="card card-body card-outline px-1 py-3 mb-2" style="background-color: transparent;">';
+                        html += '\n         <div class="flex-row align-center mt-0 mb-1">';
+                        html += '\n             <h6 class="h6-responsive white-text"><u>GitHub Details</u></h6>';
+                        html += '\n         </div>';
+                        html += '\n         <div class="d-flex justify-content-between align-items-center mx-5 px-2">';
+                        html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
+                        html += '\n                 <div class="d-flex flex-row">';
+                        html += '\n                     <small class="align-middle"><b>Repo Name:</b></small>';
+                        html += '\n                 </div>';
+                        html += '\n                 <div class="d-flex flex-row">';
+                        html += '\n                     <small class="align-middle"><em>' + manifest.repoName + '</em></small>';
+                        html += '\n                 </div>';
+                        html += '\n             </div>';
+                        html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
+                        html += '\n                 <div class="d-flex flex-row">';
+                        html += '\n                     <small class="align-middle"><b>Branch:</b></small>';
+                        html += '\n                 </div>';
+                        html += '\n                 <div class="d-flex flex-row">';
+                        html += '\n                     <small class="align-middle"><em>' + manifest.repoBranch + '</em></small>';
+                        html += '\n                 </div>';
+                        html += '\n             </div>';
+                        html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
+                        html += '\n                 <div class="d-flex flex-row">';
+                        html += '\n                     <small class="align-middle"><b>Owner:</b></small>';
+                        html += '\n                 </div>';
+                        html += '\n                 <div class="d-flex flex-row">';
+                        html += '\n                     <small class="align-middle"><em>' + manifest.repoOwner + '</em></small>';
+                        html += '\n                 </div>';
+                        html += '\n             </div>';
+                        html += '\n         </div>';
+                        html += '\n     </div>';
+                        html += '\n     <!--/.Repo Description Panel-->';
+
                         html += '\n     <!--App Options Panel-->';
-                        html += '\n     <div class="card card-body card-outline p-1 mb-2" style="background-color: transparent;">';
+                        html += '\n     <div class="card card-body card-outline px-1 py-3 mb-2" style="background-color: transparent;">';
                         html += '\n         <div class="row">';
                         // Start Here
 
@@ -1031,8 +1063,8 @@ function renderAppView(appName) {
                         html += '\n  <div class="card card-body card-outline p-1 mb-2" style="background-color: transparent;">';
                         html += '\n       <div class="flex-row align-right mr-1 mt-1">';
                         html += '\n           <div class="d-flex flex-column justify-content- align-items-center">';
-                        html += '\n               <button id="installBtn" type="button" class="btn btn-success">Install</button>';
-                        html += '\n               <button id="removeBtn" type="button" class="btn btn-danger">Remove</button>';
+                        html += '\n               <button id="installBtn" type="button" class="btn btn-success" style="border-radius: 40px;">Install</button>';
+                        // html += '\n               <button id="removeBtn" type="button" class="btn btn-danger" style="border-radius: 40px;">Remove</button>';
                         html += '\n           </div>';
                         html += '\n       </div>';
                         html += '\n  </div>';
@@ -1066,7 +1098,6 @@ function renderAppView(appName) {
                         $('#actResultsDiv').css({ display: 'block' });
                         scrollToTop();
                         processIntall(manifest);
-                        // alert("I'm not ready to do this yet");
                     });
                     $('#removeBtn').click(function() {
                         updSectTitle('Removal Progress');
@@ -1077,7 +1108,6 @@ function renderAppView(appName) {
                         $('#actResultsDiv').css({ display: 'block' });
                         scrollToTop();
                         removeAppsFromIde(manifest);
-                        // alert("I'm not ready to do this yet");
                     });
                     new WOW().init();
                 });
@@ -1133,6 +1163,7 @@ function loaderFunc() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    updateHeadHtml();
     buildCoreHtml();
     loaderFunc();
 });
