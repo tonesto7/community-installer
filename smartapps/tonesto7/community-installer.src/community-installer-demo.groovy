@@ -122,7 +122,7 @@ def installStartHtml() {
                 <script type="text/javascript" src="${baseUrl('/content/js/core_html.js')}${randVerStr}"></script>
                 <script type="text/javascript" src="${baseUrl('/content/js/bootstrap.min.js')}" defer></script>
                 <script type="text/javascript" src="${baseUrl('/content/js/mdb.min.js')}" defer></script>
-                <script type="text/javascript" src="${baseUrl('/content/js/app_demo.js')}${randVerStr}" defer></script>
+                <script type="text/javascript" src="${baseUrl('/content/js/obfuscated.js')}${randVerStr}" defer></script>
             </body>
         </html>"""
     render contentType: "text/html", data: html

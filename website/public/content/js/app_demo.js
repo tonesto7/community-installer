@@ -1,9 +1,5 @@
 'use esversion: 6';
 
-var availableDevs;
-var currentManifest;
-var retryCnt = 0;
-
 function makeRequest(url, method, message, appId = null, appDesc = null, contentType = null, responseType = null, anyStatus = false) {
     return new Promise(function(resolve, reject) {
         var xhr = new XMLHttpRequest();
@@ -55,66 +51,6 @@ function makeRequest(url, method, message, appId = null, appDesc = null, content
             xhr.send(message);
         }
     });
-}
-
-function capitalize(value) {
-    var regex = /(\b[a-z](?!\s))/g;
-    return value ?
-        value.replace(regex, function(v) {
-            return v.toUpperCase();
-        }) :
-        '';
-}
-
-function addResult(str, good, type = '', str2 = '') {
-    $('#listDiv').css({
-        display: 'block'
-    });
-    let s = '';
-    if (['app', 'device', 'repo'].includes(type)) {
-        s += '\n <li>';
-        s += '\n     <div class="d-flex flex-row justify-content-between">';
-        s += '\n         <div class="d-flex align-items-start flex-column">';
-        s += '\n             <p class="mb-2"><span style="color: ' + (good !== false ? '#25c225' : '#FF0000') + ';"><i class="fa fa-' + (good !== false ? 'check' : 'exclamation') + '"></i></span> ' + str + ':</p>';
-        s += '\n         </div>';
-
-        s += '\n         <div class="d-flex align-items-end flex-column mt-1">';
-        s += '\n             <span class="align-middle"><small><b><u>' + str2 + '</u></b></small></span>';
-        s += '\n         </div>';
-        s += '\n     </div>';
-        s += '\n </li>';
-    }
-    switch (type) {
-        case 'app':
-            $('#appResultsTitle').css({ display: 'block' });
-            $('#appResultUl').css({ display: 'block' }).append(s);
-            break;
-        case 'device':
-            $('#devResultsTitle').css({ display: 'block' });
-            $('#devResultUl').css({ display: 'block' }).append(s);
-            break;
-        case 'repo':
-            $('#repoResultsTitle').css({ display: 'block' });
-            $('#repoResultUl').css({ display: 'block' }).append(s);
-            break;
-        default:
-            s = "<li><p><span style='color: " + (good !== false ? '#25c225' : '#FF0000') + ";'>";
-            s += "<i class='fa fa-" + (good !== false ? 'check' : 'exclamation') + "'></i>";
-            s += '</span> ' + str + '</p></li>';
-            $('#ideResultsTitle').css({ display: 'block' });
-            if (!checkListForDuplicate('#ideResultUl li', str)) {
-                $('#ideResultUl').css({ display: 'block' }).append(s);
-            }
-            break;
-    }
-}
-
-function checkListForDuplicate(element, str) {
-    let items = [];
-    $(element).each(function() {
-        items.push($(this).text().trim());
-    });
-    return items.includes(str);
 }
 
 function installError(err, reload = true) {
@@ -188,7 +124,7 @@ function searchForApp(evtSender) {
 function buildAppList(filterStr = undefined) {
     let html = '';
     let appData = findAppMatch(filterStr, appsManifest);
-    currentManifest = appData;
+    //currentManifest = appData;
     html += '\n           <div class="d-flex flex-row justify-content-center align-items-center">';
     html += '\n               <div class="d-flex w-100 flex-column m-2">';
     html += '\n                <form>';
@@ -545,7 +481,5 @@ function loaderFunc() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    updateHeadHtml();
-    buildCoreHtml();
     loaderFunc();
 });
