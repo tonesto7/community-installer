@@ -75,16 +75,10 @@ def installStartHtml() {
                 <link href="${baseUrl('/content/css/main_mdb.min.css')}" rel="stylesheet">
                 <link href="${baseUrl('/content/css/main_web.min.css')}" rel="stylesheet">
                 <script type="text/javascript">
-                    const functionType = "addRepo";
                     const serverUrl = '${apiServerUrl('')}';
                     const homeUrl = '${getAppEndpointUrl('installStart')}';
                     const baseAppUrl = "${baseUrl('')}"
                 </script>
-                <style>
-                    input[type=checkbox]:disabled:checked+label:before {
-                        border-color: transparent rgba(75, 243, 72, 0.46) rgba(36, 204, 103, 0.46) transparent;
-                    }
-                </style>
             </head>
             <body>
                 <div id="bodyDiv"></div>

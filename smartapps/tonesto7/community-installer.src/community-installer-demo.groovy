@@ -83,6 +83,18 @@ def getDemoManifest() {
             photoUrl: 'https://echosistant.com/es5_content/images/Echosistant_V5.png',
             iconUrl: 'https://echosistant.com/es5_content/images/Echosistant_V5.png',
             manifestUrl: 'https://raw.githubusercontent.com/BamaRayne/Echosistant/master/installerManifest.json',
+            repoName: 'echosistant-dev'
+        },
+        {
+            name: 'EchoSistant 4.5',
+            appName: 'EchoSistant',
+            author: 'Echosistant Team',
+            description: 'The Ultimate Voice Controlled Assistant Using Alexa Enabled Devices.',
+            category: 'My Apps',
+            videoUrl: 'http://f.cl.ly/items/3O2L03471l2K3E3l3K1r/Zombie%20Kid%20Likes%20Turtles.mp4',
+            photoUrl: 'https://echosistant.com/es5_content/images/Echosistant_V5.png',
+            iconUrl: 'https://echosistant.com/es5_content/images/Echosistant_V5.png',
+            manifestUrl: 'https://raw.githubusercontent.com/BamaRayne/Echosistant/master/installerManifest.json',
             repoName: 'echosistant'
         }];
     """
@@ -105,24 +117,18 @@ def installStartHtml() {
                 <link href="${baseUrl('/content/css/main_mdb.min.css')}" rel="stylesheet">
                 <link href="${baseUrl('/content/css/main_web.min.css')}" rel="stylesheet">
                 <script type="text/javascript">
-                    const functionType = "addRepo";
                     const serverUrl = '${apiServerUrl('')}';
                     const homeUrl = '${getAppEndpointUrl('installStart')}';
                     const baseAppUrl = "${baseUrl('')}"
                     ${getDemoManifest()}
                 </script>
-                <style>
-                    input[type=checkbox]:disabled:checked+label:before {
-                        border-color: transparent rgba(75, 243, 72, 0.46) rgba(36, 204, 103, 0.46) transparent;
-                    }
-                </style>
             </head>
             <body>
                 <div id="bodyDiv"></div>
                 <script type="text/javascript" src="${baseUrl('/content/js/core_html.js')}${randVerStr}"></script>
                 <script type="text/javascript" src="${baseUrl('/content/js/bootstrap.min.js')}" defer></script>
                 <script type="text/javascript" src="${baseUrl('/content/js/mdb.min.js')}" defer></script>
-                <script type="text/javascript" src="${baseUrl('/content/js/obfuscated.js')}${randVerStr}" defer></script>
+                <script type="text/javascript" src="${baseUrl('/content/js/obfu-demo.js')}${randVerStr}" defer></script>
             </body>
         </html>"""
     render contentType: "text/html", data: html

@@ -9,6 +9,9 @@ function updateHeadHtml() {
     html += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous" async></script>';
     html += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js" async></script>';
     html += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>';
+    html += '\n                 <style>';
+    html += '\n                     input[type=checkbox]:disabled:checked+label:before { border-color: transparent rgba(75, 243, 72, 0.46) rgba(36, 204, 103, 0.46) transparent; }';
+    html += '\n                 </style>';
     $('head').append(html);
 }
 

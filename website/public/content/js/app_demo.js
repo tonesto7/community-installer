@@ -481,5 +481,7 @@ function loaderFunc() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    updateHeadHtml();
+    buildCoreHtml();
     loaderFunc();
 });
