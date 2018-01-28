@@ -16,8 +16,12 @@ const doDevRepoUpdUrl = generateStUrl('ide/device/doRepoUpdates');
 const doDevSettingUpdUrl = generateStUrl('ide/device/update');
 const doAppSettingUpdUrl = generateStUrl('ide/app/update');
 const smartappsListUrl = generateStUrl('ide/apps');
-const appRepoChkUrl = generateStUrl('github/appRepoStatus?appId=');
-const devRepoChkUrl = generateStUrl('github/deviceRepoStatus?deviceTypeId=');
+const appUpdChkUrl = generateStUrl('github/appRepoStatus?appId=');
+const appUpdApplyUrl = generateStUrl('ide/app/updateOneFromRepo/');
+const appUpdPubUrl = generateStUrl('ide/app/publishAjax/');
+const devUpdChkUrl = generateStUrl('github/deviceRepoStatus?deviceTypeId=');
+const devUpdApplyUrl = generateStUrl('ide/device/updateOneFromRepo/');
+const devUpdPubUrl = generateStUrl('ide/device/publishAjax/');
 const availableSaUrl = generateStUrl('api/smartapps/editable');
 const availableDevsUrl = generateStUrl('api/devicetypes');
 
@@ -282,11 +286,13 @@ function buildSettingParams(objData, item, repoId, repoData, objType) {
     return objs.join('&');
 }
 
-function processIntall(repoData) {
+function processIntall(repoData, selctd) {
     var allAppItems = [];
     allAppItems.push(repoData.smartApps.parent);
     for (const ca in repoData.smartApps.children) {
-        allAppItems.push(repoData.smartApps.children[ca]);
+        if (selctd.smartapps.includes(repoData.smartApps.children[ca].name)) {
+            allAppItems.push(repoData.smartApps.children[ca]);
+        }
     }
     retryCnt++;
     getStAuth().then(function(resp) {
@@ -343,7 +349,12 @@ function processIntall(repoData) {
                                                             })
                                                             .then(function(resp) {
                                                                 if (repoData.deviceHandlers && repoData.deviceHandlers.length) {
-                                                                    let devItems = repoData.deviceHandlers;
+                                                                    let devItems = [];
+                                                                    for (const dh in repoData.deviceHandlers) {
+                                                                        if (selctd.devices.includes(repoData.deviceHandlers[dh].name)) {
+                                                                            devItems.push(repoData.deviceHandlers[dh]);
+                                                                        }
+                                                                    }
                                                                     checkIfItemsInstalled(devItems, 'device')
                                                                         .catch(function(err) {
                                                                             installError(err, false);
@@ -382,7 +393,12 @@ function processIntall(repoData) {
                                             }
                                         });
                                 } else if (repoData.deviceHandlers && repoData.deviceHandlers.length) {
-                                    let devItems = repoData.deviceHandlers;
+                                    let devItems = [];
+                                    for (const dh in repoData.deviceHandlers) {
+                                        if (selctd.devices.includes(repoData.deviceHandlers[dh].name)) {
+                                            devItems.push(repoData.deviceHandlers[dh]);
+                                        }
+                                    }
                                     checkIfItemsInstalled(devItems, 'device')
                                         .catch(function(err) {
                                             installError(err, false);
@@ -466,10 +482,10 @@ function checkRepoUpdateStatus(objId, type) {
     let url = '';
     switch (type) {
         case 'device':
-            url = devRepoChkUrl;
+            url = devUpdChkUrl;
             break;
         case 'app':
-            url = appRepoChkUrl;
+            url = appUpdChkUrl;
             break;
     }
     return new Promise(function(resolve, reject) {
@@ -543,6 +559,100 @@ function installAppsToIde(appNames) {
                 });
         }
     });
+}
+
+function updateAppCode(appId, appType) {
+    if (appId && appType) {
+        updLoaderText('Checking', appType);
+        makeRequest(appUpd1Url, 'GET', null, appId, appType)
+            .catch(function(errResp1) {
+                installError(errResp1, false);
+                addResult(errResp1.appDesc + ' Update Issue', false);
+            })
+            .then(function(stResp1) {
+                // console.log(stResp1);
+                var respData = JSON.parse(stResp1.response);
+                if (respData.hasDifference === true) {
+                    updLoaderText('Updating', stResp1.appDesc);
+                    makeRequest(appUpd2Url, 'GET', null, stResp1.appId, stResp1.appDesc)
+                        .catch(function(errResp2) {
+                            installError(errResp2, false);
+                            addResult(errResp2.appDesc + ' Update Issue', false);
+                        })
+                        .then(function(stResp2) {
+                            if (!JSON.parse(stResp2.response).errors.length) {
+                                updLoaderText('Compiling', stResp2.appDesc);
+                                // console.log("stResp2(" + stResp2.appId + "):", JSON.parse(stResp2.response));
+                                makeRequest(appUpd3Url, 'GET', null, stResp2.appId, stResp2.appDesc)
+                                    .catch(function(errResp3) {
+                                        addResult(errResp3.appDesc + ' Update Issue', false);
+                                        installError(errResp3, false);
+                                    })
+                                    .then(function(stResp3) {
+                                        // console.log("stResp3(" + stResp3.appId + "):", JSON.parse(stResp3.response));
+                                        addResult(stResp3.appDesc + ' was Updated', true);
+                                    });
+                            }
+                        });
+                } else {
+                    addResult(stResp4.appDesc + ' is Up-to-Date', true);
+                    devsDone.push(stResp4.appDesc);
+                    sessionStorage.setItem('devsDone', devsDone);
+                    if (devsDone.length === Object.keys(devIds).length) {
+                        installComplete('Updates are Complete!<br/>Everything is Good!');
+                    }
+                }
+            });
+    }
+}
+
+function updateDeviceCode(devId, devType) {
+    if (devId && devType) {
+        makeRequest(devUpd1Url, 'GET', null, devId, devType)
+            .catch(function(errResp4) {
+                installError(errResp4, false);
+                addResult(errResp4.appDesc + ' Update Issue', false);
+            })
+            .then(function(stResp4) {
+                // console.log(stResp4);
+                var respData = JSON.parse(stResp4.response);
+                if (respData.hasDifference === true) {
+                    updLoaderText('Updating', stResp4.appDesc);
+                    makeRequest(devUpd2Url, 'GET', null, stResp4.appId, stResp4.appDesc)
+                        .catch(function(errResp5) {
+                            installError(errResp5, false);
+                            addResult(errResp5.appDesc + ' Update Issue', false);
+                        })
+                        .then(function(stResp5) {
+                            if (!JSON.parse(stResp5.response).errors.length) {
+                                updLoaderText('Compiling', stResp5.appDesc);
+                                // console.log("stResp5(" + stResp5.appId + "):", JSON.parse(stResp5.response));
+                                makeRequest(devUpd3Url, 'GET', null, stResp5.appId, stResp5.appDesc)
+                                    .catch(function(errResp6) {
+                                        addResult(errResp6.appDesc + ' Update Issue', false);
+                                        installError(errResp6, false);
+                                    })
+                                    .then(function(stResp6) {
+                                        // console.log("stResp6(" + stResp6.appId + "):", JSON.parse(stResp6.response));
+                                        addResult(stResp6.appDesc + ' was Updated', true);
+                                        devsDone.push(stResp6.appDesc);
+                                        sessionStorage.setItem('devsDone', devsDone);
+                                        if (devsDone.length === Object.keys(devIds).length) {
+                                            installComplete('Updates are Complete!<br/>Everything is Good!');
+                                        }
+                                    });
+                            }
+                        });
+                } else {
+                    addResult(stResp4.appDesc + ' is Up-to-Date', true);
+                    devsDone.push(stResp4.appDesc);
+                    sessionStorage.setItem('devsDone', devsDone);
+                    if (devsDone.length === Object.keys(devIds).length) {
+                        installComplete('Updates are Complete!<br/>Everything is Good!');
+                    }
+                }
+            });
+    }
 }
 
 function removeAppsFromIde(appNames) {
@@ -912,6 +1022,7 @@ function createAppDevTable(items, areDevices = false, type) {
             var child = items[item].isChild === true;
             var disabled = parent || !appOptional ? ' disabled' : '';
             var checked = parent || !appOptional ? ' checked' : '';
+            var itemId = type === 'device' ? 'device' + cnt : 'smartapp' + cnt;
 
             html += '\n                   <tr>';
             html += '\n                      <td class="align-middle py-0" style="border: 1px solid grey">';
@@ -919,8 +1030,8 @@ function createAppDevTable(items, areDevices = false, type) {
             html += '\n                             <div class="d-flex flex-column justify-content-start my-1 form-check' + disabled + '">';
             html += '\n                                 <div class="flex-column justify-content-start">';
             html += '\n                                     <div class="d-flex flex-row">';
-            html += '\n                                          <input class="form-check-input align-middle" type="checkbox" value="" id="smartapp' + cnt + '"' + checked + disabled + '>';
-            html += '\n                                          <label class="form-check-label align-middle" for="smartapp' + cnt + '"><small class="align-middle">' + items[item].name + '</small></label>';
+            html += '\n                                          <input class="form-check-input align-middle" type="checkbox" value="" id="' + itemId + '"' + checked + disabled + '>';
+            html += '\n                                          <label class="form-check-label align-middle" for="' + itemId + '"><small id="' + itemId + 'name" class="align-middle">' + items[item].name + '</small></label>';
             html += '\n                                     </div>';
             html += '\n                                 </div>';
             html += '\n                             </div>';
@@ -1090,6 +1201,19 @@ function renderAppView(appName) {
                         buildAppList();
                     });
                     $('#installBtn').click(function() {
+                        var selected = {};
+                        selected['smartapps'] = [];
+                        selected['devices'] = [];
+                        $('#appViewCard input:checked').each(function() {
+                            let itemName = $(this).attr('id');
+                            if (itemName.startsWith('smartapp')) {
+                                selected['smartapps'].push($('#' + $(this).attr('id') + 'name').text());
+                            }
+                            if (itemName.startsWith('device')) {
+                                selected['devices'].push($('#' + $(this).attr('id') + 'name').text());
+                            }
+                        });
+                        console.log('checked: ', selected);
                         updSectTitle('Install Progress');
                         $('#appViewDiv').html('');
                         $('#appViewDiv').css({ display: 'none' });
@@ -1097,7 +1221,7 @@ function renderAppView(appName) {
                         $('#loaderDiv').css({ display: 'block' });
                         $('#actResultsDiv').css({ display: 'block' });
                         scrollToTop();
-                        processIntall(manifest);
+                        processIntall(manifest, selected);
                     });
                     $('#removeBtn').click(function() {
                         updSectTitle('Removal Progress');
