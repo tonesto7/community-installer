@@ -31,12 +31,10 @@ function generateStUrl(path) {
 
 const appsManifest = [{
         name: 'NST Manager',
-        appName: 'Nest Manager',
+        appName: 'Nest-Manager',
         author: 'Anthony S.',
         description: 'This SmartApp is used to integrate your Nest devices with SmartThings and to enable built-in automations',
         category: 'Convenience',
-        videoUrl: 'http://f.cl.ly/items/3O2L03471l2K3E3l3K1r/Zombie%20Kid%20Likes%20Turtles.mp4',
-        photoUrl: 'https://raw.githubusercontent.com/tonesto7/nest-manager/master/Images/App/nst_manager_5.png',
         iconUrl: 'https://raw.githubusercontent.com/tonesto7/nest-manager/master/Images/App/nst_manager_5.png',
         manifestUrl: 'https://rawgit.com/tonesto7/nest-manager/master/installerManifest.json',
         repoName: 'nest-manager'
@@ -47,11 +45,29 @@ const appsManifest = [{
         author: 'Echosistant Team',
         description: 'The Ultimate Voice Controlled Assistant Using Alexa Enabled Devices.',
         category: 'My Apps',
-        videoUrl: 'http://f.cl.ly/items/3O2L03471l2K3E3l3K1r/Zombie%20Kid%20Likes%20Turtles.mp4',
-        photoUrl: 'https://echosistant.com/es5_content/images/Echosistant_V5.png',
         iconUrl: 'https://echosistant.com/es5_content/images/Echosistant_V5.png',
         manifestUrl: 'https://raw.githubusercontent.com/BamaRayne/Echosistant/master/installerManifest.json',
         repoName: 'echosistant-dev'
+    },
+    {
+        name: 'Ask Alexa',
+        appName: 'Ask-Alexa',
+        author: 'Michael Struck',
+        description: 'Advanced voice control of your SmartThing Environment using Amazon Echo.',
+        category: 'My Apps',
+        iconUrl: 'https://raw.githubusercontent.com/MichaelStruck/SmartThingsPublic/master/img/AskAlexa512.png',
+        manifestUrl: 'https://rawgit.com/MichaelStruck/SmartThingsPublic/master/smartapps/michaelstruck/ask-alexa.src/AAmanifest.json',
+        repoName: 'SmartThingsPublic'
+    },
+    {
+        name: 'Alexa Virtual Switch Creator',
+        appName: 'Alexa-Virtual-Switch-Creator',
+        author: 'Michael Struck',
+        description: 'Advanced voice control of your SmartThing Environment using Amazon Echo.',
+        category: 'My Apps',
+        iconUrl: 'https://raw.githubusercontent.com/MichaelStruck/SmartThingsPublic/master/img/AskAlexa512.png',
+        manifestUrl: 'https://raw.githubusercontent.com/MichaelStruck/SmartThingsPublic/master/smartapps/michaelstruck/alexa-virtual-switch-creator.src/AVSWmanifest.json',
+        repoName: 'SmartThingsPublic'
     }
 ];
 
@@ -133,6 +149,14 @@ function capitalize(value) {
             return v.toUpperCase();
         }) :
         '';
+}
+
+function cleanString(str) {
+    if (str instanceof Array) {
+        return str.map(theItem => theItem.replace(/[^a-zA-Z0-9 ]/gi, '').replace(/\s{2,}/gi, ' ').toLowerCase().trim()).join('|');
+    } else {
+        return str === undefined ? '' : str.replace(/[^a-zA-Z0-9 ]/gi, '').replace(/\s{2,}/gi, ' ').toLowerCase().trim();
+    }
 }
 
 function addResult(str, good, type = '', str2 = '') {
@@ -317,7 +341,7 @@ function processIntall(repoData, selctd) {
                                     .then(function(resp) {
                                         //   console.log(resp);
                                         if (resp === true && repoData) {
-                                            processIntall(repoData);
+                                            processIntall(repoData, selctd);
                                         }
                                     });
                             });
@@ -348,7 +372,7 @@ function processIntall(repoData, selctd) {
                                                                 installError(err, false);
                                                             })
                                                             .then(function(resp) {
-                                                                if (repoData.deviceHandlers && repoData.deviceHandlers.length) {
+                                                                if (resp && repoData.deviceHandlers && repoData.deviceHandlers.length) {
                                                                     let devItems = [];
                                                                     for (const dh in repoData.deviceHandlers) {
                                                                         if (selctd.devices.includes(repoData.deviceHandlers[dh].name)) {
@@ -437,7 +461,7 @@ function processIntall(repoData, selctd) {
                 });
         } else {
             if (retryCnt < 5) {
-                processIntall();
+                processIntall(repoData, selctd);
             } else {
                 installComplete('Authentication Issue!<br/>Make Sure you Signed In!', true);
             }
@@ -450,7 +474,7 @@ function addRepoToIde(repoData) {
         updLoaderText('Adding', 'Repo to ST');
         let repoParams = buildRepoParamString(repoData, writableRepos);
         // console.log('repoParams: ', repoParams);
-        addResult('(' + repoData.repoName + ')', true, 'repo', 'Not Added');
+        addResult('Repo (' + repoData.repoName + ')', true, 'repo', 'Not Added');
         makeRequest(updRepoUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
             .catch(function(err) {
                 installError(err, false);
@@ -459,7 +483,7 @@ function addRepoToIde(repoData) {
                 reject(err);
             })
             .then(function(resp) {
-                console.log(resp);
+                // console.log(resp);
                 updLoaderText('Verifying', 'Repo');
                 checkIdeForRepo(repoData.repoName, repoData.repoBranch)
                     .catch(function(err) {
@@ -468,8 +492,8 @@ function addRepoToIde(repoData) {
                     })
                     .then(function(resp) {
                         if (resp === true) {
-                            addResult('(' + repoData.repoName + ')', true, 'repo', 'Repo Added');
-                            addResult('(' + repoData.repoName + ')', true, 'repo', 'Repo Verified');
+                            addResult('Repo (' + repoData.repoName + ')', true, 'repo', 'Added');
+                            addResult('Repo (' + repoData.repoName + ')', true, 'repo', 'Verified');
                         }
                         resolve(resp);
                     });
@@ -655,33 +679,38 @@ function updateDeviceCode(devId, devType) {
     }
 }
 
-function removeAppsFromIde(appNames) {
+function removeAppsFromIde(appNames, selctd) {
     return new Promise(function(resolve, reject) {
-        let allAppItems = [];
+        var allAppItems = [];
+
         for (const ca in appNames.smartApps.children) {
-            allAppItems.push(appNames.smartApps.children[ca]);
+            if (selctd.smartapps.includes(appNames.smartApps.children[ca].name)) {
+                allAppItems.push(appNames.smartApps.children[ca]);
+            }
+
         }
-        allAppItems.push(appNames.smartApps.parent);
+        if (selctd.smartapps.includes(appNames.smartApps.parent.name)) {
+            allAppItems.push(appNames.smartApps.parent);
+        }
         updLoaderText('Beginning', 'Removal');
         // console.log('repoParams: ', repoParams);
         if (allAppItems) {
-            for (const i in allAppItems) {
-                let appId = availableApps.filter(app => app.name === allAppItems[i].name);
-                if (appId.length && appId[0] && appId[0].id) {
-                    makeRequest(doAppRemoveUrl + appId[0].id, 'GET', null)
-                        .catch(function(err) {
-                            installError(err, false);
-                            addResult('App Removal Issue', false, 'app', err);
-                            installComplete('Error!<br/>Try Again Later!', true);
-                            reject(err);
-                        })
-                        .then(function(resp) {
-                            updLoaderText('Apps', 'Removed');
-                            addResult(allAppItems[i].name, true, 'app', 'App Removed');
-                            installComplete('Removals are Complete!<br/>Everything is Good!');
-                        });
-                } else {
-                    installComplete('Removals are Complete!<br/>Everything is Good!');
+            for (const da in availableApps) {
+                for (const i in allAppItems) {
+                    if (availableApps[da].name === allAppItems[i].name) {
+                        makeRequest(doAppRemoveUrl + availableApps[da].id, 'GET', null)
+                            .catch(function(err) {
+                                installError(err, false);
+                                addResult('App Removal Issue', false, 'app', err);
+                                installComplete('Error!<br/>Try Again Later!', true);
+                                reject(err);
+                            })
+                            .then(function(resp) {
+                                updLoaderText('Apps', 'Removed');
+                                addResult(allAppItems[i].name, true, 'app', 'App Removed');
+                                installComplete('Removals are Complete!<br/>Everything is Good!');
+                            });
+                    }
                 }
             }
         } else {
@@ -705,7 +734,7 @@ function updateAppSettings(repoData) {
                 if (appList.length) {
                     for (const al in appList) {
                         let appParams = buildSettingParams(appList[al], updApps[i], repoId, repoData, 'app');
-                        makeRequest(doAppSettingUpdUrl, 'POST', appParams, null, null, 'application/x-www-form-urlencoded', 'text/html,application/xhtml+xml,application/xml;', true)
+                        makeRequest(doAppSettingUpdUrl, 'POST', appParams, null, null, 'application/x-www-form-urlencoded', '', true)
                             .catch(function(err) {
                                 installError(err, false);
                                 addResult('App Settings Update', false, 'app', err);
@@ -823,13 +852,16 @@ function checkIfItemsInstalled(itemObj, type, secondPass = false) {
                     updLoaderText('Analyzing', capitalize(type));
                     for (let a in itemObj) {
                         for (let i in itemsFnd) {
-                            // console.log('itemsFnd: ', itemsFnd[i].name, ' | requested ' + type + ': ' + itemObj[a].name);
+
                             if (itemsFnd[i].name === itemObj[a].name) {
+                                // console.error('itemsFnd: ', itemsFnd[i].name, ' | requested ' + type + ': ' + itemObj[a].name, 'isMatch: (' + (itemsFnd[i].name === itemObj[a].name) + ')');
                                 if (!secondPass) {
                                     addResult(itemObj[a].name, true, type, 'Already Installed');
                                 }
                                 delete itemObj[a];
                                 break;
+                            } else {
+                                // console.log('itemsFnd: ', itemsFnd[i].name, ' | requested ' + type + ': ' + itemObj[a].name, 'isMatch: (' + (itemsFnd[i].name === itemObj[a].name) + ')');
                             }
                         }
                     }
@@ -912,7 +944,7 @@ function buildAppList(filterStr = undefined) {
             }
             html += '\n   <tr style="border-bottom-style: hidden; border-top-style: hidden;">';
             html += '\n   <td class="py-1">';
-            html += '\n     <a href="#" id="' + appData[i].repoName + '" onclick="appItemClicked(this)" class="list-group-item list-group-item-action flex-column align-items-start p-2" style="border-radius: 20px;">';
+            html += '\n     <a href="#" id="' + appData[i].appName + '" onclick="appItemClicked(this)" class="list-group-item list-group-item-action flex-column align-items-start p-2" style="border-radius: 20px;">';
 
             html += '\n         <div class="d-flex w-100 justify-content-between align-items-center">';
             html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
@@ -1031,7 +1063,7 @@ function createAppDevTable(items, areDevices = false, type) {
             html += '\n                                 <div class="flex-column justify-content-start">';
             html += '\n                                     <div class="d-flex flex-row">';
             html += '\n                                          <input class="form-check-input align-middle" type="checkbox" value="" id="' + itemId + '"' + checked + disabled + '>';
-            html += '\n                                          <label class="form-check-label align-middle" for="' + itemId + '"><small id="' + itemId + 'name" class="align-middle">' + items[item].name + '</small></label>';
+            html += '\n                                          <label class="form-check-label align-middle" for="' + itemId + '"><small id="' + itemId + 'name" class="align-middle" style="font-size: 72%;">' + items[item].name + '</small></label>';
             html += '\n                                     </div>';
             html += '\n                                 </div>';
             html += '\n                             </div>';
@@ -1066,7 +1098,7 @@ function renderAppView(appName) {
     let html = '';
     var manifest;
     if (appsManifest.length > 0) {
-        let appItem = appsManifest.filter(app => app.repoName === appName);
+        let appItem = appsManifest.filter(app => app.appName === appName);
         // console.log(appItem);
         // let instApp = availableApps.filter(app => app.name.toString() === appsManifest[i].appName.toString());
         let appInstalled = false; // (instApp[0] !== undefined && instApp.length);
@@ -1175,7 +1207,7 @@ function renderAppView(appName) {
                         html += '\n       <div class="flex-row align-right mr-1 mt-1">';
                         html += '\n           <div class="d-flex flex-column justify-content- align-items-center">';
                         html += '\n               <button id="installBtn" type="button" class="btn btn-success" style="border-radius: 40px;">Install</button>';
-                        // html += '\n               <button id="removeBtn" type="button" class="btn btn-danger" style="border-radius: 40px;">Remove</button>';
+                        html += '\n               <button id="removeBtn" type="button" class="btn btn-danger" style="border-radius: 40px;">Remove</button>';
                         html += '\n           </div>';
                         html += '\n       </div>';
                         html += '\n  </div>';
@@ -1224,6 +1256,18 @@ function renderAppView(appName) {
                         processIntall(manifest, selected);
                     });
                     $('#removeBtn').click(function() {
+                        var selected = {};
+                        selected['smartapps'] = [];
+                        selected['devices'] = [];
+                        $('#appViewCard input:checked').each(function() {
+                            let itemName = $(this).attr('id');
+                            if (itemName.startsWith('smartapp')) {
+                                selected['smartapps'].push($('#' + $(this).attr('id') + 'name').text());
+                            }
+                            if (itemName.startsWith('device')) {
+                                selected['devices'].push($('#' + $(this).attr('id') + 'name').text());
+                            }
+                        });
                         updSectTitle('Removal Progress');
                         $('#appViewDiv').html('');
                         $('#appViewDiv').css({ display: 'none' });
@@ -1231,7 +1275,7 @@ function renderAppView(appName) {
                         $('#loaderDiv').css({ display: 'block' });
                         $('#actResultsDiv').css({ display: 'block' });
                         scrollToTop();
-                        removeAppsFromIde(manifest);
+                        removeAppsFromIde(manifest, selected);
                     });
                     new WOW().init();
                 });
