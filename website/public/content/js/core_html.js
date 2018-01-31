@@ -20,12 +20,12 @@ function buildCoreHtml() {
     let html = '';
     html += '\n       <header>';
     html += '\n           <nav class="navbar navbar-fixed-top navbar-dark ">';
-    html += '\n               <div class="d-flex w-100 justify-content-between align-items-center mx-auto" style="max-width: 700px;">';
+    html += '\n               <div class="d-flex w-100 justify-content-between align-items-center mx-auto" style="max-width: 725px;">';
     html += '\n                   <div class="d-flex flex-column justify-content-center align-items-center">';
     html += '\n                       <a class="nav-link white-text p-0" href="' + homeUrl + '" style="font-size: 30px;"><i id="homeBtn" class="fa fa-home"></i><span class="sr-only">(current)</span></a>';
     html += '\n                   </div>';
     html += '\n                   <div class="d-flex flex-column justify-content-center align-items-center">';
-    html += '\n                       <a class="navbar-brand" href=""><span class="align-middle"><img src="' + baseAppUrl + '/content/images/app_logo.png" height="40" class="d-inline-block align-middle" alt=""> Installer</span></a>';
+    html += '\n                       <a class="navbar-brand"><span class="align-middle"><img src="' + baseAppUrl + '/content/images/app_logo.png" height="40" class="d-inline-block align-middle" alt=""> Installer</span></a>';
     html += '\n                   </div>';
     html += '\n                   <div class="d-flex flex-column justify-content-center align-items-center">';
     html += '\n                       <a id="showSearchBtn" class="nav-link white-text p-0" style="font-size: 30px;"><i class="fa fa-search"></i><span class="sr-only">(current)</span></a>';
@@ -34,7 +34,7 @@ function buildCoreHtml() {
     html += '\n           </nav>';
     html += '\n       </header>';
     html += '\n       <main class="mt-3">';
-    html += '\n           <div id="mainDiv" class="container-fluid" style="min-width: 380px; max-width: 700px; height: auto; min-height: 100%; ">';
+    html += '\n           <div id="mainDiv" class="container-fluid" style="min-width: 380px; max-width: 750px; height: auto; min-height: 100%; ">';
     html += '\n               <section class="px-3">';
     html += '\n                   <div class="w-100 text-center">';
     html += '\n                       <h2 id="sectTitle" class="h2-responsive" style="font-weight: 400;">Software Installer</h2>';

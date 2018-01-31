@@ -1195,7 +1195,7 @@ function createAppDevTable(items, areDevices = false, type) {
             html += '\n                                 <div class="flex-column justify-content-start">';
             html += '\n                                     <div class="d-flex flex-row">';
             html += '\n                                          <input class="form-check-input align-middle" type="checkbox" value="" id="' + itemId + '"' + checked + disabled + '>';
-            html += '\n                                          <label class="form-check-label align-middle" for="' + itemId + '"><small id="' + itemId + 'name" class="align-middle" style="font-size: 72%;">' + items[item].name + '</small></label>';
+            html += '\n                                          <label class="form-check-label align-middle" for="' + itemId + '"><small id="' + itemId + 'name" class="align-middle" style="font-size: 0.7em; white-space: nowrap;">' + items[item].name + '</small></label>';
             html += '\n                                     </div>';
             html += '\n                                 </div>';
             html += '\n                             </div>';
@@ -1282,25 +1282,25 @@ function renderAppView(appName) {
                         html += '\n             <h6 class="h6-responsive white-text"><u>GitHub Details</u></h6>';
                         html += '\n         </div>';
                         html += '\n         <div class="d-flex justify-content-center align-items-center mx-auto">';
-                        html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
+                        html += '\n             <div class="d-flex flex-column justify-content-center align-items-center mx-2">';
                         html += '\n                 <div class="d-flex flex-row">';
-                        html += '\n                     <small class="align-middle"><b>Repo Name:</b></small>';
+                        html += '\n                     <small class="align-middle"><b>Repo Name</b></small>';
                         html += '\n                 </div>';
                         html += '\n                 <div class="d-flex flex-row">';
                         html += '\n                     <small class="align-middle mx-2"><em>' + manifest.repoName + '</em></small>';
                         html += '\n                 </div>';
                         html += '\n             </div>';
-                        html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
+                        html += '\n             <div class="d-flex flex-column justify-content-center align-items-center mx-2">';
                         html += '\n                 <div class="d-flex flex-row">';
-                        html += '\n                     <small class="align-middle"><b>Branch:</b></small>';
+                        html += '\n                     <small class="align-middle"><b>Branch</b></small>';
                         html += '\n                 </div>';
                         html += '\n                 <div class="d-flex flex-row">';
                         html += '\n                     <small class="align-middle mx-2"><em>' + manifest.repoBranch + '</em></small>';
                         html += '\n                 </div>';
                         html += '\n             </div>';
-                        html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
+                        html += '\n             <div class="d-flex flex-column justify-content-center align-items-center mx-2">';
                         html += '\n                 <div class="d-flex flex-row">';
-                        html += '\n                     <small class="align-middle"><b>Owner:</b></small>';
+                        html += '\n                     <small class="align-middle"><b>Owner</b></small>';
                         html += '\n                 </div>';
                         html += '\n                 <div class="d-flex flex-row">';
                         html += '\n                     <small class="align-middle mx-2"><em>' + manifest.repoOwner + '</em></small>';
@@ -1339,8 +1339,10 @@ function renderAppView(appName) {
                         html += '\n  <div class="card card-body card-outline p-1 my-2" style="background-color: transparent;">';
                         html += '\n       <div class="flex-row align-right mr-1 my-2">';
                         html += '\n           <div class="d-flex flex-column justify-content- align-items-center">';
-                        html += '\n               <button id="installBtn" type="button" class="btn btn-success" style="border-radius: 40px;">Install</button>';
-                        html += '\n               <button id="removeBtn" type="button" class="btn btn-danger" style="border-radius: 40px;">Remove</button>';
+                        html += '\n               <div class="btn-group">';
+                        html += '\n                   <button id="installBtn" type="button" class="btn btn-success mx-2" style="border-radius: 20px;">Install</button>';
+                        html += '\n                   <button id="removeBtn" type="button" class="btn btn-danger mx-2" style="border-radius: 20px;">Remove</button>';
+                        html += '\n               </div>';
                         html += '\n           </div>';
                         html += '\n       </div>';
                         html += '\n  </div>';
@@ -1354,9 +1356,9 @@ function renderAppView(appName) {
                     $('#actResultsDiv').css({ display: 'none' });
                     $('#appViewDiv').css({ display: 'block' });
                     let appViewCard = $('#appViewCard');
-                    if (appViewCard.height() > 390) {
-                        appViewCard.height(appViewCard.height() + 50 + 'px');
-                    }
+                    // if (appViewCard.height() > 390) {
+                    //     appViewCard.height(appViewCard.height() + 50 + 'px');
+                    // }
                     $('#appCloseBtn').click(function() {
                         console.log('appCloseBtn');
                         updSectTitle('Select an Item');
