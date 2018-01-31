@@ -40,7 +40,7 @@ function buildCoreHtml() {
     html += '\n           <div id="mainDiv" class="container" style="min-width: 380px; max-width: 700px; height: auto; min-height: 100%; ">';
     html += '\n               <section class="px-3">';
     html += '\n                   <div class="w-100 text-center">';
-    html += '\n                       <h2 id="sectTitle" class="h2-responsive" style="font-weight: 400; display: none;">Software Installer</h2>';
+    html += '\n                       <h2 id="sectTitle" class="h2-responsive" style="font-weight: 400;">Software Installer</h2>';
     html += '\n                       <div id="loaderDiv" class="flex-row fadeIn fadeOut">';
     html += '\n                           <div class="d-flex flex-column justify-content-center align-items-center" style="height: 200px;">';
     html += '\n                               <svg id="loader" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid" class="lds-double-ring">';
@@ -112,6 +112,6 @@ function buildCoreHtml() {
     html += '\n               </div>';
     html += '\n           </div>';
     html += '\n       </footer>';
-    $('body').css({ 'margin-top': '80px', 'overflow-x': 'hidden', 'overflow-y': 'auto', 'margin-bottom': '100px' });
+    $('body').css({ 'margin-top': '80px', 'overflow-x': 'hidden', 'overflow-y': 'auto', 'margin-bottom': '120px' });
     $('#bodyDiv').html(html);
 }
