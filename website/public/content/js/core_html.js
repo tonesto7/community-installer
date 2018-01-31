@@ -19,7 +19,7 @@ function buildCoreHtml() {
     let html = '';
     html += '\n       <header>';
     html += '\n           <nav class="navbar fixed-top navbar-expand-lg navbar-dark ">';
-    html += '\n               <a class="navbar-brand" href="' + homeUrl + '"><img src="' + baseAppUrl + '/content/images/app_logo.png" height="30" class="d-inline-block align-top" alt=""> Installer</a>';
+    html += '\n               <a class="navbar-brand" href="' + homeUrl + '"><span class="align-middle"><img src="' + baseAppUrl + '/content/images/app_logo.png" height="40" class="d-inline-block align-middle" alt=""> Installer</span></a>';
     html += '\n               <!-- Collapse button -->';
     html += '\n               <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>';
 
@@ -112,6 +112,6 @@ function buildCoreHtml() {
     html += '\n               </div>';
     html += '\n           </div>';
     html += '\n       </footer>';
-    $('body').css({ 'margin-top': '70px', 'overflow-x': 'hidden', 'overflow-y': 'auto', 'margin-bottom': '100px' });
+    $('body').css({ 'margin-top': '80px', 'overflow-x': 'hidden', 'overflow-y': 'auto', 'margin-bottom': '100px' });
     $('#bodyDiv').html(html);
 }

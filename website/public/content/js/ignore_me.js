@@ -12,6 +12,7 @@ const updRepoUrl = generateStUrl('githubAuth/updateRepos');
 const updFormUrl = generateStUrl('githubAuth/updateForm');
 const doAppRepoUpdUrl = generateStUrl('ide/app/doRepoUpdates');
 const doAppRemoveUrl = generateStUrl('ide/app/delete/');
+const doDevRemoveUrl = generateStUrl('ide/device/delete/');
 const doDevRepoUpdUrl = generateStUrl('ide/device/doRepoUpdates');
 const doDevSettingUpdUrl = generateStUrl('ide/device/update');
 const doAppSettingUpdUrl = generateStUrl('ide/app/update');
@@ -63,9 +64,9 @@ const appsManifest = [{
         name: 'Alexa Virtual Switch Creator',
         appName: 'Alexa-Virtual-Switch-Creator',
         author: 'Michael Struck',
-        description: 'Advanced voice control of your SmartThing Environment using Amazon Echo.',
+        description: 'Allows for creation of SmartThings virtual switches that can be tied to items controlled by Amazon Echo(" Alexa ").',
         category: 'My Apps',
-        iconUrl: 'https://raw.githubusercontent.com/MichaelStruck/SmartThingsPublic/master/img/AskAlexa512.png',
+        iconUrl: 'https://raw.githubusercontent.com/MichaelStruck/SmartThingsPublic/master/smartapps/michaelstruck/alexa-helper.src/Alexa@2x.png',
         manifestUrl: 'https://raw.githubusercontent.com/MichaelStruck/SmartThingsPublic/master/smartapps/michaelstruck/alexa-virtual-switch-creator.src/AVSWmanifest.json',
         repoName: 'SmartThingsPublic'
     }
@@ -152,10 +153,8 @@ function capitalize(value) {
 }
 
 function cleanString(str) {
-    if (str instanceof Array) {
-        return str.map(theItem => theItem.replace(/[^a-zA-Z0-9 ]/gi, '').replace(/\s{2,}/gi, ' ').toLowerCase().trim()).join('|');
-    } else {
-        return str === undefined ? '' : str.replace(/[^a-zA-Z0-9 ]/gi, '').replace(/\s{2,}/gi, ' ').toLowerCase().trim();
+    if (str) {
+        return str === undefined ? '' : str.replace(/[^a-zA-Z0-9 ]/gi, ' ').replace(/\s{2,}/gi, ' ').trim();
     }
 }
 
@@ -262,7 +261,7 @@ function buildRepoParamString(newRepo, existData) {
     return objs.join('&');
 }
 
-function buildInstallParams(repoid, items) {
+function buildInstallParams(repoid, items, type) {
     let objs = [];
     objs.push('id=' + repoid);
     for (let i in items) {
@@ -566,7 +565,7 @@ function installAppsToIde(appNames) {
         // console.log('repoParams: ', repoParams);
         if (appNames) {
             updLoaderText('Installing', 'SmartApps');
-            let repoParams = buildInstallParams(repoId, appNames);
+            let repoParams = buildInstallParams(repoId, appNames, 'apps');
             makeRequest(doAppRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
                 .catch(function(err) {
                     installError(err, false);
@@ -682,15 +681,19 @@ function updateDeviceCode(devId, devType) {
 function removeAppsFromIde(appNames, selctd) {
     return new Promise(function(resolve, reject) {
         var allAppItems = [];
-
         for (const ca in appNames.smartApps.children) {
             if (selctd.smartapps.includes(appNames.smartApps.children[ca].name)) {
                 allAppItems.push(appNames.smartApps.children[ca]);
             }
-
         }
         if (selctd.smartapps.includes(appNames.smartApps.parent.name)) {
             allAppItems.push(appNames.smartApps.parent);
+        }
+        var allDevItems = [];
+        for (const dh in appNames.deviceHandlers) {
+            if (selctd.devices.includes(appNames.deviceHandlers[dh].name)) {
+                allDevItems.push(appNames.deviceHandlers[dh]);
+            }
         }
         updLoaderText('Beginning', 'Removal');
         // console.log('repoParams: ', repoParams);
@@ -708,6 +711,27 @@ function removeAppsFromIde(appNames, selctd) {
                             .then(function(resp) {
                                 updLoaderText('Apps', 'Removed');
                                 addResult(allAppItems[i].name, true, 'app', 'App Removed');
+                                installComplete('Removals are Complete!<br/>Everything is Good!');
+                            });
+                    }
+                }
+            }
+        }
+
+        if (allDevItems) {
+            for (const i in allDevItems) {
+                for (const da in availableDevs) {
+                    if (availableDevs[da].name.trim() === allDevItems[i].name.trim()) {
+                        makeRequest(doDevRemoveUrl + availableDevs[da].id, 'GET', null)
+                            .catch(function(err) {
+                                installError(err, false);
+                                addResult('Device Removal Issue', false, 'device', err);
+                                installComplete('Error!<br/>Try Again Later!', true);
+                                reject(err);
+                            })
+                            .then(function(resp) {
+                                updLoaderText('Devices', 'Removed');
+                                addResult(allDevItems[i].name, true, 'device', 'Device Removed');
                                 installComplete('Removals are Complete!<br/>Everything is Good!');
                             });
                     }
@@ -746,7 +770,7 @@ function updateAppSettings(repoData) {
                                 for (let i in updApps) {
                                     addResult(updApps[i].name, true, 'app', 'OAuth Enabled');
                                 }
-                                if (i + 1 === updApps.length) {
+                                if (i < 1 ? 1 : i + 1 === updApps.length) {
                                     resolve(true);
                                 }
                             });
@@ -767,7 +791,7 @@ function installDevsToIde(devNames) {
         // console.log('repoParams: ', repoParams);
         if (devNames) {
             updLoaderText('Installing', 'Devices');
-            let repoParams = buildInstallParams(repoId, devNames);
+            let repoParams = buildInstallParams(repoId, devNames, 'devices');
             makeRequest(doDevRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
                 .catch(function(err) {
                     installError(err, false);
@@ -778,7 +802,7 @@ function installDevsToIde(devNames) {
                 .then(function(resp) {
                     updLoaderText('Devices', 'Installed');
                     for (let i in devNames) {
-                        addResult(devNames[i].name, true, 'device', 'Installed');
+                        addResult(devNames[i].name.trim(), true, 'device', 'Installed');
                     }
                     resolve(true);
                 });
@@ -815,8 +839,8 @@ function getAvailableAppsDevices(updDom = false) {
                             availableDevs = fndDevs;
                             out['devices'] = fndDevs;
                         }
+                        resolve(out);
                     });
-                resolve(out);
             });
     });
 }
@@ -852,7 +876,6 @@ function checkIfItemsInstalled(itemObj, type, secondPass = false) {
                     updLoaderText('Analyzing', capitalize(type));
                     for (let a in itemObj) {
                         for (let i in itemsFnd) {
-
                             if (itemsFnd[i].name === itemObj[a].name) {
                                 // console.error('itemsFnd: ', itemsFnd[i].name, ' | requested ' + type + ': ' + itemObj[a].name, 'isMatch: (' + (itemsFnd[i].name === itemObj[a].name) + ')');
                                 if (!secondPass) {
@@ -895,10 +918,22 @@ function findAppMatch(srchStr, data) {
         return data;
     }
     if (srchStr.length >= 3) {
-        return data.filter(appItem => JSON.stringify(appItem).toString().toLowerCase().includes(srchStr.toLowerCase()));
+        return data.filter(appItem => JSON.stringify(appItem).toString().toLowerCase().includes(srchStr.toLowerCase())).sort(dynamicSort('name'));
     } else {
-        return data;
+        return data.sort(dynamicSort('name'));
     }
+}
+
+function dynamicSort(property) {
+    var sortOrder = 1;
+    if (property[0] === "-") {
+        sortOrder = -1;
+        property = property.substr(1);
+    }
+    return function(a, b) {
+        var result = (a[property] < b[property]) ? -1 : (a[property] > b[property]) ? 1 : 0;
+        return result * sortOrder;
+    };
 }
 
 function searchForApp(evtSender) {
@@ -929,7 +964,7 @@ function buildAppList(filterStr = undefined) {
         html += '\n               <tbody>';
 
         for (let i in appData) {
-            let instApp = availableApps.filter(app => app.name.toString() === appData[i].appName.toString());
+            let instApp = availableApps.filter(app => app.name.toString() === appData[i].appName.toString() || app.name.toString() === cleanString(appData[i].appName.toString()));
             let appInstalled = instApp[0] !== undefined && instApp.length;
             let updAvail = false;
             if (appInstalled && instApp[0].id !== undefined) {
@@ -950,7 +985,7 @@ function buildAppList(filterStr = undefined) {
             html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
             html += '\n                 <div class="d-flex flex-row">';
             html += '\n                     <div class="d-flex justify-content-start align-items-center">';
-            html += '\n                         <h6 class="h6-responsive"><img src="' + appData[i].iconUrl + '" height="40" class="d-inline-block align-middle" alt=""> ' + appData[i].name + '</h6>';
+            html += '\n                         <h6 class="h6-responsive" style="font-size: 100%;"><img src="' + appData[i].iconUrl + '" height="40" class="d-inline-block align-middle" alt=""> ' + appData[i].name + '</h6>';
             html += '\n                     </div>';
             html += '\n                 </div>';
             html += '\n             </div>';
@@ -983,7 +1018,7 @@ function buildAppList(filterStr = undefined) {
             html += '\n                     <small class="align-middle"><em>' + appData[i].category + '</em></small>';
             html += '\n                 </div>';
             html += '\n             </div>';
-            html += appInstalled || updAvail ? '\n                      <div class="d-flex flex-column justify-content-center align-items-center">\n<div class="d-flex flex-row">\n<small class="align-middle"><u><b>Category:</b></u></small>\n</div>\n<div class="d-flex flex-row">' : '';
+            html += appInstalled || updAvail ? '\n                      <div class="d-flex flex-column justify-content-center align-items-center">\n<div class="d-flex flex-row">\n<small class="align-middle"><u><b>Status:</b></u></small>\n</div>\n<div class="d-flex flex-row">' : '';
             html += appInstalled && !updAvail ? '\n             <small-medium class="align-middle"><span class="badge green white-text align-middle">Installed</span></small-medium>' : '';
             html += appInstalled && updAvail ? '\n             <small-medium class="align-middle"><span class="badge green white-text align-middle">Update Avail.</span></small-medium>' : '';
             html += appInstalled || updAvail ? '\n</div>\n</div>' : '';
@@ -1148,13 +1183,13 @@ function renderAppView(appName) {
                         html += '\n         <div class="flex-row align-center mt-0 mb-1">';
                         html += '\n             <h6 class="h6-responsive white-text"><u>GitHub Details</u></h6>';
                         html += '\n         </div>';
-                        html += '\n         <div class="d-flex justify-content-between align-items-center mx-5 px-2">';
+                        html += '\n         <div class="d-flex justify-content-center align-items-center mx-5 px-2">';
                         html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
                         html += '\n                 <div class="d-flex flex-row">';
                         html += '\n                     <small class="align-middle"><b>Repo Name:</b></small>';
                         html += '\n                 </div>';
                         html += '\n                 <div class="d-flex flex-row">';
-                        html += '\n                     <small class="align-middle"><em>' + manifest.repoName + '</em></small>';
+                        html += '\n                     <small class="align-middle mx-2"><em>' + manifest.repoName + '</em></small>';
                         html += '\n                 </div>';
                         html += '\n             </div>';
                         html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
@@ -1162,7 +1197,7 @@ function renderAppView(appName) {
                         html += '\n                     <small class="align-middle"><b>Branch:</b></small>';
                         html += '\n                 </div>';
                         html += '\n                 <div class="d-flex flex-row">';
-                        html += '\n                     <small class="align-middle"><em>' + manifest.repoBranch + '</em></small>';
+                        html += '\n                     <small class="align-middle mx-2"><em>' + manifest.repoBranch + '</em></small>';
                         html += '\n                 </div>';
                         html += '\n             </div>';
                         html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
@@ -1170,7 +1205,7 @@ function renderAppView(appName) {
                         html += '\n                     <small class="align-middle"><b>Owner:</b></small>';
                         html += '\n                 </div>';
                         html += '\n                 <div class="d-flex flex-row">';
-                        html += '\n                     <small class="align-middle"><em>' + manifest.repoOwner + '</em></small>';
+                        html += '\n                     <small class="align-middle mx-2"><em>' + manifest.repoOwner + '</em></small>';
                         html += '\n                 </div>';
                         html += '\n             </div>';
                         html += '\n         </div>';
@@ -1203,8 +1238,8 @@ function renderAppView(appName) {
                         html += '\n      </div>';
                         html += '\n  </div>';
                         // Stop Here
-                        html += '\n  <div class="card card-body card-outline p-1 mb-2" style="background-color: transparent;">';
-                        html += '\n       <div class="flex-row align-right mr-1 mt-1">';
+                        html += '\n  <div class="card card-body card-outline p-1 mb-5" style="background-color: transparent;">';
+                        html += '\n       <div class="flex-row align-right mr-1 mt-1 mb-5">';
                         html += '\n           <div class="d-flex flex-column justify-content- align-items-center">';
                         html += '\n               <button id="installBtn" type="button" class="btn btn-success" style="border-radius: 40px;">Install</button>';
                         html += '\n               <button id="removeBtn" type="button" class="btn btn-danger" style="border-radius: 40px;">Remove</button>';
