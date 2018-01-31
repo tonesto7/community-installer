@@ -64,11 +64,21 @@ const appsManifest = [{
         name: 'Alexa Virtual Switch Creator',
         appName: 'Alexa-Virtual-Switch-Creator',
         author: 'Michael Struck',
-        description: 'Allows for creation of SmartThings virtual switches that can be tied to items controlled by Amazon Echo(" Alexa ").',
+        description: 'Allows for creation of SmartThings virtual switches that can be tied to items controlled by Amazon Echo (Alexa).',
         category: 'My Apps',
         iconUrl: 'https://raw.githubusercontent.com/MichaelStruck/SmartThingsPublic/master/smartapps/michaelstruck/alexa-helper.src/Alexa@2x.png',
         manifestUrl: 'https://raw.githubusercontent.com/MichaelStruck/SmartThingsPublic/master/smartapps/michaelstruck/alexa-virtual-switch-creator.src/AVSWmanifest.json',
         repoName: 'SmartThingsPublic'
+    },
+    {
+        name: 'WebCoRE',
+        appName: 'WebCoRE',
+        author: 'Adrian Caramaliu',
+        description: 'Web enabled Community\'s own Rule Engine',
+        category: 'My Apps',
+        iconUrl: 'https://cdn.rawgit.com/ady624/webCoRE/master/resources/icons/app-CoRE.png',
+        manifestUrl: 'https://github.com/tonesto7/nest-manager/blob/master/installerManifest.json',
+        repoName: ''
     }
 ];
 
@@ -915,7 +925,7 @@ function getProjectManifest(url) {
 
 function findAppMatch(srchStr, data) {
     if (srchStr === undefined) {
-        return data;
+        return data.sort(dynamicSort('name'));
     }
     if (srchStr.length >= 3) {
         return data.filter(appItem => JSON.stringify(appItem).toString().toLowerCase().includes(srchStr.toLowerCase())).sort(dynamicSort('name'));
