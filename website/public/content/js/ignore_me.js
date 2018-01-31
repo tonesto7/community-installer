@@ -5,6 +5,7 @@ var writableRepos = [];
 var availableApps;
 var availableDevs;
 var currentManifest;
+var metricsData;
 var retryCnt = 0;
 const authUrl = generateStUrl('hub');
 const fetchReposUrl = generateStUrl('github/writeableRepos');
@@ -74,7 +75,7 @@ const appsManifest = [{
         name: 'WebCoRE',
         appName: 'WebCoRE',
         author: 'Adrian Caramaliu',
-        description: 'Web enabled Community\'s own Rule Engine',
+        description: "Web enabled Community's own Rule Engine",
         category: 'My Apps',
         iconUrl: 'https://cdn.rawgit.com/ady624/webCoRE/master/resources/icons/app-CoRE.png',
         manifestUrl: 'https://rawgit.com/ady624/webCoRE/master/installerManifest.json',
@@ -145,6 +146,7 @@ function getStAuth() {
             .then(function(response) {
                 if (response !== undefined) {
                     $('#results').html('');
+                    localStorage.setItem('stillRefreshing', false);
                     addResult('SmartThings Authentication', true);
                     resolve(true);
                 }
@@ -155,11 +157,7 @@ function getStAuth() {
 
 function capitalize(value) {
     var regex = /(\b[a-z](?!\s))/g;
-    return value ?
-        value.replace(regex, function(v) {
-            return v.toUpperCase();
-        }) :
-        '';
+    return value ? value.replace(regex, function(v) { return v.toUpperCase(); }) : '';
 }
 
 function cleanString(str) {
@@ -223,6 +221,7 @@ function installError(err, reload = true) {
     if (reload && Number(localStorage.getItem('refreshCount')) < 7) {
         loaderFunc();
     } else {
+        localStorage.setItem('stillRefreshing', false);
         installComplete(err, true);
     }
 }
@@ -923,6 +922,22 @@ function getProjectManifest(url) {
     });
 }
 
+function incrementAppView(appName) {
+    var fb = new Firebase('https://community-installer-34dac.firebaseio.com/metrics/appViews/' + appName);
+    fb.transaction(function(currentVal) {
+        isFinite(currentVal) || (currentVal = 0);
+        return currentVal + 1;
+    });
+}
+
+function incrementAppInstall(appName) {
+    var fb = new Firebase('https://community-installer-34dac.firebaseio.com/metrics/appInstalls/' + appName);
+    fb.transaction(function(currentVal) {
+        isFinite(currentVal) || (currentVal = 0);
+        return currentVal + 1;
+    });
+}
+
 function findAppMatch(srchStr, data) {
     if (srchStr === undefined) {
         return data.sort(dynamicSort('name'));
@@ -936,12 +951,12 @@ function findAppMatch(srchStr, data) {
 
 function dynamicSort(property) {
     var sortOrder = 1;
-    if (property[0] === "-") {
+    if (property[0] === '-') {
         sortOrder = -1;
         property = property.substr(1);
     }
     return function(a, b) {
-        var result = (a[property] < b[property]) ? -1 : (a[property] > b[property]) ? 1 : 0;
+        var result = a[property] < b[property] ? -1 : a[property] > b[property] ? 1 : 0;
         return result * sortOrder;
     };
 }
@@ -950,6 +965,36 @@ function searchForApp(evtSender) {
     let srchVal = $('#appSearchBox').val();
     console.log('AppSearch Event (' + evtSender + '): ' + srchVal);
     buildAppList(srchVal);
+}
+
+function startMetricsListener() {
+    var fb = new Firebase('https://community-installer-34dac.firebaseio.com/metrics/');
+    fb.on('value', function(snap) {
+        var v = snap.val();
+        console.log('v: ', v);
+        metricsData = v;
+        updateMetricsData();
+    });
+}
+
+function updateMetricsData() {
+    let v = metricsData;
+    if (v !== undefined && v !== null && Object.keys(v).length) {
+        if (Object.keys(v.appInstalls).length) {
+            for (const i in v.appInstalls) {
+                if ($('#' + i + '_install_cnt').length) {
+                    $('#' + i + '_install_cnt').text(parseInt(v.appInstalls[i]));
+                }
+            }
+        }
+        if (Object.keys(v.appViews).length) {
+            for (const i in v.appViews) {
+                if ($('#' + i + '_view_cnt').length) {
+                    $('#' + i + '_view_cnt').text(parseInt(v.appViews[i]));
+                }
+            }
+        }
+    }
 }
 
 function buildAppList(filterStr = undefined) {
@@ -970,7 +1015,7 @@ function buildAppList(filterStr = undefined) {
         html += '\n<div id=listDiv class="clearfix">';
         html += '\n   <div class="listGroup">';
         html += '\n       <div class="card card-body card-outline p-2 mb-0" style="background-color: transparent;">';
-        html += '\n           <table class="table table-sm mb-0">';
+        html += '\n           <table id="appListTable" class="table table-sm mb-0">';
         html += '\n               <tbody>';
 
         for (let i in appData) {
@@ -989,7 +1034,7 @@ function buildAppList(filterStr = undefined) {
             }
             html += '\n   <tr style="border-bottom-style: hidden; border-top-style: hidden;">';
             html += '\n   <td class="py-1">';
-            html += '\n     <a href="#" id="' + appData[i].appName + '" onclick="appItemClicked(this)" class="list-group-item list-group-item-action flex-column align-items-start p-2" style="border-radius: 20px;">';
+            html += '\n     <a href="#" id="' + appData[i].appName + '" class="list-group-item list-group-item-action flex-column align-items-start p-2" style="border-radius: 20px;">';
 
             html += '\n         <div class="d-flex w-100 justify-content-between align-items-center">';
             html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
@@ -1034,10 +1079,18 @@ function buildAppList(filterStr = undefined) {
             html += appInstalled || updAvail ? '\n</div>\n</div>' : '';
             html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
             html += '\n                 <div class="d-flex flex-row">';
+            html += '\n                     <small class="align-middle"><u><b>Views:</b></u></small>';
+            html += '\n                 </div>';
+            html += '\n                 <div class="d-flex flex-row">';
+            html += '\n                     <small class="align-middle"><span id="' + appData[i].appName + '_view_cnt" class="badge badge-pill grey white-text align-middle">0</span></small>';
+            html += '\n                 </div>';
+            html += '\n             </div>';
+            html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
+            html += '\n                 <div class="d-flex flex-row">';
             html += '\n                     <small class="align-middle"><u><b>Installs:</b></u></small>';
             html += '\n                 </div>';
             html += '\n                 <div class="d-flex flex-row">';
-            html += '\n                     <small class="align-middle"><span class="badge badge-pill grey white-text align-middle">' + 20 + '</span></small>';
+            html += '\n                     <small class="align-middle"><span id="' + appData[i].appName + '_install_cnt" class="badge badge-pill grey white-text align-middle">0</span></small>';
             html += '\n                 </div>';
             html += '\n             </div>';
             html += '\n         </div>';
@@ -1060,7 +1113,6 @@ function buildAppList(filterStr = undefined) {
     $('#loaderDiv').css({ display: 'none' });
     $('#actResultsDiv').css({ display: 'none' });
     $('#appViewDiv').css({ display: 'none' });
-
     $('#appSearchBox').keypress(function(e) {
         if (e.which === 13) {
             searchForApp('KeyPress');
@@ -1070,7 +1122,15 @@ function buildAppList(filterStr = undefined) {
     $('#searchBtn').click(function() {
         searchForApp('Clicked');
     });
+    $("#appListTable").on("click", "td a", function() {
+        console.log('App Item Clicked: (' + this.id + ')');
+        if (this.id) {
+            renderAppView(this.id);
+            incrementAppView(this.id);
+        }
+    });
     scrollToTop();
+    updateMetricsData();
     new WOW().init();
 }
 
@@ -1298,6 +1358,7 @@ function renderAppView(appName) {
                         $('#loaderDiv').css({ display: 'block' });
                         $('#actResultsDiv').css({ display: 'block' });
                         scrollToTop();
+                        incrementAppInstall(appName);
                         processIntall(manifest, selected);
                     });
                     $('#removeBtn').click(function() {
@@ -1325,13 +1386,6 @@ function renderAppView(appName) {
                     new WOW().init();
                 });
         }
-    }
-}
-
-function appItemClicked(appItem) {
-    console.log('App Item Clicked: (' + appItem.id + ')');
-    if (appItem.id) {
-        renderAppView(appItem.id);
     }
 }
 
@@ -1369,6 +1423,7 @@ function loaderFunc() {
                     .then(function(resp) {
                         if (resp && resp.apps && Object.keys(resp).length) {
                             buildAppList();
+                            startMetricsListener();
                         }
                     });
             }
@@ -1376,6 +1431,11 @@ function loaderFunc() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    updateHeadHtml();
+    buildCoreHtml();
+    loaderFunc();
+});
+ument.addEventListener('DOMContentLoaded', function() {
     updateHeadHtml();
     buildCoreHtml();
     loaderFunc();

@@ -14,8 +14,8 @@ definition(
     iconX2Url		: "https://community-installer-34dac.firebaseapp.com/content/images/app_logo.png",
     iconX3Url		: "https://community-installer-34dac.firebaseapp.com/content/images/app_logo.png")
 /**********************************************************************************************************************************************/
-private releaseVer() { return "5.0.0126" }
-private appVerDate() { "1-26-2018" }
+private releaseVer() { return "5.0.0131" }
+private appVerDate() { "1-31-2018" }
 /**********************************************************************************************************************************************/
 preferences {
     page name: "startPage"
@@ -45,18 +45,28 @@ def startPage() {
 
 def mainPage() {
     dynamicPage (name: "mainPage", title: "", install: true, uninstall: true) {
-        def theURL = "https://account.smartthings.com?redirect=${getAppEndpointUrl("installStart")}"
-        // log.trace theURL
+        section("") { image getAppImg("welcome_img.png") }
         section("") {
-            image getAppImg("welcome_img.png")
-            paragraph title: "What now?", "Tap on the input below to launch the Installer Web App"
-            href "", title: "Tap Here to Get Started", url: theURL, style: "embedded", required: false, description: "", image: ""
+            if(!authAcctType) {
+                paragraph title: "This helps to determine the login server you are sent to!", optDesc
+            }
+            input "authAcctType", "enum", title: "IDE Login Account Type", multiple: false, required: true, submitOnChange: true, metadata: [values:["samsung":"Samsung", "st":"SmartThings"]], image: getAppImg("${settings?.authAcctType}_icon.png")
+        }
+        section("") {
+            paragraph title: "What now?", "Tap on the input below to launch the Installer Web App and signin to the IDE"
+            href "", title: "Tap Here to Get Started", url: getLoginUrl(), style: "embedded", required: false, description: "", image: ""
         }
     }
 }
 
 def baseUrl(path) {
     return "https://community-installer-34dac.firebaseapp.com${path}"
+}
+
+def getLoginUrl() {
+    def theURL = "https://account.smartthings.com?redirect=${getAppEndpointUrl("installStart")}"
+    if(settings?.authAcctType == "samsung") { theURL = "https://account.smartthings.com/login/samsungaccount?redirect=${getAppEndpointUrl("installStart")}" }
+    return theURL
 }
 
 def installStartHtml() {
