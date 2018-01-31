@@ -47,7 +47,7 @@ const appsManifest = [{
         description: 'The Ultimate Voice Controlled Assistant Using Alexa Enabled Devices.',
         category: 'My Apps',
         iconUrl: 'https://echosistant.com/es5_content/images/Echosistant_V5.png',
-        manifestUrl: 'https://raw.githubusercontent.com/BamaRayne/Echosistant/master/installerManifest.json',
+        manifestUrl: 'https://rawgit.com/BamaRayne/Echosistant/master/installerManifest.json',
         repoName: 'echosistant-dev'
     },
     {
@@ -67,7 +67,7 @@ const appsManifest = [{
         description: 'Allows for creation of SmartThings virtual switches that can be tied to items controlled by Amazon Echo (Alexa).',
         category: 'My Apps',
         iconUrl: 'https://raw.githubusercontent.com/MichaelStruck/SmartThingsPublic/master/smartapps/michaelstruck/alexa-helper.src/Alexa@2x.png',
-        manifestUrl: 'https://raw.githubusercontent.com/MichaelStruck/SmartThingsPublic/master/smartapps/michaelstruck/alexa-virtual-switch-creator.src/AVSWmanifest.json',
+        manifestUrl: 'https://rawgit.com/MichaelStruck/SmartThingsPublic/master/smartapps/michaelstruck/alexa-virtual-switch-creator.src/AVSWmanifest.json',
         repoName: 'SmartThingsPublic'
     },
     {
@@ -77,7 +77,7 @@ const appsManifest = [{
         description: 'Web enabled Community\'s own Rule Engine',
         category: 'My Apps',
         iconUrl: 'https://cdn.rawgit.com/ady624/webCoRE/master/resources/icons/app-CoRE.png',
-        manifestUrl: 'https://github.com/tonesto7/nest-manager/blob/master/installerManifest.json',
+        manifestUrl: 'https://rawgit.com/ady624/webCoRE/master/installerManifest.json',
         repoName: ''
     }
 ];
