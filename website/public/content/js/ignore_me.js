@@ -1,5 +1,3 @@
-'use esversion: 6';
-
 var repoId = '';
 var writableRepos = [];
 var availableApps;
@@ -7,6 +5,8 @@ var availableDevs;
 var currentManifest;
 var metricsData;
 var retryCnt = 0;
+var refreshCount;
+var searchBoxShown = false;
 const authUrl = generateStUrl('hub');
 const fetchReposUrl = generateStUrl('github/writeableRepos');
 const updRepoUrl = generateStUrl('githubAuth/updateRepos');
@@ -17,7 +17,7 @@ const doDevRemoveUrl = generateStUrl('ide/device/delete/');
 const doDevRepoUpdUrl = generateStUrl('ide/device/doRepoUpdates');
 const doDevSettingUpdUrl = generateStUrl('ide/device/update');
 const doAppSettingUpdUrl = generateStUrl('ide/app/update');
-const smartappsListUrl = generateStUrl('ide/apps');
+
 const appUpdChkUrl = generateStUrl('github/appRepoStatus?appId=');
 const appUpdApplyUrl = generateStUrl('ide/app/updateOneFromRepo/');
 const appUpdPubUrl = generateStUrl('ide/app/publishAjax/');
@@ -35,7 +35,7 @@ const appsManifest = [{
         name: 'NST Manager',
         appName: 'Nest-Manager',
         author: 'Anthony S.',
-        description: 'This SmartApp is used to integrate your Nest devices with SmartThings and to enable built-in automations',
+        description: "Integrate all of your Nest products with SmartThings and utilize it's many built-in automations to help keep your home feeling comfortable and safe",
         category: 'Convenience',
         iconUrl: 'https://raw.githubusercontent.com/tonesto7/nest-manager/master/Images/App/nst_manager_5.png',
         manifestUrl: 'https://rawgit.com/tonesto7/nest-manager/master/installerManifest.json',
@@ -146,7 +146,6 @@ function getStAuth() {
             .then(function(response) {
                 if (response !== undefined) {
                     $('#results').html('');
-                    localStorage.setItem('stillRefreshing', false);
                     addResult('SmartThings Authentication', true);
                     resolve(true);
                 }
@@ -157,7 +156,11 @@ function getStAuth() {
 
 function capitalize(value) {
     var regex = /(\b[a-z](?!\s))/g;
-    return value ? value.replace(regex, function(v) { return v.toUpperCase(); }) : '';
+    return value ?
+        value.replace(regex, function(v) {
+            return v.toUpperCase();
+        }) :
+        '';
 }
 
 function cleanString(str) {
@@ -218,10 +221,9 @@ function checkListForDuplicate(element, str) {
 }
 
 function installError(err, reload = true) {
-    if (reload && Number(localStorage.getItem('refreshCount')) < 7) {
+    if (reload && refreshCount < 7) {
         loaderFunc();
     } else {
-        localStorage.setItem('stillRefreshing', false);
         installComplete(err, true);
     }
 }
@@ -235,9 +237,10 @@ function installComplete(text, red = false) {
     $('#actResultsDiv').css({ display: 'block' });
     $('#results').css({ display: 'block' }).html('<small>' + text + '</small>');
     $('#resultsDone').css({ display: 'block' });
+    $('#resultsHomeBtn').css({ display: 'block' });
     updSectTitle('', true);
-    localStorage.removeItem('appsDone');
-    localStorage.removeItem('refreshCount');
+    refreshCount = undefined;
+    scrollToTop();
 }
 
 function updSectTitle(str, hide = false) {
@@ -982,15 +985,21 @@ function updateMetricsData() {
     if (v !== undefined && v !== null && Object.keys(v).length) {
         if (Object.keys(v.appInstalls).length) {
             for (const i in v.appInstalls) {
-                if ($('#' + i + '_install_cnt').length) {
-                    $('#' + i + '_install_cnt').text(parseInt(v.appInstalls[i]));
+                var iItem = $('#' + i + '_install_cnt');
+                let cnt = parseInt(v.appInstalls[i]);
+                if (cnt >= 1) {
+                    iItem.removeClass('grey').addClass('orange').text(cnt);
                 }
             }
         }
         if (Object.keys(v.appViews).length) {
             for (const i in v.appViews) {
-                if ($('#' + i + '_view_cnt').length) {
-                    $('#' + i + '_view_cnt').text(parseInt(v.appViews[i]));
+                var vItem = $('#' + i + '_view_cnt');
+                if (vItem.length) {
+                    let cnt = parseInt(v.appViews[i]);
+                    if (cnt >= 1) {
+                        vItem.removeClass('grey').addClass('purple').text(cnt);
+                    }
                 }
             }
         }
@@ -998,12 +1007,13 @@ function updateMetricsData() {
 }
 
 function buildAppList(filterStr = undefined) {
+    searchBtnAvail(true);
     let html = '';
     let appData = findAppMatch(filterStr, appsManifest);
     currentManifest = appData;
-    html += '\n           <div class="d-flex flex-row justify-content-center align-items-center">';
+    html += '\n           <div id="searchFormDiv" class="d-flex flex-row justify-content-center align-items-center">';
     html += '\n               <div class="d-flex w-100 flex-column m-2">';
-    html += '\n                <form>';
+    html += '\n                <form id="searchForm" style="display: none;">';
     html += '\n                   <div class="input-group md-form form-sm form-2 mb-0">';
     html += '\n                       <input id="appSearchBox" class="form-control grey-border white-text" type="text" placeholder="Search" aria-label="Search">';
     html += '\n                       <span class="input-group-addon waves-effect grey lighten-3" id="searchBtn"><a><i class="fa fa-search text-grey" aria-hidden="true"></i></a></span>';
@@ -1014,7 +1024,7 @@ function buildAppList(filterStr = undefined) {
     if (appData.length > 0) {
         html += '\n<div id=listDiv class="clearfix">';
         html += '\n   <div class="listGroup">';
-        html += '\n       <div class="card card-body card-outline p-2 mb-0" style="background-color: transparent;">';
+        html += '\n       <div class="p-2 mb-0" style="background-color: transparent;">';
         html += '\n           <table id="appListTable" class="table table-sm mb-0">';
         html += '\n               <tbody>';
 
@@ -1060,7 +1070,7 @@ function buildAppList(filterStr = undefined) {
             html += '\n             </div>';
             html += '\n         </div>';
 
-            html += '\n         <div class="d-flex justify-content-start align-items-center my-3" style="border-style: inset; border: 1px solid grey; border-radius: 5px;">';
+            html += '\n         <div class="d-flex justify-content-start align-items-center mt-1 mb-3" style="border-style: inset; border: 1px solid grey; border-radius: 5px;">';
             html += '\n             <p class="d-flex m-2 justify-content-center"><small class="align-middle">' + appData[i].description + '</small></p>';
             html += '\n         </div>';
 
@@ -1082,7 +1092,7 @@ function buildAppList(filterStr = undefined) {
             html += '\n                     <small class="align-middle"><u><b>Views:</b></u></small>';
             html += '\n                 </div>';
             html += '\n                 <div class="d-flex flex-row">';
-            html += '\n                     <small class="align-middle"><span id="' + appData[i].appName + '_view_cnt" class="badge badge-pill grey white-text align-middle">0</span></small>';
+            html += '\n                     <span id="' + appData[i].appName + '_view_cnt" class="badge badge-pill grey white-text align-middle">0</span>';
             html += '\n                 </div>';
             html += '\n             </div>';
             html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
@@ -1090,7 +1100,7 @@ function buildAppList(filterStr = undefined) {
             html += '\n                     <small class="align-middle"><u><b>Installs:</b></u></small>';
             html += '\n                 </div>';
             html += '\n                 <div class="d-flex flex-row">';
-            html += '\n                     <small class="align-middle"><span id="' + appData[i].appName + '_install_cnt" class="badge badge-pill grey white-text align-middle">0</span></small>';
+            html += '\n                     <span id="' + appData[i].appName + '_install_cnt" class="badge badge-pill grey white-text align-middle">0</span>';
             html += '\n                 </div>';
             html += '\n             </div>';
             html += '\n         </div>';
@@ -1122,7 +1132,15 @@ function buildAppList(filterStr = undefined) {
     $('#searchBtn').click(function() {
         searchForApp('Clicked');
     });
-    $("#appListTable").on("click", "td a", function() {
+    $('#showSearchBtn').click(function() {
+        console.log('showSearchBtn clicked...');
+        if ($('#searchForm').is(":visible")) {
+            $('#searchForm').hide();
+        } else {
+            $('#searchForm').show();
+        }
+    });
+    $('#appListTable').on('click', 'td a', function() {
         console.log('App Item Clicked: (' + this.id + ')');
         if (this.id) {
             renderAppView(this.id);
@@ -1132,6 +1150,15 @@ function buildAppList(filterStr = undefined) {
     scrollToTop();
     updateMetricsData();
     new WOW().init();
+}
+
+function searchBtnAvail(show = true) {
+    if (show) {
+        $('#showSearchBtn').show();
+    } else {
+        // $('#searchForm').hide();
+        $('#showSearchBtn').hide();
+    }
 }
 
 function createAppDevTable(items, areDevices = false, type) {
@@ -1162,7 +1189,7 @@ function createAppDevTable(items, areDevices = false, type) {
             var itemId = type === 'device' ? 'device' + cnt : 'smartapp' + cnt;
 
             html += '\n                   <tr>';
-            html += '\n                      <td class="align-middle py-0" style="border: 1px solid grey">';
+            html += '\n                      <td class="align-middle py-0" style="border: 1px solid grey;">';
             html += '\n                         <div class="d-flex flex-column ml-2">';
             html += '\n                             <div class="d-flex flex-column justify-content-start my-1 form-check' + disabled + '">';
             html += '\n                                 <div class="flex-column justify-content-start">';
@@ -1174,12 +1201,12 @@ function createAppDevTable(items, areDevices = false, type) {
             html += '\n                             </div>';
             html += '\n                         </div>';
             html += '\n                     </td>';
-            html += '\n                     <td class="align-middle" style="border: 1px solid grey">';
+            html += '\n                     <td class="align-middle" style="border: 1px solid grey;">';
             html += '\n                         <div class="d-flex flex-column align-items-center">';
             html += '\n                                   <small class="align-middle"><span class="badge grey white-text align-middle">v' + items[item].version + '</span></small>';
             html += '\n                               </div>';
             html += '\n                           </td>';
-            html += '\n                           <td class="align-middle py-0" style="border: 1px solid grey">';
+            html += '\n                           <td class="align-middle py-0" style="border: 1px solid grey;">';
             html += '\n                               <div class="d-flex flex-column align-items-center">';
             html += parent === true ? '\n                 <small style="margin: 2px auto;"><span class="badge blue white-text">Parent App</span></small>' : '';
             html += child === true ? '\n                  <small style="margin: 2px auto;"><span class="badge purple white-text">Child App</span></small>' : '';
@@ -1200,6 +1227,7 @@ function createAppDevTable(items, areDevices = false, type) {
 }
 
 function renderAppView(appName) {
+    searchBtnAvail(false);
     let html = '';
     var manifest;
     if (appsManifest.length > 0) {
@@ -1253,7 +1281,7 @@ function renderAppView(appName) {
                         html += '\n         <div class="flex-row align-center mt-0 mb-1">';
                         html += '\n             <h6 class="h6-responsive white-text"><u>GitHub Details</u></h6>';
                         html += '\n         </div>';
-                        html += '\n         <div class="d-flex justify-content-center align-items-center mx-5 px-2">';
+                        html += '\n         <div class="d-flex justify-content-center align-items-center mx-auto">';
                         html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
                         html += '\n                 <div class="d-flex flex-row">';
                         html += '\n                     <small class="align-middle"><b>Repo Name:</b></small>';
@@ -1308,8 +1336,8 @@ function renderAppView(appName) {
                         html += '\n      </div>';
                         html += '\n  </div>';
                         // Stop Here
-                        html += '\n  <div class="card card-body card-outline p-1 mb-5" style="background-color: transparent;">';
-                        html += '\n       <div class="flex-row align-right mr-1 mt-1 mb-5">';
+                        html += '\n  <div class="card card-body card-outline p-1 my-2" style="background-color: transparent;">';
+                        html += '\n       <div class="flex-row align-right mr-1 my-2">';
                         html += '\n           <div class="d-flex flex-column justify-content- align-items-center">';
                         html += '\n               <button id="installBtn" type="button" class="btn btn-success" style="border-radius: 40px;">Install</button>';
                         html += '\n               <button id="removeBtn" type="button" class="btn btn-danger" style="border-radius: 40px;">Remove</button>';
@@ -1395,13 +1423,14 @@ function scrollToTop() {
     });
 }
 
+function defineClickActions() {}
+
 function loaderFunc() {
-    $('#results').html('<small>Waiting for connection...</small>');
-    if (localStorage.getItem('refreshCount') === null) {
-        localStorage.setItem('refreshCount', '0');
+    if (refreshCount === null) {
+        refreshCount = 0;
     }
+    refreshCount++;
     scrollToTop();
-    localStorage.setItem('refreshCount', (Number(localStorage.getItem('refreshCount')) + 1).toString());
     updSectTitle('App Details', true);
     getStAuth()
         .catch(function(err) {
@@ -1431,11 +1460,6 @@ function loaderFunc() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    updateHeadHtml();
-    buildCoreHtml();
-    loaderFunc();
-});
-ument.addEventListener('DOMContentLoaded', function() {
     updateHeadHtml();
     buildCoreHtml();
     loaderFunc();

@@ -19,26 +19,22 @@ function updateHeadHtml() {
 function buildCoreHtml() {
     let html = '';
     html += '\n       <header>';
-    html += '\n           <nav class="navbar fixed-top navbar-expand-lg navbar-dark ">';
-    html += '\n               <a class="navbar-brand" href="' + homeUrl + '"><span class="align-middle"><img src="' + baseAppUrl + '/content/images/app_logo.png" height="40" class="d-inline-block align-middle" alt=""> Installer</span></a>';
-    html += '\n               <!-- Collapse button -->';
-    html += '\n               <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>';
-
-    html += '\n               <!-- Collapsible content -->';
-    html += '\n               <div class="collapse navbar-collapse" id="navbarSupportedContent">';
-    html += '\n                   <!-- Links -->';
-    html += '\n                   <ul class="navbar-nav mr-auto">';
-    html += '\n                       <li class="nav-item active">';
-    html += '\n                            <a class="nav-link" href="' + homeUrl + '"><i id="homeBtn" class="fa fa-home"></i> Home <span class="sr-only">(current)</span></a>';
-    html += '\n                       </li>';
-    html += '\n                   </ul>';
-    html += '\n                   <!-- Links -->';
+    html += '\n           <nav class="navbar navbar-fixed-top navbar-dark ">';
+    html += '\n               <div class="d-flex w-100 justify-content-between align-items-center mx-auto" style="max-width: 700px;">';
+    html += '\n                   <div class="d-flex flex-column justify-content-center align-items-center">';
+    html += '\n                       <a class="nav-link white-text p-0" href="' + homeUrl + '" style="font-size: 30px;"><i id="homeBtn" class="fa fa-home"></i><span class="sr-only">(current)</span></a>';
+    html += '\n                   </div>';
+    html += '\n                   <div class="d-flex flex-column justify-content-center align-items-center">';
+    html += '\n                       <a class="navbar-brand" href=""><span class="align-middle"><img src="' + baseAppUrl + '/content/images/app_logo.png" height="40" class="d-inline-block align-middle" alt=""> Installer</span></a>';
+    html += '\n                   </div>';
+    html += '\n                   <div class="d-flex flex-column justify-content-center align-items-center">';
+    html += '\n                       <a id="showSearchBtn" class="nav-link white-text p-0" style="font-size: 30px;"><i class="fa fa-search"></i><span class="sr-only">(current)</span></a>';
+    html += '\n                   </div>';
     html += '\n               </div>';
-    html += '\n               <!-- Collapsible content -->';
     html += '\n           </nav>';
     html += '\n       </header>';
-    html += '\n       <main>';
-    html += '\n           <div id="mainDiv" class="container" style="min-width: 380px; max-width: 700px; height: auto; min-height: 100%; ">';
+    html += '\n       <main class="mt-3">';
+    html += '\n           <div id="mainDiv" class="container-fluid" style="min-width: 380px; max-width: 700px; height: auto; min-height: 100%; ">';
     html += '\n               <section class="px-3">';
     html += '\n                   <div class="w-100 text-center">';
     html += '\n                       <h2 id="sectTitle" class="h2-responsive" style="font-weight: 400;">Software Installer</h2>';
@@ -97,6 +93,7 @@ function buildCoreHtml() {
     html += '\n                                               </div>';
 
     html += '\n                                               <div id="resultsDone" class="mt-4" style="display: none;"><small>Press Back/Done Now</small></div>';
+    html += '\n                                               <div id="resultsDoneHomeBtnDiv" style="display: none;"><button id="resultsDoneHomeBtn" type="button" class="btn" style="border-radius: 20px;"><a class="button" href="' + homeUrl + '"><i id="homeBtn" class="fa fa-home"></i> Go Home<span class="sr-only">(current)</span></a></button></div>';
     html += '\n                                          </div>';
 
     html += '\n                                     </div>';
@@ -106,13 +103,13 @@ function buildCoreHtml() {
     html += '\n               </section>';
     html += '\n           </div>';
     html += '\n       </main>';
-    html += '\n       <footer id="ftrSect" class="page-footer center-on-small-only fixed-bottom m-0 p-0">';
+    html += '\n       <footer id="ftrSect" class="page-footer center-on-small-only m-0 p-0">';
     html += '\n           <div class="footer-copyright">';
     html += '\n               <div class="containter-fluid">';
     html += '\n                   <small>Copyright \u00A9 2018 Anthony Santilli & Corey Lista</small>';
     html += '\n               </div>';
     html += '\n           </div>';
     html += '\n       </footer>';
-    $('body').css({ 'margin-top': '80px', 'overflow-x': 'hidden', 'overflow-y': 'auto', 'margin-bottom': '120px' });
+    $('body').css({ 'overflow-x': 'hidden', 'overflow-y': 'auto', 'margin-bottom': '120px' });
     $('#bodyDiv').html(html);
 }
