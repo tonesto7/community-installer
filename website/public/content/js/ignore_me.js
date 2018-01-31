@@ -220,7 +220,7 @@ function checkListForDuplicate(element, str) {
 }
 
 function installError(err, reload = true) {
-    if (reload && sessionStorage.refreshCount < 7) {
+    if (reload && Number(localStorage.getItem('refreshCount')) < 7) {
         loaderFunc();
     } else {
         installComplete(err, true);
@@ -237,8 +237,8 @@ function installComplete(text, red = false) {
     $('#results').css({ display: 'block' }).html('<small>' + text + '</small>');
     $('#resultsDone').css({ display: 'block' });
     updSectTitle('', true);
-    sessionStorage.removeItem('appsDone');
-    sessionStorage.removeItem('refreshCount');
+    localStorage.removeItem('appsDone');
+    localStorage.removeItem('refreshCount');
 }
 
 function updSectTitle(str, hide = false) {
@@ -1343,11 +1343,11 @@ function scrollToTop() {
 
 function loaderFunc() {
     $('#results').html('<small>Waiting for connection...</small>');
-    if (sessionStorage.refreshCount === undefined) {
-        sessionStorage.refreshCount = '0';
+    if (localStorage.getItem('refreshCount') === null) {
+        localStorage.setItem('refreshCount', '0');
     }
     scrollToTop();
-    sessionStorage.refreshCount = Number(sessionStorage.refreshCount) + 1;
+    localStorage.setItem('refreshCount', (Number(localStorage.getItem('refreshCount')) + 1).toString());
     updSectTitle('App Details', true);
     getStAuth()
         .catch(function(err) {
