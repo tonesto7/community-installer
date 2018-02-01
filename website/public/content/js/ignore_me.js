@@ -80,6 +80,16 @@ const appsManifest = [{
         iconUrl: 'https://cdn.rawgit.com/ady624/webCoRE/master/resources/icons/app-CoRE.png',
         manifestUrl: 'https://rawgit.com/ady624/webCoRE/master/installerManifest.json',
         repoName: ''
+    },
+    {
+        name: 'RemindR',
+        appName: 'RemindR',
+        author: 'JH/BD',
+        description: 'Never miss an important event.',
+        category: 'My Apps',
+        iconUrl: 'https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-RemindR.png',
+        manifestUrl: 'https://rawgit.com/BamaRayne/EchoSistantApps/master/remindrManifest.json',
+        repoName: 'WebCoRE'
     }
 ];
 
@@ -1084,7 +1094,7 @@ function buildAppList(filterStr = undefined) {
             html += '\n                 </div>';
             html += '\n             </div>';
             html += appInstalled || updAvail ? '\n                      <div class="d-flex flex-column justify-content-center align-items-center">\n<div class="d-flex flex-row">\n<small class="align-middle"><u><b>Status:</b></u></small>\n</div>\n<div class="d-flex flex-row">' : '';
-            html += appInstalled && !updAvail ? '\n             <small-medium class="align-middle"><span class="badge green white-text align-middle">Installed</span></small-medium>' : '';
+            html += appInstalled && !updAvail ? '\n             <small-medium class="align-middle"><span class="badge blue white-text align-middle">Installed</span></small-medium>' : '';
             html += appInstalled && updAvail ? '\n             <small-medium class="align-middle"><span class="badge green white-text align-middle">Update Avail.</span></small-medium>' : '';
             html += appInstalled || updAvail ? '\n</div>\n</div>' : '';
             html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
