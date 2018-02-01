@@ -1,5 +1,5 @@
-var scriptVersion = "1.0.0";
-var scriptVerDate = "2/01/2018";
+var scriptVersion = '1.0.0';
+var scriptVerDate = '2/01/2018';
 
 var repoId = '';
 var writableRepos = [];
@@ -1023,7 +1023,7 @@ function getIsAppOrDeviceInstalled(itemName, type) {
     if (itemName && type) {
         let data = type === 'app' ? availableApps : availableDevs;
         let instApp = data.filter(app => app.name.toString() === itemName.toString() || app.name.toString() === cleanString(itemName.toString()) || app.name.toLowerCase() === itemName.toLowerCase());
-        res['installed'] = (instApp[0] !== undefined && instApp.length > 0);
+        res['installed'] = instApp[0] !== undefined && instApp.length > 0;
         res['data'] = instApp;
     } else {
         res['installed'] = false;
@@ -1333,7 +1333,31 @@ function renderAppView(appName) {
                         html += '\n         </div>';
                         html += '\n     </div>';
                         html += '\n     <!--/.Repo Description Panel-->';
-
+                        if (manifest.forumUrl !== undefined || manifest.docUrl) {
+                            html += '\n     <!--Community Description Panel-->';
+                            html += '\n     <div class="card card-body card-outline px-1 py-3 mb-2" style="background-color: transparent;">';
+                            html += '\n         <div class="flex-row align-center mt-0 mb-1">';
+                            html += '\n             <h6 class="h6-responsive white-text"><u>Community Links</u></h6>';
+                            html += '\n         </div>';
+                            html += '\n         <div class="d-flex justify-content-center align-items-center mx-auto">';
+                            html += '\n             <div class="d-flex flex-column justify-content-center align-items-center mx-2">';
+                            html += '\n                 <div class="btn-group" role="group" aria-label="Basic example">';
+                            if (manifest.forumUrl) {
+                                html += '\n                 <div class="d-flex flex-row">';
+                                html += '\n                     <a class="btn btn-sm mx-2" href="' + manifest.forumUrl + '"><small-medium class="orange-text">Project Link</small-me></a>';
+                                html += '\n                 </div>';
+                            }
+                            if (manifest.docUrl) {
+                                html += '\n                 <div class="d-flex flex-row">';
+                                html += '\n                     <a class="btn btn-sm mx-2" href="' + manifest.docUrl + '"><small-medium class="orange-text">Documentation</small-me></a>';
+                                html += '\n                 </div>';
+                            }
+                            html += '\n                 </div>';
+                            html += '\n             </div>';
+                            html += '\n         </div>';
+                            html += '\n     </div>';
+                            html += '\n     <!--/.Community Description Panel-->';
+                        }
                         html += '\n     <!--App Options Panel-->';
                         html += '\n     <div class="card card-body card-outline px-1 py-3 mb-2" style="background-color: transparent;">';
                         html += '\n         <div class="row">';
