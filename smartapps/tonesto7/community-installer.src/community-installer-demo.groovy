@@ -14,8 +14,8 @@ definition(
     iconX2Url		: "https://community-installer-34dac.firebaseapp.com/content/images/app_logo.png",
     iconX3Url		: "https://community-installer-34dac.firebaseapp.com/content/images/app_logo.png")
 /**********************************************************************************************************************************************/
-private releaseVer() { return "5.0.0126" }
-private appVerDate() { "1-26-2018" }
+private releaseVer() { return "5.0.0201" }
+private appVerDate() { "2-01-2018" }
 /**********************************************************************************************************************************************/
 preferences {
     page name: "startPage"
@@ -135,7 +135,7 @@ def installStartHtml() {
 }
 
 def installed() {
-    log.debug "Installed with settings: ${settings}", "debug", false
+    log.debug "Installed with settings: ${settings}"
     atomicState?.isInstalled = true
     initialize()
 }
@@ -148,7 +148,7 @@ def updated() {
 
 def initialize() {
     if (!atomicState?.accessToken) {
-        log.debug "Access token not defined. Attempting to refresh. Ensure OAuth is enabled in the SmartThings IDE.", "error", false
+        log.debug "Access token not defined. Attempting to refresh. Ensure OAuth is enabled in the SmartThings IDE."
         getAccessToken()
     }
 }
