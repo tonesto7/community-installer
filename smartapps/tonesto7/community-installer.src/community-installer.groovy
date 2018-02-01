@@ -87,7 +87,9 @@ def installStartHtml() {
                 <script type="text/javascript">
                     const serverUrl = '${apiServerUrl('')}';
                     const homeUrl = '${getAppEndpointUrl('installStart')}';
-                    const baseAppUrl = "${baseUrl('')}"
+                    const baseAppUrl = "${baseUrl('')}";
+                    const appVersion = "${releaseVer()}";
+                    const appVerDate = "${appVerDate()}";
                 </script>
             </head>
             <body>

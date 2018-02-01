@@ -210,3 +210,20 @@ ul:empty#appResultUl {
 .navbar {
     background-color: #2b3134;
 }
+
+body.modal-open #mainDiv {
+    -webkit-filter: blur(7px);
+    -moz-filter: blur(15px);
+    -o-filter: blur(15px);
+    -ms-filter: blur(15px);
+    filter: blur(15px);
+}
+
+.darkModalBg {
+    background-color: #2b3134;
+}
+
+.modal-backdrop {
+    /* background: #f7f7f7; */
+    background: #2b3134;
+}

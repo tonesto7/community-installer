@@ -1,3 +1,6 @@
+var scriptVersion = "1.0.0";
+var scriptVerDate = "2/01/2018";
+
 var repoId = '';
 var writableRepos = [];
 var availableApps;
@@ -5,8 +8,7 @@ var availableDevs;
 var currentManifest;
 var metricsData;
 var retryCnt = 0;
-var refreshCount;
-var searchBoxShown = false;
+
 const authUrl = generateStUrl('hub');
 const fetchReposUrl = generateStUrl('github/writeableRepos');
 const updRepoUrl = generateStUrl('githubAuth/updateRepos');
@@ -231,7 +233,7 @@ function checkListForDuplicate(element, str) {
 }
 
 function installError(err, reload = true) {
-    if (reload && refreshCount < 7) {
+    if (reload && Number(localStorage.getItem('refreshCount')) < 7) {
         loaderFunc();
     } else {
         installComplete(err, true);
@@ -249,7 +251,7 @@ function installComplete(text, red = false) {
     $('#resultsDone').css({ display: 'block' });
     $('#resultsHomeBtn').css({ display: 'block' });
     updSectTitle('', true);
-    refreshCount = undefined;
+    localStorage.removeItem('refreshCount');
     scrollToTop();
 }
 
@@ -1016,6 +1018,20 @@ function updateMetricsData() {
     }
 }
 
+function getIsAppOrDeviceInstalled(itemName, type) {
+    let res = {};
+    if (itemName && type) {
+        let data = type === 'app' ? availableApps : availableDevs;
+        let instApp = data.filter(app => app.name.toString() === itemName.toString() || app.name.toString() === cleanString(itemName.toString()) || app.name.toLowerCase() === itemName.toLowerCase());
+        res['installed'] = (instApp[0] !== undefined && instApp.length > 0);
+        res['data'] = instApp;
+    } else {
+        res['installed'] = false;
+        res['data'] = [];
+    }
+    return res;
+}
+
 function buildAppList(filterStr = undefined) {
     searchBtnAvail(true);
     let html = '';
@@ -1039,18 +1055,18 @@ function buildAppList(filterStr = undefined) {
         html += '\n               <tbody>';
 
         for (let i in appData) {
-            let instApp = availableApps.filter(app => app.name.toString() === appData[i].appName.toString() || app.name.toString() === cleanString(appData[i].appName.toString()));
-            let appInstalled = instApp[0] !== undefined && instApp.length;
+            let instApp = getIsAppOrDeviceInstalled(appData[i].appName, 'app');
+            let appInstalled = instApp.installed === true;
             let updAvail = false;
-            if (appInstalled && instApp[0].id !== undefined) {
-                checkRepoUpdateStatus(instApp[0].id, 'app').catch(function(err) {}).then(function(resp) {
+            if (appInstalled && instApp.data[0].id !== undefined) {
+                checkRepoUpdateStatus(instApp.data[0].id, 'app').catch(function(err) {}).then(function(resp) {
                     if (resp === true) {
                         updAvail = true;
                     }
                 });
             }
-            if (instApp[0] !== undefined) {
-                // console.log('appInstalled: ' + appInstalled, 'instApp: ' + instApp[0].id);
+            if (instApp.data[0] !== undefined) {
+                // console.log('appInstalled: ' + appInstalled, 'instApp: ' + instApp.data[0].id);
             }
             html += '\n   <tr style="border-bottom-style: hidden; border-top-style: hidden;">';
             html += '\n   <td class="py-1">';
@@ -1126,7 +1142,7 @@ function buildAppList(filterStr = undefined) {
     } else {
         html += '\n  <h6>No Items Found</h6>';
     }
-
+    scrollToTop();
     updSectTitle('Select an Item');
     $('#listContDiv').html('').html(html);
     $('#listContDiv').css({ display: 'block' });
@@ -1144,7 +1160,7 @@ function buildAppList(filterStr = undefined) {
     });
     $('#showSearchBtn').click(function() {
         console.log('showSearchBtn clicked...');
-        if ($('#searchForm').is(":visible")) {
+        if ($('#searchForm').is(':visible')) {
             $('#searchForm').hide();
         } else {
             $('#searchForm').show();
@@ -1157,7 +1173,6 @@ function buildAppList(filterStr = undefined) {
             incrementAppView(this.id);
         }
     });
-    scrollToTop();
     updateMetricsData();
     new WOW().init();
 }
@@ -1166,7 +1181,6 @@ function searchBtnAvail(show = true) {
     if (show) {
         $('#showSearchBtn').show();
     } else {
-        // $('#searchForm').hide();
         $('#showSearchBtn').hide();
     }
 }
@@ -1359,16 +1373,12 @@ function renderAppView(appName) {
                         html += '\n</div>';
                         html += '\n<div class="clearfix"></div>';
                     }
-                    // html += '\n</div>';
-                    $('#appViewDiv').append(html);
+                    scrollToTop();
+                    $('#appViewDiv').append(html).css({ display: 'block' });
                     $('#listContDiv').css({ display: 'none' });
                     $('#loaderDiv').css({ display: 'none' });
                     $('#actResultsDiv').css({ display: 'none' });
-                    $('#appViewDiv').css({ display: 'block' });
-                    let appViewCard = $('#appViewCard');
-                    // if (appViewCard.height() > 390) {
-                    //     appViewCard.height(appViewCard.height() + 50 + 'px');
-                    // }
+
                     $('#appCloseBtn').click(function() {
                         console.log('appCloseBtn');
                         updSectTitle('Select an Item');
@@ -1438,10 +1448,10 @@ function scrollToTop() {
 function defineClickActions() {}
 
 function loaderFunc() {
-    if (refreshCount === null) {
-        refreshCount = 0;
+    if (localStorage.getItem('refreshCount') === null) {
+        localStorage.setItem('refreshCount', '0');
     }
-    refreshCount++;
+    localStorage.setItem('refreshCount', (Number(localStorage.getItem('refreshCount')) + 1).toString());
     scrollToTop();
     updSectTitle('App Details', true);
     getStAuth()
@@ -1462,6 +1472,7 @@ function loaderFunc() {
                         installError(err, false);
                     })
                     .then(function(resp) {
+                        scrollToTop();
                         if (resp && resp.apps && Object.keys(resp).length) {
                             buildAppList();
                             startMetricsListener();
