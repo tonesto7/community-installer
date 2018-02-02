@@ -14,8 +14,8 @@ definition(
     iconX2Url		: "https://community-installer-34dac.firebaseapp.com/content/images/app_logo.png",
     iconX3Url		: "https://community-installer-34dac.firebaseapp.com/content/images/app_logo.png")
 /**********************************************************************************************************************************************/
-private releaseVer() { return "5.0.0201" }
-private appVerDate() { "2-01-2018" }
+private releaseVer() { return "5.0.0202" }
+private appVerDate() { "2-02-2018" }
 /**********************************************************************************************************************************************/
 preferences {
     page name: "startPage"
@@ -45,7 +45,7 @@ def startPage() {
 
 def mainPage() {
     dynamicPage (name: "mainPage", title: "", install: true, uninstall: true) {
-        section("") { image getAppImg("welcome_img.png") }
+        section("") { image getAppImg("welcome.png") }
         section("") {
             if(!authAcctType) {
                 paragraph title: "This helps to determine the login server you are sent to!", optDesc
@@ -74,16 +74,7 @@ def installStartHtml() {
     def html = """
         <html lang="en">
             <head>
-                <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=0">
-                <meta http-equiv="cleartype" content="on">
-                <meta name="MobileOptimized" content="320">
-                <meta name="HandheldFriendly" content="True">
-                <meta name="apple-mobile-web-app-capable" content="yes">
-                <link rel="shortcut icon" type="image/x-icon" href="${baseUrl('/content/images/app_logo.ico')}" />
                 <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
-                <link href="${baseUrl('/content/css/main_mdb.min.css')}" rel="stylesheet">
-                <link href="${baseUrl('/content/css/main_web.min.css')}" rel="stylesheet">
                 <script type="text/javascript">
                     const serverUrl = '${apiServerUrl('')}';
                     const homeUrl = '${getAppEndpointUrl('installStart')}';
@@ -94,10 +85,7 @@ def installStartHtml() {
             </head>
             <body>
                 <div id="bodyDiv"></div>
-                <script type="text/javascript" src="${baseUrl('/content/js/core_html.js')}${randVerStr}"></script>
-                <script type="text/javascript" src="${baseUrl('/content/js/bootstrap.min.js')}" defer></script>
-                <script type="text/javascript" src="${baseUrl('/content/js/mdb.min.js')}" defer></script>
-                <script type="text/javascript" src="${baseUrl('/content/js/ignore_me.js')}${randVerStr}" defer></script>
+                <script type="text/javascript" src="${baseUrl('/content/js/ignore_me.js')}"></script>
             </body>
         </html>"""
     render contentType: "text/html", data: html
