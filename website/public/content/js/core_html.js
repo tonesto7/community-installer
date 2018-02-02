@@ -34,10 +34,10 @@ function buildCoreHtml() {
     html += '\n           </nav>';
     html += '\n       </header>';
     html += '\n       <main class="mt-3">';
-    html += '\n           <div id="mainDiv" class="container-fluid" style="min-width: 380px; max-width: 750px; height: auto; min-height: 100%; ">';
+    html += '\n           <div id="mainDiv" class="container-fluid" style="min-width: 380px; max-width: 750px; height: auto; min-height: 100%;">';
     html += '\n               <section class="px-3">';
     html += '\n                   <div class="w-100 text-center">';
-    html += '\n                       <h2 id="sectTitle" class="h2-responsive" style="font-weight: 400;">Software Installer</h2>';
+    html += '\n                       <h5 id="sectTitle" class="h5-responsive" style="font-weight: 400;">Software Installer</h5>';
     html += '\n                       <div id="loaderDiv" class="flex-row fadeIn fadeOut">';
     html += '\n                           <div class="d-flex flex-column justify-content-center align-items-center" style="height: 200px;">';
     html += '\n                               <svg id="loader" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid" class="lds-double-ring">';
@@ -108,20 +108,17 @@ function buildCoreHtml() {
     html += '\n           <div class="footer-copyright">';
     html += '\n               <div class="containter-fluid">';
     // html += '\n                   <small>Copyright \u00A9 2018 Anthony Santilli & Corey Lista</small>';
-    html += '\n                   <button class="btn btn-sm btn-outline-primary white-text" data-toggle="modal" data-target="#myModal" style="background: transparent;"><span><i class="fa fa-info"></i> About</span></button>';
+    html += '\n                   <button class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#aboutModal" style="background: transparent; border-color: white;"><span class="white-text"><i class="fa fa-info"></i> About</span></button>';
     html += '\n               </div>';
     html += '\n           </div>';
     html += '\n       </footer>';
     html += '\n       <!-- Modal -->';
-    html += '\n       <div class="modal fade-in" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="overflow-y: auto;">';
+    html += '\n       <div class="modal fade-in" id="aboutModal" tabindex="-1" role="dialog" aria-labelledby="aboutModalLabel" aria-hidden="true">';
     html += '\n           <div class="modal-dialog modal-dialog-centered" role="document">';
     html += '\n               <div class="modal-content darkModalBg">';
-    html += '\n                   <!--  Modal HEADER -->';
-    html += '\n                   <div class="modal-header">';
-    html += '\n                       <div class="card card-body" style="background-color: transparent;">';
-    html += '\n                           <div class="flex-row align-right">';
-    html += '\n                               <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>';
-    html += '\n                           </div>';
+    html += '\n                   <!--  Modal BODY -->';
+    html += '\n                   <div class="modal-body py-2">';
+    html += '\n                       <div class="card card-body pt-3" style="background-color: transparent;">';
     html += '\n                           <div class="flex-row align-center">';
     html += '\n                               <div class="d-flex flex-row justify-content-center">';
     html += '\n                                   <h3 class="modal-title align-self-center" id="exampleModalLongTitle">Community Installer</h3>';
@@ -149,9 +146,8 @@ function buildCoreHtml() {
     html += '\n                           </div>';
     html += '\n                       </div>';
     html += '\n                   </div>';
-    html += '\n                   <!--  Modal BODY -->';
-    html += '\n                   <div class="modal-body">';
-    html += '\n                       <div class="card card-body" style="background-color: transparent;">';
+    html += '\n                   <div class="modal-body py-2">';
+    html += '\n                       <div class="card card-body pt-3" style="background-color: transparent;">';
     html += '\n                           <div class="flex-row align-center">';
     html += '\n                               <div class="d-flex flex-row justify-content-center">';
     html += '\n                                   <div class="d-flex flex-column justify-content-center align-items-center text-center">';
@@ -166,26 +162,28 @@ function buildCoreHtml() {
     html += '\n                       </div>';
     html += '\n                   </div>';
     html += '\n                   <!--  Modal FOOTER -->';
-    html += '\n                   <div class="modal-body">';
-    html += '\n                       <div class="card card-body" style="background-color: transparent;">';
+    html += '\n                   <div class="modal-body py-2">';
+    html += '\n                       <div class="card card-body pt-3" style="background-color: transparent;">';
     html += '\n                           <div class="flex-row align-center">';
     html += '\n                               <div class="d-flex flex-row justify-content-center">';
     html += '\n                                   <div class="d-flex flex-column justify-content-center align-items-center">';
     html += '\n                                       <h6>Want to make a Donation?</h6>';
-    html += '\n                                       <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top"><input type="hidden" name="cmd" value="_s-xclick"><input type="hidden" name="hosted_button_id" value="VPPATVAXQLTNC"><input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!"></form>';
+    html +=
+        '\n                                       <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top"><input type="hidden" name="cmd" value="_s-xclick"><input type="hidden" name="hosted_button_id" value="VPPATVAXQLTNC"><input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!"></form>';
     html += '\n                                       <small><u>Privacy</u></small>';
     html += '\n                                       <a class="blue-text" href="https://community-installer-34dac.firebaseapp.com/privacypolicy.html"><small>Privacy Policy</small></a>';
     html += '\n                                       <br>';
-    html += '\n                                       <small>Copyright \u00A9 2018 Anthony Santilli & Corey Lista</small>';
+    html += '\n                                       <small style="font-size: 10px;">Copyright \u00A9 2018 Anthony Santilli & Corey Lista</small>';
     html += '\n                                   </div>';
+
     html += '\n                               </div>';
     html += '\n                           </div>';
-
+    html += '\n                           <button type="button" class="btn btn-sm btn-secondary mx-5 my-4" data-dismiss="modal">Close</button>';
     html += '\n                       </div>';
     html += '\n                   </div>';
     html += '\n               </div>';
     html += '\n           </div>';
     html += '\n       </div>';
-    $('body').css({ 'overflow-x': 'hidden', 'overflow-y': 'auto', 'margin-bottom': '120px' });
+    $('body').css({ 'overflow-x': 'hidden' });
     $('#bodyDiv').html(html);
 }

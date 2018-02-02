@@ -8,7 +8,7 @@ var availableDevs;
 var currentManifest;
 var metricsData;
 var retryCnt = 0;
-
+var refreshCount;
 const authUrl = generateStUrl('hub');
 const fetchReposUrl = generateStUrl('github/writeableRepos');
 const updRepoUrl = generateStUrl('githubAuth/updateRepos');
@@ -27,7 +27,7 @@ const devUpdChkUrl = generateStUrl('github/deviceRepoStatus?deviceTypeId=');
 const devUpdApplyUrl = generateStUrl('ide/device/updateOneFromRepo/');
 const devUpdPubUrl = generateStUrl('ide/device/publishAjax/');
 const availableSaUrl = generateStUrl('api/smartapps/editable');
-const availableDevsUrl = generateStUrl('api/devicetypes');
+const availableDevsUrl = generateStUrl('ide/devices');
 
 function generateStUrl(path) {
     return serverUrl + path;
@@ -92,7 +92,17 @@ const appsManifest = [{
         iconUrl: 'https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-RemindR.png',
         manifestUrl: 'https://rawgit.com/BamaRayne/EchoSistantApps/master/remindrManifest.json',
         repoName: 'WebCoRE'
+    },
+    {
+        name: 'STWinkRelay',
+        appName: 'Wink-Relay',
+        author: 'Joshua Lyon',
+        description: 'Super fast LAN integration for the Wink Relay (control and sensor reporting).',
+        category: 'My Apps',
+        iconUrl: 'https://assets.ifttt.com/images/channels/423083547/icons/on_color_large.png',
+        manifestUrl: 'https://rawgit.com/joshualyon/STWinkRelay/master/installerManifest.json',
     }
+
 ];
 
 function makeRequest(url, method, message, appId = null, appDesc = null, contentType = null, responseType = null, anyStatus = false) {
@@ -233,10 +243,14 @@ function checkListForDuplicate(element, str) {
 }
 
 function installError(err, reload = true) {
-    if (reload && Number(localStorage.getItem('refreshCount')) < 7) {
-        loaderFunc();
+    if (reload && parseInt(localStorage.getItem('refreshCount')) < 7) {
+        setTimeout(loaderFunc, 1000);
     } else {
-        installComplete(err, true);
+        if (err === 'Unauthorized') {
+            installComplete('Your Auth Session Expired.  Please go back and sign in again', true);
+        } else {
+            installComplete(err, true);
+        }
     }
 }
 
@@ -834,6 +848,28 @@ function installDevsToIde(devNames) {
     });
 }
 
+function parseDomForDevices(domData) {
+    const parser = new DOMParser();
+    const respDoc = parser.parseFromString(domData.toString(), 'text/html');
+    const appTable = respDoc.getElementById('devicetype-table');
+    const theBody = appTable.getElementsByTagName('tbody');
+    const theApps = theBody[0].getElementsByTagName('tr');
+    const fndDTH = [];
+    for (var i = 0; i < theApps.length; i++) {
+        let devName = theApps[i].getElementsByClassName('namespace-name')[0].getElementsByTagName('a')[0].innerText.replace(/\n/g, '').trim().split(':');
+        //let gitHubArr = theApps[i].getElementsByTagName('td')[2].innerHTML.replace(/<script[^>]*>(?:(?!<\/script>)[^])*<\/script>/g, '').replace(/\n/g, '').trim();
+        fndDTH.push({
+            id: theApps[i].id,
+            name: (devName.length > 1 ? devName[1] : devName).toString().trim(),
+            published: theApps[i].getElementsByTagName('td')[3].innerText.replace(/\n/g, '').trim() === 'Published'
+                // capabilities: theApps[i].getElementsByTagName('td')[4].innerText.replace(/\n/g, '').trim(),
+                // oAuth: theApps[i].getElementsByTagName('td')[5].innerText.replace(/\n/g, '').trim()
+        });
+    }
+    console.log(fndDTH);
+    return fndDTH;
+}
+
 function getAvailableAppsDevices(updDom = false) {
     return new Promise(function(resolve, reject) {
         // console.log('apps:', apps);
@@ -858,7 +894,7 @@ function getAvailableAppsDevices(updDom = false) {
                     })
                     .then(function(resp) {
                         // console.log(resp);
-                        let fndDevs = JSON.parse(resp);
+                        let fndDevs = parseDomForDevices(resp);
                         if (fndDevs.length) {
                             availableDevs = fndDevs;
                             out['devices'] = fndDevs;
@@ -890,30 +926,13 @@ function checkIfItemsInstalled(itemObj, type, secondPass = false) {
             })
             .then(function(resp) {
                 // console.log(resp);
-                let itemsFnd = JSON.parse(resp);
-                if (itemsFnd.length) {
-
+                let itemsFnd;
+                if (resp.length) {
                     if (type === 'device') {
-                        // const parser = new DOMParser();
-                        // const respDoc = parser.parseFromString(resp, 'text/html');
-                        // const appTable = respDoc.getElementById('devicetype-table');
-                        // const theBody = appTable.getElementsByTagName('tbody');
-                        // const theApps = theBody[0].getElementsByTagName('tr');
-
-                        // const fndDTH = [];
-                        // for (var i = 0; i < theApps.length; i++) {
-                        //     fndDTH.push({
-                        //         deviceID: theApps[i].id,
-                        //         appName: theApps[i].getElementsByClassName('namespace-name')[0].getElementsByTagName('a')[0].innerText.replace(/\n/g, '').trim(),
-                        //         github: theApps[i].getElementsByTagName('td')[2].innerHTML.replace(/<script[^>]*>(?:(?!<\/script>)[^])*<\/script>/g, '').replace(/\n/g, '').trim(),
-                        //         published: theApps[i].getElementsByTagName('td')[3].innerText.replace(/\n/g, '').trim(),
-                        //         capabilities: theApps[i].getElementsByTagName('td')[4].innerText.replace(/\n/g, '').trim(),
-                        //         oAuth: theApps[i].getElementsByTagName('td')[5].innerText.replace(/\n/g, '').trim()
-                        //     });
-                        // }
-                        // console.log(fndDTH);
+                        itemsFnd = parseDomForDevices(resp);
                         availableDevs = itemsFnd;
                     } else {
+                        itemsFnd = JSON.parse(resp);
                         availableApps = itemsFnd;
                     }
                     updLoaderText('Analyzing', capitalize(type));
@@ -1492,15 +1511,15 @@ function loaderFunc() {
     if (localStorage.getItem('refreshCount') === null) {
         localStorage.setItem('refreshCount', '0');
     }
-    localStorage.setItem('refreshCount', (Number(localStorage.getItem('refreshCount')) + 1).toString());
+    localStorage.setItem('refreshCount', (parseInt(localStorage.getItem('refreshCount')) + 1).toString());
     scrollToTop();
     updSectTitle('App Details', true);
     getStAuth()
         .catch(function(err) {
-            if (err === 'Unauthorized') {
+            if (err === 'Unauthorized' && parseInt(localStorage.getItem('refreshCount')) > 6) {
                 installComplete('Your Auth Session Expired.  Please go back and sign in again', true);
             } else {
-                installError(err, false);
+                installError(err, true);
             }
         })
         .then(function(resp) {
@@ -1527,6 +1546,4 @@ document.addEventListener('DOMContentLoaded', function() {
     updateHeadHtml();
     buildCoreHtml();
     loaderFunc();
-});
-oaderFunc();
 });
