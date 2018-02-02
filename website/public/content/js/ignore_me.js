@@ -1,5 +1,5 @@
-var scriptVersion = '1.0.0';
-var scriptVerDate = '2/01/2018';
+var scriptVersion = '1.0.202a';
+var scriptVerDate = '2/02/2018';
 
 var repoId = '';
 var writableRepos = [];
@@ -28,6 +28,8 @@ const devUpdApplyUrl = generateStUrl('ide/device/updateOneFromRepo/');
 const devUpdPubUrl = generateStUrl('ide/device/publishAjax/');
 const availableSaUrl = generateStUrl('api/smartapps/editable');
 const availableDevsUrl = generateStUrl('ide/devices');
+
+var appManifests;
 
 function generateStUrl(path) {
     return serverUrl + path;
@@ -865,7 +867,7 @@ function parseDomForDevices(domData) {
                 // oAuth: theApps[i].getElementsByTagName('td')[5].innerText.replace(/\n/g, '').trim()
         });
     }
-    console.log(fndDTH);
+    // console.log(fndDTH);
     return fndDTH;
 }
 
@@ -974,6 +976,26 @@ function getProjectManifest(url) {
     });
 }
 
+function getAppManifests() {
+    return new Promise(function(resolve, reject) {
+        updLoaderText('Getting', 'App Manifest');
+        makeRequest(baseAppUrl + '/content/configs/secret_sauce.json', 'GET', null)
+            .catch(function(err) {
+                reject(err);
+            })
+            .then(function(resp) {
+                // console.log(resp);
+                let mani = JSON.parse(resp);
+                if (mani.apps && mani.apps.length > 0) {
+                    appManifests = mani.apps;
+                    resolve(mani.apps);
+                } else {
+                    resolve(undefined);
+                }
+            });
+    });
+}
+
 function incrementAppView(appName) {
     var fb = new Firebase('https://community-installer-34dac.firebaseio.com/metrics/appViews/' + appName);
     fb.transaction(function(currentVal) {
@@ -1072,7 +1094,7 @@ function getIsAppOrDeviceInstalled(itemName, type) {
 function buildAppList(filterStr = undefined) {
     searchBtnAvail(true);
     let html = '';
-    let appData = findAppMatch(filterStr, appsManifest);
+    let appData = findAppMatch(filterStr, appManifests);
     currentManifest = appData;
     html += '\n           <div id="searchFormDiv" class="d-flex flex-row justify-content-center align-items-center">';
     html += '\n               <div class="d-flex w-100 flex-column m-2">';
@@ -1291,10 +1313,10 @@ function renderAppView(appName) {
     searchBtnAvail(false);
     let html = '';
     var manifest;
-    if (appsManifest.length > 0) {
-        let appItem = appsManifest.filter(app => app.appName === appName);
+    if (appManifests.length > 0) {
+        let appItem = appManifests.filter(app => app.appName === appName);
         // console.log(appItem);
-        // let instApp = availableApps.filter(app => app.name.toString() === appsManifest[i].appName.toString());
+        // let instApp = availableApps.filter(app => app.name.toString() === appManifests[i].appName.toString());
         let appInstalled = false; // (instApp[0] !== undefined && instApp.length);
         let updAvail = false;
         if (appInstalled && instApp[0].id !== undefined) {
@@ -1359,40 +1381,99 @@ function renderAppView(appName) {
                             html += '\n     </div>';
                             html += '\n     <!--/.Community Description Panel-->';
                         }
-                        html += '\n     <!--Repo Description Panel-->';
-                        html += '\n     <div class="card card-body card-outline px-1 py-3 mb-2" style="background-color: transparent;">';
-                        html += '\n         <div class="flex-row align-center mt-0 mb-1">';
-                        html += '\n             <h6 class="h6-responsive white-text"><u>GitHub Details</u></h6>';
-                        html += '\n         </div>';
-                        html += '\n         <div class="d-flex justify-content-center align-items-center mx-auto">';
-                        html += '\n             <div class="d-flex flex-column justify-content-center align-items-center mx-2">';
-                        html += '\n                 <div class="d-flex flex-row">';
-                        html += '\n                     <small class="align-middle"><b>Repo Name</b></small>';
-                        html += '\n                 </div>';
-                        html += '\n                 <div class="d-flex flex-row">';
-                        html += '\n                     <small class="align-middle mx-2"><em>' + manifest.repoName + '</em></small>';
-                        html += '\n                 </div>';
-                        html += '\n             </div>';
-                        html += '\n             <div class="d-flex flex-column justify-content-center align-items-center mx-2">';
-                        html += '\n                 <div class="d-flex flex-row">';
-                        html += '\n                     <small class="align-middle"><b>Branch</b></small>';
-                        html += '\n                 </div>';
-                        html += '\n                 <div class="d-flex flex-row">';
-                        html += '\n                     <small class="align-middle mx-2"><em>' + manifest.repoBranch + '</em></small>';
-                        html += '\n                 </div>';
-                        html += '\n             </div>';
-                        html += '\n             <div class="d-flex flex-column justify-content-center align-items-center mx-2">';
-                        html += '\n                 <div class="d-flex flex-row">';
-                        html += '\n                     <small class="align-middle"><b>Owner</b></small>';
-                        html += '\n                 </div>';
-                        html += '\n                 <div class="d-flex flex-row">';
-                        html += '\n                     <small class="align-middle mx-2"><em>' + manifest.repoOwner + '</em></small>';
-                        html += '\n                 </div>';
-                        html += '\n             </div>';
-                        html += '\n         </div>';
-                        html += '\n     </div>';
-                        html += '\n     <!--/.Repo Description Panel-->';
+                        if (manifest.repoName && manifest.repoBranch && manifest.repoOwner) {
+                            html += '\n     <!--Repo Description Panel-->';
+                            html += '\n     <div class="card card-body card-outline px-1 py-0 mb-2" style="background-color: transparent;">';
 
+                            html += '\n           <!--Accordion wrapper-->';
+                            html += '\n           <div class="accordion" id="repoAccordionEx" role="tablist" aria-multiselectable="true">';
+
+                            html += '\n               <!-- Accordion card -->';
+                            html += '\n               <div class="card mb-0" style="background-color: transparent; border-bottom: none;">';
+
+                            html += '\n                   <!-- Card header -->';
+                            html += '\n                   <div class="card-header my-0" role="tab" id="repoCardCollapseHeading">';
+                            html += '\n                       <a data-toggle="collapse" data-parent="#repoAccordionEx" href="#repoCardCollapse" aria-expanded="true" aria-controls="repoCardCollapse">';
+                            html += '\n                           <h6 class="white-text mb-0"><u>GitHub Details</u> <i class="fa fa-angle-down rotate-icon"></i></h6>';
+                            html += '\n                       </a>';
+                            html += '\n                   </div>';
+
+                            html += '\n                   <!-- Card body -->';
+                            html += '\n                   <div id="repoCardCollapse" class="collapse" role="tabpanel" aria-labelledby="repoCardCollapseHeading">';
+                            html += '\n                       <div class="card-body white-text py-0">';
+                            html += '\n                         <div class="d-flex justify-content-center align-items-center mx-auto mb-2">';
+                            html += '\n                             <div class="d-flex flex-column justify-content-center align-items-center mx-2">';
+                            html += '\n                                 <div class="d-flex flex-row">';
+                            html += '\n                                     <small class="align-middle"><b>Repo Name</b></small>';
+                            html += '\n                                 </div>';
+                            html += '\n                                 <div class="d-flex flex-row">';
+                            html += '\n                                     <small class="align-middle mx-2"><em>' + manifest.repoName + '</em></small>';
+                            html += '\n                                 </div>';
+                            html += '\n                             </div>';
+                            html += '\n                             <div class="d-flex flex-column justify-content-center align-items-center mx-2">';
+                            html += '\n                                 <div class="d-flex flex-row">';
+                            html += '\n                                     <small class="align-middle"><b>Branch</b></small>';
+                            html += '\n                                 </div>';
+                            html += '\n                                 <div class="d-flex flex-row">';
+                            html += '\n                                     <small class="align-middle mx-2"><em>' + manifest.repoBranch + '</em></small>';
+                            html += '\n                                 </div>';
+                            html += '\n                             </div>';
+                            html += '\n                             <div class="d-flex flex-column justify-content-center align-items-center mx-2">';
+                            html += '\n                                 <div class="d-flex flex-row">';
+                            html += '\n                                     <small class="align-middle"><b>Owner</b></small>';
+                            html += '\n                                 </div>';
+                            html += '\n                                 <div class="d-flex flex-row">';
+                            html += '\n                                     <small class="align-middle mx-2"><em>' + manifest.repoOwner + '</em></small>';
+                            html += '\n                                 </div>';
+                            html += '\n                             </div>';
+                            html += '\n                         </div>';
+                            html += '\n                       </div>';
+                            html += '\n                   </div>';
+                            html += '\n               </div>';
+                            html += '\n               <!-- Accordion card -->';
+                            html += '\n           </div>';
+                            html += '\n           <!--/.Accordion wrapper-->';
+
+                            html += '\n     </div>';
+                            html += '\n     <!--/.Repo Description Panel-->';
+                        }
+                        if (manifest.notes) {
+                            html += '\n     <!--Notes Block Panel-->';
+                            html += '\n     <div class="card card-body card-outline px-1 py-0 mb-2" style="background-color: transparent;">';
+
+                            html += '\n           <!--Accordion wrapper-->';
+                            html += '\n           <div class="accordion" id="notesAccordionEx" role="tablist" aria-multiselectable="true">';
+
+                            html += '\n               <!-- Accordion card -->';
+                            html += '\n               <div class="card mb-0" style="background-color: transparent; border-bottom: none;">';
+
+                            html += '\n                   <!-- Card header -->';
+                            html += '\n                   <div class="card-header my-0" role="tab" id="notesCardCollapseHeading">';
+                            html += '\n                       <a data-toggle="collapse" data-parent="#notesAccordionEx" href="#notesCardCollapse" aria-expanded="true" aria-controls="notesCardCollapse">';
+                            html += '\n                           <h6 class="white-text mb-0"><u>Notes</u> <i class="fa fa-angle-down rotate-icon"></i></h6>';
+                            html += '\n                       </a>';
+                            html += '\n                   </div>';
+
+                            html += '\n                   <!-- Card body -->';
+                            html += '\n                   <div id="notesCardCollapse" class="collapse" role="tabpanel" aria-labelledby="notesCardCollapseHeading">';
+                            html += '\n                       <div class="card-body white-text py-0">';
+                            html += '\n                         <div class="d-flex justify-content-center align-items-center mx-auto mb-2">';
+                            html += '\n                             <div class="d-flex flex-column justify-content-center align-items-center mx-2">';
+                            html += '\n                                 <div>';
+                            html += '\n                                     ' + manifest.notes;
+                            html += '\n                                 </div>';
+                            html += '\n                             </div>';
+                            html += '\n                         </div>';
+                            html += '\n                       </div>';
+                            html += '\n                   </div>';
+                            html += '\n               </div>';
+                            html += '\n               <!-- Accordion card -->';
+                            html += '\n           </div>';
+                            html += '\n           <!--/.Accordion wrapper-->';
+
+                            html += '\n     </div>';
+                            html += '\n     <!--/.Notes Block Panel-->';
+                        }
                         html += '\n     <!--App Options Panel-->';
                         html += '\n     <div class="card card-body card-outline px-1 py-3 mb-2" style="background-color: transparent;">';
                         html += '\n         <div class="row">';
@@ -1523,6 +1604,13 @@ function loaderFunc() {
         })
         .then(function(resp) {
             if (resp === true) {
+                getAppManifests()
+                    .catch(function(err) {
+                        installComplete('Unable to App List Manifest', true);
+                    })
+                    .then(function(manifestResp) {
+                        loadAppList();
+                    });
                 getAvailableAppsDevices(true)
                     .catch(function(err) {
                         if (err === 'Unauthorized') {
@@ -1533,12 +1621,18 @@ function loaderFunc() {
                     .then(function(resp) {
                         scrollToTop();
                         if (resp && resp.apps && Object.keys(resp).length) {
-                            buildAppList();
-                            startMetricsListener();
+                            loadAppList();
                         }
                     });
             }
         });
+}
+
+function loadAppList() {
+    if (appManifests.length > 0 && availableApps.length > 0) {
+        buildAppList();
+        startMetricsListener();
+    }
 }
 
 function buildCoreHtml() {
@@ -1549,22 +1643,20 @@ function buildCoreHtml() {
     head += '\n                 <meta name="MobileOptimized" content="320">';
     head += '\n                 <meta name="HandheldFriendly" content="True">';
     head += '\n                 <meta name="apple-mobile-web-app-capable" content="yes">';
-    head += '\n                 <link rel="shortcut icon" type="image/x-icon" href="' + baseAppUrl + '/content/images/app_logo.ico" />';
+    head += '\n                 <link rel="shortcut icon" type="image/x-icon" href="' + baseAppUrl + '/content/images/app_logo.ico" async />';
     head += '\n                 <title>Community Installer</title>';
-    head += '\n                 <link href="' + baseAppUrl + '/content/css/main_mdb.min.css"  rel="stylesheet" />';
-    // head += '\n                 <link href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.4.5/css/mdb.min.css" rel="stylesheet">';
-    head += '\n                 <link href="' + baseAppUrl + '/content/css/main_web.min.css"  rel="stylesheet" />';
-    head += '\n                 <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">';
-    head += '\n                 <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" rel="stylesheet">';
-    head += '\n                 <script src="https://use.fontawesome.com/a81eef09c0.js" defer></script>';
+    head += '\n                 <link rel="stylesheet" type="text/css" href="' + baseAppUrl + '/content/css/main_mdb.min.css" />';
+    // head += '\n                 <link rel="stylesheet" type="text/css" href="' + baseAppUrl + '/content/css/mdb.min.css" />';
+
+    head += '\n                 <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto" />';
+    head += '\n                 <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" />';
+    head += '\n                 <script src="https://use.fontawesome.com/a81eef09c0.js" async></script>';
 
     head += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous" async></script>';
     head += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js" async></script>';
-    head += '\n                 <script src="https://static.firebase.com/v0/firebase.js"></script>';
+    head += '\n                 <script src="https://static.firebase.com/v0/firebase.js" async></script>';
     head += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js" async></script>';
-    head += '\n                 <style>';
-    head += '\n                     input[type=checkbox]:disabled:checked+label:before { border-color: transparent rgba(75, 243, 72, 0.46) rgba(36, 204, 103, 0.46) transparent; }';
-    head += '\n                 </style>';
+    head += '\n                 <link rel="stylesheet" type="text/css" href="' + baseAppUrl + '/content/css/main_web.min.css" />';
     $('head').append(head);
 
     let html = '';
@@ -1745,7 +1837,6 @@ $.ajaxSetup({
 function loadScripts() {
     $.getScript('https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js');
     $.getScript('https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.4.5/js/mdb.min.js');
-    // $.getScript(baseAppUrl + '/content/js/ignore_me.js');
 }
 
 document.addEventListener('DOMContentLoaded', function() {

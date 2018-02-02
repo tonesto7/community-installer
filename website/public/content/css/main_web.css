@@ -227,3 +227,7 @@ body.modal-open #mainDiv {
     /* background: #f7f7f7; */
     background: #2b3134;
 }
+
+input[type=checkbox]:disabled:checked+label:before {
+    border-color: transparent rgba(75, 243, 72, 0.46) rgba(36, 204, 103, 0.46) transparent;
+}
