@@ -892,7 +892,26 @@ function checkIfItemsInstalled(itemObj, type, secondPass = false) {
                 // console.log(resp);
                 let itemsFnd = JSON.parse(resp);
                 if (itemsFnd.length) {
+
                     if (type === 'device') {
+                        // const parser = new DOMParser();
+                        // const respDoc = parser.parseFromString(resp, 'text/html');
+                        // const appTable = respDoc.getElementById('devicetype-table');
+                        // const theBody = appTable.getElementsByTagName('tbody');
+                        // const theApps = theBody[0].getElementsByTagName('tr');
+
+                        // const fndDTH = [];
+                        // for (var i = 0; i < theApps.length; i++) {
+                        //     fndDTH.push({
+                        //         deviceID: theApps[i].id,
+                        //         appName: theApps[i].getElementsByClassName('namespace-name')[0].getElementsByTagName('a')[0].innerText.replace(/\n/g, '').trim(),
+                        //         github: theApps[i].getElementsByTagName('td')[2].innerHTML.replace(/<script[^>]*>(?:(?!<\/script>)[^])*<\/script>/g, '').replace(/\n/g, '').trim(),
+                        //         published: theApps[i].getElementsByTagName('td')[3].innerText.replace(/\n/g, '').trim(),
+                        //         capabilities: theApps[i].getElementsByTagName('td')[4].innerText.replace(/\n/g, '').trim(),
+                        //         oAuth: theApps[i].getElementsByTagName('td')[5].innerText.replace(/\n/g, '').trim()
+                        //     });
+                        // }
+                        // console.log(fndDTH);
                         availableDevs = itemsFnd;
                     } else {
                         availableApps = itemsFnd;
@@ -1300,6 +1319,28 @@ function renderAppView(appName) {
                         html += '\n       </div>';
                         html += '\n     </div>';
                         html += '\n     <!--/.App Description Panel-->';
+                        if (manifest.forumUrl || manifest.docUrl) {
+                            html += '\n     <!--Community Description Panel-->';
+                            html += '\n     <div class="card card-body card-outline px-1 py-3 mb-2" style="background-color: transparent;">';
+                            html += '\n         <div class="d-flex justify-content-center align-items-center mx-auto">';
+                            html += '\n             <div class="d-flex flex-column justify-content-center align-items-center mx-2">';
+                            html += '\n                 <div class="btn-group" role="group" aria-label="Basic example">';
+                            if (manifest.forumUrl) {
+                                html += '\n                 <div class="d-flex flex-row">';
+                                html += '\n                     <a class="btn btn-sm mx-2" href="' + manifest.forumUrl + '"><small-medium class="orange-text">Project Link</small-medium></a>';
+                                html += '\n                 </div>';
+                            }
+                            if (manifest.docUrl) {
+                                html += '\n                 <div class="d-flex flex-row">';
+                                html += '\n                     <a class="btn btn-sm mx-2" href="' + manifest.docUrl + '"><small-medium class="orange-text">Documentation</small-medium></a>';
+                                html += '\n                 </div>';
+                            }
+                            html += '\n                 </div>';
+                            html += '\n             </div>';
+                            html += '\n         </div>';
+                            html += '\n     </div>';
+                            html += '\n     <!--/.Community Description Panel-->';
+                        }
                         html += '\n     <!--Repo Description Panel-->';
                         html += '\n     <div class="card card-body card-outline px-1 py-3 mb-2" style="background-color: transparent;">';
                         html += '\n         <div class="flex-row align-center mt-0 mb-1">';
@@ -1333,31 +1374,7 @@ function renderAppView(appName) {
                         html += '\n         </div>';
                         html += '\n     </div>';
                         html += '\n     <!--/.Repo Description Panel-->';
-                        if (manifest.forumUrl !== undefined || manifest.docUrl) {
-                            html += '\n     <!--Community Description Panel-->';
-                            html += '\n     <div class="card card-body card-outline px-1 py-3 mb-2" style="background-color: transparent;">';
-                            html += '\n         <div class="flex-row align-center mt-0 mb-1">';
-                            html += '\n             <h6 class="h6-responsive white-text"><u>Community Links</u></h6>';
-                            html += '\n         </div>';
-                            html += '\n         <div class="d-flex justify-content-center align-items-center mx-auto">';
-                            html += '\n             <div class="d-flex flex-column justify-content-center align-items-center mx-2">';
-                            html += '\n                 <div class="btn-group" role="group" aria-label="Basic example">';
-                            if (manifest.forumUrl) {
-                                html += '\n                 <div class="d-flex flex-row">';
-                                html += '\n                     <a class="btn btn-sm mx-2" href="' + manifest.forumUrl + '"><small-medium class="orange-text">Project Link</small-me></a>';
-                                html += '\n                 </div>';
-                            }
-                            if (manifest.docUrl) {
-                                html += '\n                 <div class="d-flex flex-row">';
-                                html += '\n                     <a class="btn btn-sm mx-2" href="' + manifest.docUrl + '"><small-medium class="orange-text">Documentation</small-me></a>';
-                                html += '\n                 </div>';
-                            }
-                            html += '\n                 </div>';
-                            html += '\n             </div>';
-                            html += '\n         </div>';
-                            html += '\n     </div>';
-                            html += '\n     <!--/.Community Description Panel-->';
-                        }
+
                         html += '\n     <!--App Options Panel-->';
                         html += '\n     <div class="card card-body card-outline px-1 py-3 mb-2" style="background-color: transparent;">';
                         html += '\n         <div class="row">';
@@ -1510,4 +1527,6 @@ document.addEventListener('DOMContentLoaded', function() {
     updateHeadHtml();
     buildCoreHtml();
     loaderFunc();
+});
+oaderFunc();
 });

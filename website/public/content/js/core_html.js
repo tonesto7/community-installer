@@ -108,7 +108,7 @@ function buildCoreHtml() {
     html += '\n           <div class="footer-copyright">';
     html += '\n               <div class="containter-fluid">';
     // html += '\n                   <small>Copyright \u00A9 2018 Anthony Santilli & Corey Lista</small>';
-    html += '\n                   <button class="btn btn-sm white-text" data-toggle="modal" data-target="#myModal" style="background: transparent;"><span><i class="fa fa-info"></i> About</span></button>';
+    html += '\n                   <button class="btn btn-sm btn-outline-primary white-text" data-toggle="modal" data-target="#myModal" style="background: transparent;"><span><i class="fa fa-info"></i> About</span></button>';
     html += '\n               </div>';
     html += '\n           </div>';
     html += '\n       </footer>';
@@ -172,8 +172,7 @@ function buildCoreHtml() {
     html += '\n                               <div class="d-flex flex-row justify-content-center">';
     html += '\n                                   <div class="d-flex flex-column justify-content-center align-items-center">';
     html += '\n                                       <h6>Want to make a Donation?</h6>';
-    html +=
-        '\n                                       <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top"><input type="hidden" name="cmd" value="_s-xclick"><input type="hidden" name="hosted_button_id" value="VPPATVAXQLTNC"><input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!"></form>';
+    html += '\n                                       <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top"><input type="hidden" name="cmd" value="_s-xclick"><input type="hidden" name="hosted_button_id" value="VPPATVAXQLTNC"><input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!"></form>';
     html += '\n                                       <small><u>Privacy</u></small>';
     html += '\n                                       <a class="blue-text" href="https://community-installer-34dac.firebaseapp.com/privacypolicy.html"><small>Privacy Policy</small></a>';
     html += '\n                                       <br>';
