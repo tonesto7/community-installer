@@ -1,5 +1,5 @@
-var scriptVersion = '1.0.202a';
-var scriptVerDate = '2/02/2018';
+var scriptVersion = '1.0.205a';
+var scriptVerDate = '2/05/2018';
 
 var repoId = '';
 var writableRepos = [];
@@ -30,7 +30,6 @@ const availableSaUrl = generateStUrl('api/smartapps/editable');
 const availableDevsUrl = generateStUrl('ide/devices');
 
 var appManifests;
-console.log('serverUrl: ' + serverUrl);
 
 function generateStUrl(path) {
     return serverUrl + path;
@@ -120,6 +119,10 @@ function cleanString(str) {
     if (str) {
         return str === undefined ? '' : str.replace(/[^a-zA-Z0-9 ]/gi, ' ').replace(/\s{2,}/gi, ' ').trim();
     }
+}
+
+function cleanIdName(name) {
+    return name.toString().replace(/ /g, '_');
 }
 
 function addResult(str, good, type = '', str2 = '') {
@@ -470,17 +473,9 @@ function addRepoToIde(repoData) {
     });
 }
 
-function checkRepoUpdateStatus(objId, type) {
-    let url = '';
-    switch (type) {
-        case 'device':
-            url = devUpdChkUrl;
-            break;
-        case 'app':
-            url = appUpdChkUrl;
-            break;
-    }
+function checkItemUpdateStatus(objId, type) {
     return new Promise(function(resolve, reject) {
+        let url = type === 'device' ? devUpdChkUrl : appUpdChkUrl;
         makeRequest(url + objId, 'GET', null)
             .catch(function(err) {
                 reject(err);
@@ -488,8 +483,8 @@ function checkRepoUpdateStatus(objId, type) {
             .then(function(resp) {
                 // console.log(resp);
                 let data = JSON.parse(resp);
-                if (data.length) {
-                    resolve(data.hasDifference === true);
+                if (data.hasDifference === true) {
+                    resolve(true);
                 }
                 resolve(false);
             });
@@ -837,16 +832,8 @@ function getAvailableAppsDevices(updDom = false) {
 }
 
 function checkIfItemsInstalled(itemObj, type, secondPass = false) {
-    let url = '';
-    switch (type) {
-        case 'device':
-            url = availableDevsUrl;
-            break;
-        case 'app':
-            url = availableSaUrl;
-            break;
-    }
     return new Promise(function(resolve, reject) {
+        let url = type === 'device' ? availableDevsUrl : availableSaUrl;
         // console.log('apps:', apps);
         updLoaderText('Getting', capitalize(type) + ' Data');
         makeRequest(url, 'GET', null)
@@ -1030,7 +1017,7 @@ function getIsAppOrDeviceInstalled(itemName, type) {
     let res = {};
     if (itemName && type) {
         let data = type === 'app' ? availableApps : availableDevs;
-        let instApp = data.filter(app => app.name.toString() === itemName.toString() || app.name.toString() === cleanString(itemName.toString()) || app.name.toLowerCase() === itemName.toLowerCase());
+        let instApp = data.filter(app => app.name.toString() === itemName.toString() || app.name.toString() === cleanString(itemName.toString()) || app.name.toString().toLowerCase() === itemName.toString().toLowerCase());
         res['installed'] = instApp[0] !== undefined && instApp.length > 0;
         res['data'] = instApp;
     } else {
@@ -1038,6 +1025,94 @@ function getIsAppOrDeviceInstalled(itemName, type) {
         res['data'] = [];
     }
     return res;
+}
+
+function processItemsStatuses(data, viewType) {
+    if (viewType === 'appList') {
+        if (data.length > 0) {
+            for (let i in data) {
+                updateAppDeviceItemStatus(data[i].appName, 'app', viewType);
+            }
+        }
+    } else {
+        if (Object.keys(data).length > 0) {
+            updateAppDeviceItemStatus(data.smartApps.parent.name, 'app', viewType);
+            if (data.smartApps.children.length) {
+                for (const sa in data.smartApps.children) {
+                    updateAppDeviceItemStatus(data.smartApps.children[sa].name, 'app', viewType);
+                }
+            }
+            if (data.deviceHandlers.length) {
+                for (const dh in data.deviceHandlers) {
+                    updateAppDeviceItemStatus(data.deviceHandlers[dh].name, 'device', viewType);
+                }
+            }
+        }
+    }
+}
+
+function updateAppDeviceItemStatus(itemName, type, viewType) {
+    if (itemName) {
+        let installedItem = getIsAppOrDeviceInstalled(itemName, type);
+        let appInstalled = installedItem.installed === true;
+        let statusElementName = cleanIdName(itemName) + '_appview_status_' + type;
+        if (installedItem && installedItem.data && installedItem.data[0] !== undefined) {
+            if (viewType === 'appList') {
+                statusElementName = itemName;
+            }
+            checkItemUpdateStatus(installedItem.data[0].id, type)
+                .catch(function(err) {
+
+                })
+                .then(function(resp) {
+                    updateAvail = resp === true;
+                    if (appInstalled || updateAvail) {
+                        let itemStatus;
+                        let color;
+                        if (updateAvail) {
+                            itemStatus = 'Updates';
+                            color = viewType === 'appList' ? 'ribbon-orange' : 'orange';
+                            $('#updateBtn').show();
+                        } else {
+                            itemStatus = 'Installed';
+                            color = viewType === 'appList' ? 'ribbon-blue' : 'blue';
+                        }
+                        if (viewType === 'appList') {
+                            updateAppListStatusRibbon(statusElementName, itemStatus, color);
+                        } else {
+                            $('#' + statusElementName).text(itemStatus).addClass(color);
+                            if (updateAvail) {
+                                $('#' + statusElementName).data("hasUpdate", true);
+                            }
+                            $('#' + statusElementName).data("details", {
+                                id: installedItem.data[0].id,
+                                type: type,
+                                name: installedItem.data[0].name
+                            });
+                            if (appInstalled) { $('#' + statusElementName).data("installed", true); }
+                        }
+                    }
+                });
+        } else {
+            if (viewType === 'appView') {
+                $('#' + statusElementName).text('Not Installed');
+            }
+        }
+    }
+}
+
+function updateAppListStatusRibbon(itemName, status, color = undefined) {
+    if (itemName && status) {
+        let ribbon = $('#' + itemName + '_ribbon');
+        let ribbonStatus = $('#' + itemName + '_ribbon_status');
+
+        $(ribbon).css({ display: 'block' });
+
+        if (color) {
+            $(ribbonStatus).addClass(color);
+        }
+        $(ribbonStatus).text(status);
+    }
 }
 
 function buildAppList(filterStr = undefined) {
@@ -1063,22 +1138,12 @@ function buildAppList(filterStr = undefined) {
         html += '\n               <tbody>';
 
         for (let i in appData) {
-            let instApp = getIsAppOrDeviceInstalled(appData[i].appName, 'app');
-            let appInstalled = instApp.installed === true;
-            let updAvail = false;
-            if (appInstalled && instApp.data[0].id !== undefined) {
-                checkRepoUpdateStatus(instApp.data[0].id, 'app').catch(function(err) {}).then(function(resp) {
-                    if (resp === true) {
-                        updAvail = true;
-                    }
-                });
-            }
-            if (instApp.data[0] !== undefined) {
-                // console.log('appInstalled: ' + appInstalled, 'instApp: ' + instApp.data[0].id);
-            }
             html += '\n   <tr style="border-bottom-style: hidden; border-top-style: hidden;">';
             html += '\n   <td class="py-1">';
             html += '\n     <a href="#" id="' + appData[i].appName + '" class="list-group-item list-group-item-action flex-column align-items-start p-2" style="border-radius: 20px;">';
+
+            html += '\n         <div id="' + appData[i].appName + '_ribbon" class="ribbon" style="display: none;"><span id="' + appData[i].appName + '_ribbon_status"> </span></div>';
+
             html += '\n         <!-- APP NAME SECTION TOP (START)-->';
             html += '\n         <div class="d-flex w-100 justify-content-between align-items-center">';
             html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
@@ -1086,12 +1151,6 @@ function buildAppList(filterStr = undefined) {
             html += '\n                     <div class="d-flex justify-content-start align-items-center">';
             html += '\n                         <h6 class="h6-responsive" style="font-size: 100%;"><img src="' + appData[i].iconUrl + '" height="40" class="d-inline-block align-middle" alt=""> ' + appData[i].name + '</h6>';
             html += '\n                     </div>';
-            html += '\n                 </div>';
-            html += '\n             </div>';
-            html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
-            html += '\n                 <div class="d-flex flex-row">';
-            html += '\n                 </div>';
-            html += '\n                 <div class="d-flex flex-row">';
             html += '\n                 </div>';
             html += '\n             </div>';
 
@@ -1119,12 +1178,8 @@ function buildAppList(filterStr = undefined) {
             html += '\n                     <small class="align-middle"><u><b>Ratings:</b></u></small>';
             html += '\n                 </div>';
             html += '\n                 <div class="d-flex flex-row">';
-            // html += '\n                     <div class="">';
-            html += '\n                         <a class="btn btn-sm" href="#"><i class="fa fa-thumbs-up fa-sm"></i> 553</a>';
-            // html += '\n                     </div>';
-            // html += '\n                     <div class="button-container dislike-container">';
-            html += '\n                         <a class="btn btn-sm" href="#"><i class="fa fa-thumbs-down fa-sm"></i> 342</a>';
-            // html += '\n                     </div>';
+            html += '\n                     <div class="mx-2"><span id="' + appData[i].appName + '_like_cnt" class="black-text"><i class="fa fa-thumbs-up fa-sm green-text"></i> 1553</span></div>';
+            html += '\n                     <div class="mx-2"><span id="' + appData[i].appName + '_dislike_cnt" class="black-text"><i class="fa fa-thumbs-down fa-sm red-text"></i> 253</span></div>';
             html += '\n                 </div>';
             html += '\n             </div>';
             html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
@@ -1138,7 +1193,6 @@ function buildAppList(filterStr = undefined) {
             html += '\n         </div>';
             html += '\n         <!-- APP METRICS SECTION (END)-->';
 
-
             html += '\n         <!-- APP STATUS SECTION TOP (START)-->';
             html += '\n         <div class="d-flex w-100 justify-content-between align-items-center">';
             html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
@@ -1150,10 +1204,6 @@ function buildAppList(filterStr = undefined) {
             html += '\n                 </div>';
             html += '\n             </div>';
 
-            html += appInstalled || updAvail ? '\n                      <div class="d-flex flex-column justify-content-center align-items-center">\n<div class="d-flex flex-row">\n<small class="align-middle"><u><b>Status:</b></u></small>\n</div>\n<div class="d-flex flex-row">' : '';
-            html += appInstalled && !updAvail ? '\n             <small-medium class="align-middle"><span class="badge blue white-text align-middle">Installed</span></small-medium>' : '';
-            html += appInstalled && updAvail ? '\n             <small-medium class="align-middle"><span class="badge green white-text align-middle">Update Avail.</span></small-medium>' : '';
-            html += appInstalled || updAvail ? '\n</div>\n</div>' : '';
             html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
             html += '\n                 <div class="d-flex flex-row">';
             html += '\n                     <small class="align-middle"><u><b>Category:</b></u></small>';
@@ -1204,11 +1254,11 @@ function buildAppList(filterStr = undefined) {
         console.log('App Item Clicked: (' + this.id + ')');
         if (this.id) {
             renderAppView(this.id);
-            incrementAppView(this.id);
         }
     });
     $('#listContDiv').css({ display: 'block' });
     updateMetricsData();
+    processItemsStatuses(appData, 'appList');
     new WOW().init();
 }
 
@@ -1223,7 +1273,8 @@ function searchBtnAvail(show = true) {
 function createAppDevTable(items, areDevices = false, type) {
     let html = '';
     if (items.length) {
-        html += '\n   <div class="col-xs-12 ' + (areDevices ? 'col-md-6' : 'col-sm-12') + ' mb-2 p-0">';
+        // html += '\n   <div class="col-xs-12 ' + (areDevices ? 'col-md-6' : 'col-sm-12') + ' mb-2 p-0">';
+        html += '\n   <div class="col mb-2 p-0">';
         html += '\n       <h6 class="h6-responsive white-text"><u>' + (type === 'app' ? 'SmartApps' : 'Devices') + '</u></h6>';
         html += '\n       <div class="d-flex justify-content-center">';
         html += '\n           <div class="d-flex w-100 justify-content-center align-items-center mx-4">';
@@ -1236,6 +1287,7 @@ function createAppDevTable(items, areDevices = false, type) {
         html += '\n                       </tr>';
         html += '\n                   </thead>';
         html += '\n                   <tbody>';
+
         let cnt = 0;
         for (const item in items) {
             var appPub = type === 'device' || items[item].published === true;
@@ -1246,23 +1298,23 @@ function createAppDevTable(items, areDevices = false, type) {
             var disabled = parent || !appOptional ? ' disabled' : '';
             var checked = parent || !appOptional ? ' checked' : '';
             var itemId = type === 'device' ? 'device' + cnt : 'smartapp' + cnt;
-
-            html += '\n                   <tr>';
-            html += '\n                      <td class="align-middle py-0" style="border: 1px solid grey;">';
-            html += '\n                         <div class="d-flex flex-column ml-2">';
-            html += '\n                             <div class="d-flex flex-column justify-content-start my-1 form-check' + disabled + '">';
-            html += '\n                                 <div class="flex-column justify-content-start">';
-            html += '\n                                     <div class="d-flex flex-row">';
-            html += '\n                                          <input class="form-check-input align-middle" type="checkbox" value="" id="' + itemId + '"' + checked + disabled + '>';
-            html += '\n                                          <label class="form-check-label align-middle" for="' + itemId + '"><small id="' + itemId + 'name" class="align-middle" style="font-size: 0.7em; white-space: nowrap;">' + items[item].name + '</small></label>';
-            html += '\n                                     </div>';
-            html += '\n                                 </div>';
-            html += '\n                             </div>';
-            html += '\n                         </div>';
-            html += '\n                     </td>';
-            html += '\n                     <td class="align-middle" style="border: 1px solid grey;">';
-            html += '\n                         <div class="d-flex flex-column align-items-center">';
-            html += '\n                                   <small class="align-middle"><span class="badge grey white-text align-middle">v' + items[item].version + '</span></small>';
+            html += '\n                       <tr>';
+            html += '\n                           <td class="align-middle py-0" style="border: 1px solid grey;">';
+            html += '\n                               <div class="d-flex flex-column ml-2">';
+            html += '\n                                   <div class="d-flex flex-column justify-content-start my-1 form-check' + disabled + '">';
+            html += '\n                                       <div class="flex-column justify-content-start">';
+            html += '\n                                           <div class="d-flex flex-row">';
+            html += '\n                                               <input class="form-check-input align-middle" type="checkbox" value="" id="' + itemId + '"' + checked + disabled + '>';
+            html += '\n                                               <label class="form-check-label align-middle" for="' + itemId + '"><small id="' + itemId + 'name" class="align-middle" style="font-size: 0.7em; white-space: nowrap;">' + items[item].name + '</small></label>';
+            html += '\n                                           </div>';
+            html += '\n                                       </div>';
+            html += '\n                                   </div>';
+            html += '\n                               </div>';
+            html += '\n                           </td>';
+            html += '\n                           <td class="align-middle" style="border: 1px solid grey;">';
+            html += '\n                               <div class="d-flex flex-column align-items-center">';
+            html += '\n                                   <small class="align-middle" style="margin: 2px auto;"><span class="badge grey white-text align-middle">v' + items[item].version + '</span></small>';
+            html += '\n                                   <small class="align-middle" style="margin: 2px auto;"><span id="' + cleanIdName(items[item].name) + '_appview_status_' + type + '" class="badge white-text align-middle"></span></small>';
             html += '\n                               </div>';
             html += '\n                           </td>';
             html += '\n                           <td class="align-middle py-0" style="border: 1px solid grey;">';
@@ -1286,22 +1338,13 @@ function createAppDevTable(items, areDevices = false, type) {
 }
 
 function renderAppView(appName) {
+    incrementAppView(appName);
     searchBtnAvail(false);
     let html = '';
     var manifest;
     if (appManifests.length > 0) {
         let appItem = appManifests.filter(app => app.appName === appName);
         // console.log(appItem);
-        // let instApp = availableApps.filter(app => app.name.toString() === appManifests[i].appName.toString());
-        let appInstalled = false; // (instApp[0] !== undefined && instApp.length);
-        let updAvail = false;
-        if (appInstalled && instApp[0].id !== undefined) {
-            checkRepoUpdateStatus(instApp[0].id, 'app').catch(function(err) {}).then(function(resp) {
-                if (resp === true) {
-                    updAvail = true;
-                }
-            });
-        }
         for (let i in appItem) {
             getProjectManifest(appItem[0].manifestUrl)
                 .catch(function(err) {
@@ -1481,7 +1524,8 @@ function renderAppView(appName) {
                         html += '\n           <div class="d-flex flex-column justify-content- align-items-center">';
                         html += '\n               <div class="btn-group">';
                         html += '\n                   <button id="installBtn" type="button" class="btn btn-success mx-2" style="border-radius: 20px;">Install</button>';
-                        html += '\n                   <button id="removeBtn" type="button" class="btn btn-danger mx-2" style="border-radius: 20px;">Remove</button>';
+                        // html += '\n                   <button id="removeBtn" type="button" class="btn btn-danger mx-2" style="border-radius: 20px;">Remove</button>';
+                        html += '\n                   <button id="updateBtn" type="button" class="btn btn-warning mx-2" style="border-radius: 20px; display: none;">Update</button>';
                         html += '\n               </div>';
                         html += '\n           </div>';
                         html += '\n       </div>';
@@ -1494,29 +1538,17 @@ function renderAppView(appName) {
                     $('#listContDiv').css({ display: 'none' });
                     $('#loaderDiv').css({ display: 'none' });
                     $('#actResultsDiv').css({ display: 'none' });
-
+                    processItemsStatuses(manifest, 'appView');
                     $('#appCloseBtn').click(function() {
                         console.log('appCloseBtn');
                         updSectTitle('Select an Item');
                         $('#appViewDiv').html('');
                         $('#appViewDiv').css({ display: 'none' });
                         $('#listContDiv').css({ display: 'block' });
-                        buildAppList();
                     });
                     $('#installBtn').click(function() {
-                        var selected = {};
-                        selected['smartapps'] = [];
-                        selected['devices'] = [];
-                        $('#appViewCard input:checked').each(function() {
-                            let itemName = $(this).attr('id');
-                            if (itemName.startsWith('smartapp')) {
-                                selected['smartapps'].push($('#' + $(this).attr('id') + 'name').text());
-                            }
-                            if (itemName.startsWith('device')) {
-                                selected['devices'].push($('#' + $(this).attr('id') + 'name').text());
-                            }
-                        });
-                        console.log('checked: ', selected);
+                        let selectedItems = getSelectedCodeItems();
+                        // console.log('checked: ', selectedItems);
                         updSectTitle('Install Progress');
                         $('#appViewDiv').html('');
                         $('#appViewDiv').css({ display: 'none' });
@@ -1525,21 +1557,10 @@ function renderAppView(appName) {
                         $('#actResultsDiv').css({ display: 'block' });
                         scrollToTop();
                         incrementAppInstall(appName);
-                        processIntall(manifest, selected);
+                        processIntall(manifest, selectedItems);
                     });
                     $('#removeBtn').click(function() {
-                        var selected = {};
-                        selected['smartapps'] = [];
-                        selected['devices'] = [];
-                        $('#appViewCard input:checked').each(function() {
-                            let itemName = $(this).attr('id');
-                            if (itemName.startsWith('smartapp')) {
-                                selected['smartapps'].push($('#' + $(this).attr('id') + 'name').text());
-                            }
-                            if (itemName.startsWith('device')) {
-                                selected['devices'].push($('#' + $(this).attr('id') + 'name').text());
-                            }
-                        });
+                        let selectedItems = getSelectedCodeItems();
                         updSectTitle('Removal Progress');
                         $('#appViewDiv').html('');
                         $('#appViewDiv').css({ display: 'none' });
@@ -1547,12 +1568,97 @@ function renderAppView(appName) {
                         $('#loaderDiv').css({ display: 'block' });
                         $('#actResultsDiv').css({ display: 'block' });
                         scrollToTop();
-                        removeAppsFromIde(manifest, selected);
+                        removeAppsFromIde(manifest, selectedItems);
                     });
+                    $('#updateBtn').click(function() {
+                        let devUpds = getUpdateItemsByType('device');
+                        let appUpds = getUpdateItemsByType('app');
+                        // updSectTitle('Update Progress');
+                        // $('#appViewDiv').html('');
+                        // $('#appViewDiv').css({ display: 'none' });
+                        // $('#listContDiv').css({ display: 'none' });
+                        // $('#loaderDiv').css({ display: 'block' });
+                        // $('#actResultsDiv').css({ display: 'block' });
+                        // scrollToTop();
+                        // removeAppsFromIde(manifest, selectedItems);
+                    });
+                    if (areAllItemsInstalled(manifest) === true) {
+                        $('#installBtn').prop('disabled', true);
+                    } else { $('#installBtn').prop('disabled', false); }
                     new WOW().init();
                 });
         }
     }
+}
+
+function areAllItemsInstalled(manifest) {
+    let appsInst = getInstalledItemsByType('app');
+    let devsInst = getInstalledItemsByType('device');
+    if (Object.keys(manifest).length > 0) {
+        if (appsInst.filter(app => app.name === manifest.smartApps.parent.name).length >= 1) {
+            delete manifest.smartApps['parent'];
+        }
+        if (manifest.smartApps.children.length) {
+            for (const sa in manifest.smartApps.children) {
+                if (appsInst.filter(app => app.name === manifest.smartApps.children[sa].name).length >= 1) {
+                    delete manifest.smartApps.children[sa];
+                }
+            }
+        }
+        if (manifest.deviceHandlers.length) {
+            for (const dh in manifest.deviceHandlers) {
+                if (devsInst.filter(dev => dev.name === manifest.deviceHandlers[dh].name).length >= 1) {
+                    delete manifest.deviceHandlers[dh];
+                }
+            }
+        }
+    }
+    if (manifest.smartApps.parent === undefined && manifest.smartApps.children.length < 1 && manifest.deviceHandlers.length < 1) {
+        return true;
+    } else { return false; }
+}
+
+function getInstalledItemsByType(type) {
+    if (type) {
+        let results = [];
+        let items = $('span').filter(function() {
+            return $(this).data('installed') === true && $(this).data('details').type === type;
+        });
+        for (var i in items) {
+            results.push(items[i].data());
+        }
+        return results;
+    }
+    return undefined;
+}
+
+function getUpdateItemsByType(type) {
+    if (type) {
+        let results = [];
+        let items = $('span').filter(function() {
+            return $(this).data('hasUpdate') === true && $(this).data('details').type === type;
+        });
+        for (var i in items) {
+            results.push(items[i].data());
+        }
+        return results;
+    }
+    return undefined;
+}
+
+function getSelectedCodeItems() {
+    var selected = {};
+    selected['smartapps'] = [];
+    selected['devices'] = [];
+    $('#appViewCard input:checked').each(function() {
+        let itemName = $(this).attr('id');
+        if (itemName.startsWith('smartapp')) {
+            selected['smartapps'].push($('#' + $(this).attr('id') + 'name').text());
+        }
+        if (itemName.startsWith('device')) {
+            selected['devices'].push($('#' + $(this).attr('id') + 'name').text());
+        }
+    });
 }
 
 function scrollToTop() {
@@ -1618,20 +1724,18 @@ function buildCoreHtml() {
     head += '\n                 <meta name="MobileOptimized" content="320">';
     head += '\n                 <meta name="HandheldFriendly" content="True">';
     head += '\n                 <meta name="apple-mobile-web-app-capable" content="yes">';
-    head += '\n                 <link rel="shortcut icon" type="image/x-icon" href="' + baseAppUrl + '/content/images/app_logo.ico" async />';
+    head += '\n                 <link rel="shortcut icon" type="image/x-icon" href="' + baseAppUrl + '/content/images/app_logo.ico" />';
     head += '\n                 <title>Community Installer</title>';
-    head += '\n                 <link rel="stylesheet" type="text/css" href="' + baseAppUrl + '/content/css/main_mdb.min.css" />';
+    // head += '\n                 <link rel="stylesheet" type="text/css" href="' + baseAppUrl + '/content/css/main_mdb.min.css" />';
     // head += '\n                 <link rel="stylesheet" type="text/css" href="' + baseAppUrl + '/content/css/mdb.min.css" />';
-
     head += '\n                 <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto" />';
     head += '\n                 <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" />';
     head += '\n                 <script src="https://use.fontawesome.com/a81eef09c0.js" async></script>';
-
     head += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous" async></script>';
     head += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js" async></script>';
     head += '\n                 <script src="https://static.firebase.com/v0/firebase.js" async></script>';
     head += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js" async></script>';
-    head += '\n                 <link rel="stylesheet" type="text/css" href="' + baseAppUrl + '/content/css/main_web.min.css" />';
+    // head += '\n                 <link rel="stylesheet" type="text/css" href="' + baseAppUrl + '/content/css/main_web.min.css" />';
     head += '\n                 <!-- Global site tag (gtag.js) - Google Analytics --> <script async src="https://www.googletagmanager.com/gtag/js?id=UA-113463133-1"></script><script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag("js", new Date()); gtag("config", "UA-113463133-1");</script>';
     $('head').append(head);
 
