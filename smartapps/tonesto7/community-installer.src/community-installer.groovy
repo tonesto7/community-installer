@@ -3,6 +3,8 @@
 *   Copyright 2018 Anthony Santilli, Corey Lista
 *
 // /**********************************************************************************************************************************************/
+import java.security.MessageDigest
+
 definition(
     name			: "Community-Installer",
     namespace		: "tonesto7",
@@ -14,8 +16,8 @@ definition(
     iconX2Url		: "https://community-installer-34dac.firebaseapp.com/content/images/app_logo.png",
     iconX3Url		: "https://community-installer-34dac.firebaseapp.com/content/images/app_logo.png")
 /**********************************************************************************************************************************************/
-private releaseVer() { return "5.0.0202" }
-private appVerDate() { "2-02-2018" }
+private releaseVer() { return "5.0.0204" }
+private appVerDate() { "2-04-2018" }
 /**********************************************************************************************************************************************/
 preferences {
     page name: "startPage"
@@ -74,13 +76,15 @@ def installStartHtml() {
     def html = """
         <html lang="en">
             <head>
+                <meta name="robots" content="noindex">
                 <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
                 <script type="text/javascript">
                     const serverUrl = '${apiServerUrl('')}';
                     const homeUrl = '${getAppEndpointUrl('installStart')}';
-                    const baseAppUrl = "${baseUrl('')}";
-                    const appVersion = "${releaseVer()}";
-                    const appVerDate = "${appVerDate()}";
+                    const baseAppUrl = '${baseUrl('')}';
+                    const appVersion = '${releaseVer()}';
+                    const appVerDate = '${appVerDate()}';
+                    const hashedUuid = '${generateLocationHash()}';
                 </script>
             </head>
             <body>
@@ -113,6 +117,13 @@ def initialize() {
 def uninstalled() {
 	revokeAccessToken()
     log.warn("${app?.getLabel()} has been Uninstalled...")
+}
+
+def generateLocationHash() {
+    def s = location?.getId()
+    MessageDigest digest = MessageDigest.getInstance("MD5")
+    digest.update(s.bytes);
+    new BigInteger(1, digest.digest()).toString(16).padLeft(32, '0') 
 }
 
 def getAccessToken() {

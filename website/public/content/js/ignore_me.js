@@ -30,81 +30,11 @@ const availableSaUrl = generateStUrl('api/smartapps/editable');
 const availableDevsUrl = generateStUrl('ide/devices');
 
 var appManifests;
+console.log('serverUrl: ' + serverUrl);
 
 function generateStUrl(path) {
     return serverUrl + path;
 }
-
-const appsManifest = [{
-        name: 'NST Manager',
-        appName: 'Nest-Manager',
-        author: 'Anthony S.',
-        description: "Integrate all of your Nest products with SmartThings and utilize it's many built-in automations to help keep your home feeling comfortable and safe",
-        category: 'Convenience',
-        iconUrl: 'https://raw.githubusercontent.com/tonesto7/nest-manager/master/Images/App/nst_manager_5.png',
-        manifestUrl: 'https://rawgit.com/tonesto7/nest-manager/master/installerManifest.json',
-        repoName: 'nest-manager'
-    },
-    {
-        name: 'EchoSistant Evolution',
-        appName: 'EchoSistant5',
-        author: 'Echosistant Team',
-        description: 'The Ultimate Voice Controlled Assistant Using Alexa Enabled Devices.',
-        category: 'My Apps',
-        iconUrl: 'https://echosistant.com/es5_content/images/Echosistant_V5.png',
-        manifestUrl: 'https://rawgit.com/BamaRayne/Echosistant/master/installerManifest.json',
-        repoName: 'echosistant-dev'
-    },
-    {
-        name: 'Ask Alexa',
-        appName: 'Ask-Alexa',
-        author: 'Michael Struck',
-        description: 'Advanced voice control of your SmartThing Environment using Amazon Echo.',
-        category: 'My Apps',
-        iconUrl: 'https://raw.githubusercontent.com/MichaelStruck/SmartThingsPublic/master/img/AskAlexa512.png',
-        manifestUrl: 'https://rawgit.com/MichaelStruck/SmartThingsPublic/master/smartapps/michaelstruck/ask-alexa.src/AAmanifest.json',
-        repoName: 'SmartThingsPublic'
-    },
-    {
-        name: 'Alexa Virtual Switch Creator',
-        appName: 'Alexa-Virtual-Switch-Creator',
-        author: 'Michael Struck',
-        description: 'Allows for creation of SmartThings virtual switches that can be tied to items controlled by Amazon Echo (Alexa).',
-        category: 'My Apps',
-        iconUrl: 'https://raw.githubusercontent.com/MichaelStruck/SmartThingsPublic/master/smartapps/michaelstruck/alexa-helper.src/Alexa@2x.png',
-        manifestUrl: 'https://rawgit.com/MichaelStruck/SmartThingsPublic/master/smartapps/michaelstruck/alexa-virtual-switch-creator.src/AVSWmanifest.json',
-        repoName: 'SmartThingsPublic'
-    },
-    {
-        name: 'WebCoRE',
-        appName: 'WebCoRE',
-        author: 'Adrian Caramaliu',
-        description: "Web enabled Community's own Rule Engine",
-        category: 'My Apps',
-        iconUrl: 'https://cdn.rawgit.com/ady624/webCoRE/master/resources/icons/app-CoRE.png',
-        manifestUrl: 'https://rawgit.com/ady624/webCoRE/master/installerManifest.json',
-        repoName: ''
-    },
-    {
-        name: 'RemindR',
-        appName: 'RemindR',
-        author: 'JH/BD',
-        description: 'Never miss an important event.',
-        category: 'My Apps',
-        iconUrl: 'https://raw.githubusercontent.com/BamaRayne/Echosistant/master/smartapps/bamarayne/echosistant.src/app-RemindR.png',
-        manifestUrl: 'https://rawgit.com/BamaRayne/EchoSistantApps/master/remindrManifest.json',
-        repoName: 'WebCoRE'
-    },
-    {
-        name: 'STWinkRelay',
-        appName: 'Wink-Relay',
-        author: 'Joshua Lyon',
-        description: 'Super fast LAN integration for the Wink Relay (control and sensor reporting).',
-        category: 'My Apps',
-        iconUrl: 'https://assets.ifttt.com/images/channels/423083547/icons/on_color_large.png',
-        manifestUrl: 'https://rawgit.com/joshualyon/STWinkRelay/master/installerManifest.json'
-    }
-];
 
 function makeRequest(url, method, message, appId = null, appDesc = null, contentType = null, responseType = null, anyStatus = false) {
     return new Promise(function(resolve, reject) {
@@ -1012,6 +942,14 @@ function incrementAppInstall(appName) {
     });
 }
 
+function incrementLikeDislike(appName, type) {
+    var fb = new Firebase('https://community-installer-34dac.firebaseio.com/metrics/appRatings/' + appName);
+    fb.transaction(function(currentVal) {
+        isFinite(currentVal) || (currentVal = 0);
+        return currentVal + 1;
+    });
+}
+
 function findAppMatch(srchStr, data) {
     if (srchStr === undefined) {
         return data.sort(dynamicSort('name'));
@@ -1054,7 +992,7 @@ function startMetricsListener() {
 function updateMetricsData() {
     let v = metricsData;
     if (v !== undefined && v !== null && Object.keys(v).length) {
-        if (Object.keys(v.appInstalls).length) {
+        if (v.appInstalls && Object.keys(v.appInstalls).length) {
             for (const i in v.appInstalls) {
                 var iItem = $('#' + i + '_install_cnt');
                 let cnt = parseInt(v.appInstalls[i]);
@@ -1063,7 +1001,7 @@ function updateMetricsData() {
                 }
             }
         }
-        if (Object.keys(v.appViews).length) {
+        if (v.appViews && Object.keys(v.appViews).length) {
             for (const i in v.appViews) {
                 var vItem = $('#' + i + '_view_cnt');
                 if (vItem.length) {
@@ -1072,6 +1010,17 @@ function updateMetricsData() {
                         vItem.removeClass('grey').addClass('purple').text(cnt);
                     }
                 }
+            }
+        }
+        if (v.appRatings && Object.keys(v.appRatings).length) {
+            for (const i in v.appRatings) {
+                // var vItem = $('#' + i + '_view_cnt');
+                // if (vItem.length) {
+                //     let cnt = parseInt(v.appViews[i]);
+                //     if (cnt >= 1) {
+                //         vItem.removeClass('grey').addClass('purple').text(cnt);
+                //     }
+                // }
             }
         }
     }
@@ -1130,7 +1079,7 @@ function buildAppList(filterStr = undefined) {
             html += '\n   <tr style="border-bottom-style: hidden; border-top-style: hidden;">';
             html += '\n   <td class="py-1">';
             html += '\n     <a href="#" id="' + appData[i].appName + '" class="list-group-item list-group-item-action flex-column align-items-start p-2" style="border-radius: 20px;">';
-
+            html += '\n         <!-- APP NAME SECTION TOP (START)-->';
             html += '\n         <div class="d-flex w-100 justify-content-between align-items-center">';
             html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
             html += '\n                 <div class="d-flex flex-row">';
@@ -1145,39 +1094,37 @@ function buildAppList(filterStr = undefined) {
             html += '\n                 <div class="d-flex flex-row">';
             html += '\n                 </div>';
             html += '\n             </div>';
-            html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
-            html += '\n                 <div class="d-flex flex-row">';
-            html += '\n                     <small class="align-middle"><u><b>Author:</b></u></small>';
-            html += '\n                 </div>';
-            html += '\n                 <div class="d-flex flex-row">';
-            html += '\n                     <small class="align-middle" style="font-size: 12px;"><em>' + appData[i].author + '</em></small>';
-            html += '\n                 </div>';
-            html += '\n             </div>';
-            html += '\n         </div>';
 
+            html += '\n         </div>';
+            html += '\n         <!-- APP NAME SECTION TOP (END)-->';
+
+            html += '\n         <!-- APP DESCRIPTION SECTION (START)-->';
             html += '\n         <div class="d-flex justify-content-start align-items-center mt-1 mb-3" style="border-style: inset; border: 1px solid grey; border-radius: 5px;">';
             html += '\n             <p class="d-flex m-2 justify-content-center"><small class="align-middle">' + appData[i].description + '</small></p>';
             html += '\n         </div>';
+            html += '\n         <!-- APP DESCRIPTION SECTION (END)-->';
 
-            html += '\n         <div class="d-flex w-100 justify-content-between align-items-center">';
-            html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
-            html += '\n                 <div class="d-flex flex-row">';
-            html += '\n                     <small class="align-middle"><u><b>Category:</b></u></small>';
-            html += '\n                 </div>';
-            html += '\n                 <div class="d-flex flex-row">';
-            html += '\n                     <small class="align-middle"><em>' + appData[i].category + '</em></small>';
-            html += '\n                 </div>';
-            html += '\n             </div>';
-            html += appInstalled || updAvail ? '\n                      <div class="d-flex flex-column justify-content-center align-items-center">\n<div class="d-flex flex-row">\n<small class="align-middle"><u><b>Status:</b></u></small>\n</div>\n<div class="d-flex flex-row">' : '';
-            html += appInstalled && !updAvail ? '\n             <small-medium class="align-middle"><span class="badge blue white-text align-middle">Installed</span></small-medium>' : '';
-            html += appInstalled && updAvail ? '\n             <small-medium class="align-middle"><span class="badge green white-text align-middle">Update Avail.</span></small-medium>' : '';
-            html += appInstalled || updAvail ? '\n</div>\n</div>' : '';
+            html += '\n         <!-- APP METRICS SECTION (START)-->';
+            html += '\n         <div class="d-flex w-100 justify-content-between align-items-center mb-3">';
             html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
             html += '\n                 <div class="d-flex flex-row">';
             html += '\n                     <small class="align-middle"><u><b>Views:</b></u></small>';
             html += '\n                 </div>';
             html += '\n                 <div class="d-flex flex-row">';
             html += '\n                     <span id="' + appData[i].appName + '_view_cnt" class="badge badge-pill grey white-text align-middle">0</span>';
+            html += '\n                 </div>';
+            html += '\n             </div>';
+            html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
+            html += '\n                 <div class="d-flex flex-row">';
+            html += '\n                     <small class="align-middle"><u><b>Ratings:</b></u></small>';
+            html += '\n                 </div>';
+            html += '\n                 <div class="d-flex flex-row">';
+            // html += '\n                     <div class="">';
+            html += '\n                         <a class="btn btn-sm" href="#"><i class="fa fa-thumbs-up fa-sm"></i> 553</a>';
+            // html += '\n                     </div>';
+            // html += '\n                     <div class="button-container dislike-container">';
+            html += '\n                         <a class="btn btn-sm" href="#"><i class="fa fa-thumbs-down fa-sm"></i> 342</a>';
+            // html += '\n                     </div>';
             html += '\n                 </div>';
             html += '\n             </div>';
             html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
@@ -1189,6 +1136,34 @@ function buildAppList(filterStr = undefined) {
             html += '\n                 </div>';
             html += '\n             </div>';
             html += '\n         </div>';
+            html += '\n         <!-- APP METRICS SECTION (END)-->';
+
+
+            html += '\n         <!-- APP STATUS SECTION TOP (START)-->';
+            html += '\n         <div class="d-flex w-100 justify-content-between align-items-center">';
+            html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
+            html += '\n                 <div class="d-flex flex-row">';
+            html += '\n                     <small class="align-middle"><u><b>Author:</b></u></small>';
+            html += '\n                 </div>';
+            html += '\n                 <div class="d-flex flex-row">';
+            html += '\n                     <small class="align-middle" style="font-size: 12px;"><em>' + appData[i].author + '</em></small>';
+            html += '\n                 </div>';
+            html += '\n             </div>';
+
+            html += appInstalled || updAvail ? '\n                      <div class="d-flex flex-column justify-content-center align-items-center">\n<div class="d-flex flex-row">\n<small class="align-middle"><u><b>Status:</b></u></small>\n</div>\n<div class="d-flex flex-row">' : '';
+            html += appInstalled && !updAvail ? '\n             <small-medium class="align-middle"><span class="badge blue white-text align-middle">Installed</span></small-medium>' : '';
+            html += appInstalled && updAvail ? '\n             <small-medium class="align-middle"><span class="badge green white-text align-middle">Update Avail.</span></small-medium>' : '';
+            html += appInstalled || updAvail ? '\n</div>\n</div>' : '';
+            html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
+            html += '\n                 <div class="d-flex flex-row">';
+            html += '\n                     <small class="align-middle"><u><b>Category:</b></u></small>';
+            html += '\n                 </div>';
+            html += '\n                 <div class="d-flex flex-row">';
+            html += '\n                     <small class="align-middle"><em>' + appData[i].category + '</em></small>';
+            html += '\n                 </div>';
+            html += '\n             </div>';
+            html += '\n         </div>';
+            html += '\n         <!-- APP STATUS SECTION TOP (END)-->';
             html += '\n     </a>';
             html += '\n   </td>';
             html += '\n   </tr>';
@@ -1204,7 +1179,7 @@ function buildAppList(filterStr = undefined) {
     scrollToTop();
     updSectTitle('Select an Item');
     $('#listContDiv').html('').html(html);
-    $('#listContDiv').css({ display: 'block' });
+
     $('#loaderDiv').css({ display: 'none' });
     $('#actResultsDiv').css({ display: 'none' });
     $('#appViewDiv').css({ display: 'none' });
@@ -1232,6 +1207,7 @@ function buildAppList(filterStr = undefined) {
             incrementAppView(this.id);
         }
     });
+    $('#listContDiv').css({ display: 'block' });
     updateMetricsData();
     new WOW().init();
 }
@@ -1609,27 +1585,26 @@ function loaderFunc() {
                         installComplete('Unable to App List Manifest', true);
                     })
                     .then(function(manifestResp) {
-                        loadAppList();
-                    });
-                getAvailableAppsDevices(true)
-                    .catch(function(err) {
-                        if (err === 'Unauthorized') {
-                            installComplete('Your Auth Session Expired.  Please go back and sign in again', true);
-                        }
-                        installError(err, false);
-                    })
-                    .then(function(resp) {
-                        scrollToTop();
-                        if (resp && resp.apps && Object.keys(resp).length) {
-                            loadAppList();
-                        }
+                        getAvailableAppsDevices(true)
+                            .catch(function(err) {
+                                if (err === 'Unauthorized') {
+                                    installComplete('Your Auth Session Expired.  Please go back and sign in again', true);
+                                }
+                                installError(err, false);
+                            })
+                            .then(function(resp) {
+                                scrollToTop();
+                                if (resp && resp.apps && Object.keys(resp).length) {
+                                    loadAppList();
+                                }
+                            });
                     });
             }
         });
 }
 
 function loadAppList() {
-    if (appManifests.length > 0 && availableApps.length > 0) {
+    if ((appManifests !== undefined && appManifests.length > 0) || (availableApps !== undefined && availableApps.length > 0)) {
         buildAppList();
         startMetricsListener();
     }
@@ -1657,6 +1632,7 @@ function buildCoreHtml() {
     head += '\n                 <script src="https://static.firebase.com/v0/firebase.js" async></script>';
     head += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js" async></script>';
     head += '\n                 <link rel="stylesheet" type="text/css" href="' + baseAppUrl + '/content/css/main_web.min.css" />';
+    head += '\n                 <!-- Global site tag (gtag.js) - Google Analytics --> <script async src="https://www.googletagmanager.com/gtag/js?id=UA-113463133-1"></script><script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag("js", new Date()); gtag("config", "UA-113463133-1");</script>';
     $('head').append(head);
 
     let html = '';
@@ -1749,7 +1725,6 @@ function buildCoreHtml() {
     html += '\n       <footer id="ftrSect" class="page-footer center-on-small-only m-0 p-0">';
     html += '\n           <div class="footer-copyright">';
     html += '\n               <div class="containter-fluid">';
-    // html += '\n                   <small>Copyright \u00A9 2018 Anthony Santilli & Corey Lista</small>';
     html += '\n                   <button class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#aboutModal" style="background: transparent; border-color: white;"><span class="white-text"><i class="fa fa-info"></i> About</span></button>';
     html += '\n               </div>';
     html += '\n           </div>';
