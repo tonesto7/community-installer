@@ -1036,16 +1036,24 @@ function processItemsStatuses(data, viewType) {
         }
     } else {
         if (Object.keys(data).length > 0) {
+            let cnt = 1;
             updateAppDeviceItemStatus(data.smartApps.parent.name, 'app', viewType);
             if (data.smartApps.children.length) {
                 for (const sa in data.smartApps.children) {
                     updateAppDeviceItemStatus(data.smartApps.children[sa].name, 'app', viewType);
+                    cnt++;
                 }
             }
             if (data.deviceHandlers.length) {
                 for (const dh in data.deviceHandlers) {
                     updateAppDeviceItemStatus(data.deviceHandlers[dh].name, 'device', viewType);
+                    cnt++;
                 }
+            }
+            if (data.smartApps.children.length + data.deviceHandlers.length + 1) {
+                $('#installBtn').addClass('disabled');
+            } else {
+                $('#installBtn').removeClass('disabled');
             }
         }
     }
@@ -1060,39 +1068,37 @@ function updateAppDeviceItemStatus(itemName, type, viewType) {
             if (viewType === 'appList') {
                 statusElementName = itemName;
             }
-            checkItemUpdateStatus(installedItem.data[0].id, type)
-                .catch(function(err) {
-
-                })
-                .then(function(resp) {
-                    updateAvail = resp === true;
-                    if (appInstalled || updateAvail) {
-                        let itemStatus;
-                        let color;
+            checkItemUpdateStatus(installedItem.data[0].id, type).catch(function(err) {}).then(function(resp) {
+                updateAvail = resp === true;
+                if (appInstalled || updateAvail) {
+                    let itemStatus;
+                    let color;
+                    if (updateAvail) {
+                        itemStatus = 'Updates';
+                        color = viewType === 'appList' ? 'ribbon-orange' : 'orange';
+                        $('#updateBtn').show();
+                    } else {
+                        itemStatus = 'Installed';
+                        color = viewType === 'appList' ? 'ribbon-blue' : 'blue';
+                    }
+                    if (viewType === 'appList') {
+                        updateAppListStatusRibbon(statusElementName, itemStatus, color);
+                    } else {
+                        $('#' + statusElementName).text(itemStatus).addClass(color);
                         if (updateAvail) {
-                            itemStatus = 'Updates';
-                            color = viewType === 'appList' ? 'ribbon-orange' : 'orange';
-                            $('#updateBtn').show();
-                        } else {
-                            itemStatus = 'Installed';
-                            color = viewType === 'appList' ? 'ribbon-blue' : 'blue';
+                            $('#' + statusElementName).data('hasUpdate', true);
                         }
-                        if (viewType === 'appList') {
-                            updateAppListStatusRibbon(statusElementName, itemStatus, color);
-                        } else {
-                            $('#' + statusElementName).text(itemStatus).addClass(color);
-                            if (updateAvail) {
-                                $('#' + statusElementName).data("hasUpdate", true);
-                            }
-                            $('#' + statusElementName).data("details", {
-                                id: installedItem.data[0].id,
-                                type: type,
-                                name: installedItem.data[0].name
-                            });
-                            if (appInstalled) { $('#' + statusElementName).data("installed", true); }
+                        $('#' + statusElementName).data('details', {
+                            id: installedItem.data[0].id,
+                            type: type,
+                            name: installedItem.data[0].name
+                        });
+                        if (appInstalled) {
+                            $('#' + statusElementName).data('installed', true);
                         }
                     }
-                });
+                }
+            });
         } else {
             if (viewType === 'appView') {
                 $('#' + statusElementName).text('Not Installed');
@@ -1493,6 +1499,24 @@ function renderAppView(appName) {
                             html += '\n     </div>';
                             html += '\n     <!--/.Notes Block Panel-->';
                         }
+                        let isInstalled = true;
+                        if (isInstalled) {
+                            html += '\n     <!--Rating Block Panel-->';
+                            html += '\n     <div class="card card-body card-outline px-1 py-0 mb-2" style="background-color: transparent;">';
+                            html += '\n       <h6 class="h6-responsive white-text"><u>Rate the Software</u></h6>';
+                            html += '\n       <div class="flex-row align-right mr-1 my-2">';
+                            html += '\n           <div class="d-flex flex-column justify-content- align-items-center">';
+                            html += '\n               <div class="btn-group">';
+                            html += '\n                   <button id="likeBtn" type="button" class="btn mx-2" style="background: transparent;"><span><i class="fa fa-thumbs-up green-text"></i></span></button>';
+                            // html += '\n                   <button id="removeBtn" type="button" class="btn btn-danger mx-2" style="border-radius: 20px;">Remove</button>';
+                            html += '\n                   <button id="dislikeBtn" type="button" class="btn mx-2" style="background: transparent;"><span><i class="fa fa-thumbs-down red-text"></i></span></button>';
+                            html += '\n               </div>';
+                            html += '\n           </div>';
+                            html += '\n       </div>';
+
+                            html += '\n     </div>';
+                            html += '\n     <!--/.Ratings Block Panel-->';
+                        }
                         html += '\n     <!--App Options Panel-->';
                         html += '\n     <div class="card card-body card-outline px-1 py-3 mb-2" style="background-color: transparent;">';
                         html += '\n         <div class="row">';
@@ -1582,9 +1606,12 @@ function renderAppView(appName) {
                         // scrollToTop();
                         // removeAppsFromIde(manifest, selectedItems);
                     });
-                    if (areAllItemsInstalled(manifest) === true) {
-                        $('#installBtn').prop('disabled', true);
-                    } else { $('#installBtn').prop('disabled', false); }
+                    let allInstalled = areAllItemsInstalled(manifest);
+                    if (allInstalled === true) {
+                        // $('#installBtn').prop('disabled', true);
+                    } else {
+                        // $('#installBtn').prop('disabled', false);
+                    }
                     new WOW().init();
                 });
         }
@@ -1593,7 +1620,9 @@ function renderAppView(appName) {
 
 function areAllItemsInstalled(manifest) {
     let appsInst = getInstalledItemsByType('app');
+    console.log(getInstalledItemsByType('app'));
     let devsInst = getInstalledItemsByType('device');
+    console.log(getInstalledItemsByType('device'));
     if (Object.keys(manifest).length > 0) {
         if (appsInst.filter(app => app.name === manifest.smartApps.parent.name).length >= 1) {
             delete manifest.smartApps['parent'];
@@ -1615,18 +1644,22 @@ function areAllItemsInstalled(manifest) {
     }
     if (manifest.smartApps.parent === undefined && manifest.smartApps.children.length < 1 && manifest.deviceHandlers.length < 1) {
         return true;
-    } else { return false; }
+    } else {
+        return false;
+    }
 }
 
 function getInstalledItemsByType(type) {
     if (type) {
         let results = [];
-        let items = $('span').filter(function() {
-            return $(this).data('installed') === true && $(this).data('details').type === type;
-        });
-        for (var i in items) {
-            results.push(items[i].data());
-        }
+        let items = $('span')
+            .filter(function() {
+                return $(this).data('installed') === true && $(this).data('details').type === type;
+            })
+            .each(function() {
+                // console.log($(this).data('details'));
+                results.push($(this).data('details'));
+            });
         return results;
     }
     return undefined;
@@ -1635,12 +1668,13 @@ function getInstalledItemsByType(type) {
 function getUpdateItemsByType(type) {
     if (type) {
         let results = [];
-        let items = $('span').filter(function() {
-            return $(this).data('hasUpdate') === true && $(this).data('details').type === type;
-        });
-        for (var i in items) {
-            results.push(items[i].data());
-        }
+        let items = $('span')
+            .filter(function() {
+                return $(this).data('hasUpdate') === true && $(this).data('details').type === type;
+            })
+            .each(function() {
+                results.push($(this).data('details'));
+            });
         return results;
     }
     return undefined;
