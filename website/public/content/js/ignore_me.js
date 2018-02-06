@@ -931,7 +931,7 @@ function getProjectManifest(url) {
 function getAppManifests() {
     return new Promise(function(resolve, reject) {
         updLoaderText('Getting', 'App Manifest');
-        makeRequest(baseAppUrl + '/content/configs/secret_sauce.json', 'GET', null)
+        makeRequest(baseAppUrl + '/content/configs/secret_sauce.json?=' + now(), 'GET', null)
             .catch(function(err) {
                 reject(err);
             })
