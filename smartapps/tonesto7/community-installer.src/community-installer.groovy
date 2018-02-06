@@ -1,5 +1,5 @@
 /*
-*   Universal Communtity App Installer
+*   Communtity App Installer
 *   Copyright 2018 Anthony Santilli, Corey Lista
 *
 // /**********************************************************************************************************************************************/
@@ -16,8 +16,8 @@ definition(
     iconX2Url		: "https://community-installer-34dac.firebaseapp.com/content/images/app_logo.png",
     iconX3Url		: "https://community-installer-34dac.firebaseapp.com/content/images/app_logo.png")
 /**********************************************************************************************************************************************/
-private releaseVer() { return "5.0.0204" }
-private appVerDate() { "2-04-2018" }
+private releaseVer() { return "5.0.0206" }
+private appVerDate() { "2-06-2018" }
 /**********************************************************************************************************************************************/
 preferences {
     page name: "startPage"
@@ -77,6 +77,8 @@ def installStartHtml() {
         <html lang="en">
             <head>
                 <meta name="robots" content="noindex">
+                <link rel="stylesheet" type="text/css" href="${baseUrl('/content/css/main_mdb.min.css')}" />
+                <link rel="stylesheet" type="text/css" href="${baseUrl('/content/css/main_web.min.css')}" />
                 <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
                 <script type="text/javascript">
                     const serverUrl = '${apiServerUrl('')}';
@@ -89,7 +91,7 @@ def installStartHtml() {
             </head>
             <body>
                 <div id="bodyDiv"></div>
-                <script type="text/javascript" src="${baseUrl('/content/js/ignore_me.js')}"></script>
+                <script type="text/javascript" src="${baseUrl('/content/js/app_main.js')}${randVerStr}"></script>
             </body>
         </html>"""
     render contentType: "text/html", data: html

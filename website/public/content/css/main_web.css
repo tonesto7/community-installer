@@ -231,3 +231,56 @@ body.modal-open #mainDiv {
 input[type=checkbox]:disabled:checked+label:before {
     border-color: transparent rgba(75, 243, 72, 0.46) rgba(36, 204, 103, 0.46) transparent;
 }
+
+
+/* The ribbons */
+
+.ribbon {
+    position: absolute;
+    right: -1px;
+    top: -1px;
+    z-index: 1;
+    overflow: hidden;
+    width: 60px;
+    height: 60px;
+    text-align: right;
+}
+
+.ribbon span {
+    font-size: 11px;
+    /* font-weight: bold; */
+    color: #FFF;
+    /* text-transform: uppercase; */
+    text-align: center;
+    line-height: 20px;
+    transform: rotate(45deg);
+    -webkit-transform: rotate(45deg);
+    width: 100px;
+    display: block;
+    background: #79A70A;
+    /* background: linear-gradient(#2989d8 0%, #1e5799 100%); */
+    box-shadow: 0 3px 10px -5px rgba(0, 0, 0, 1);
+    position: absolute;
+    top: 12px;
+    right: -30px;
+}
+
+.ribbon-blue {
+    background: green !important;
+}
+
+.ribbon-red {
+    background: red !important;
+}
+
+.ribbon-yellow {
+    background: yellow !important;
+}
+
+.ribbon-blue {
+    background: #2989d8 !important;
+}
+
+.ribbon-orange {
+    background: orange !important;
+}
