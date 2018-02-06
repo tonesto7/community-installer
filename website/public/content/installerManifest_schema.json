@@ -1,0 +1,236 @@
+{
+    "title": "Installer Manifest",
+    "type": "object",
+    "properties": {
+        "namespace": {
+            "type": "string",
+            "description": "App Namespace",
+            "default": "tonesto7"
+        },
+        "repoOwner": {
+            "type": "string",
+            "description": "Repo Owner",
+            "default": "tonesto7"
+        },
+        "repoName": {
+            "type": "string",
+            "description": "Reop Name",
+            "default": "nest-manager"
+        },
+        "repoBranch": {
+            "type": "string",
+            "description": "Repo Branch",
+            "default": "master"
+        },
+        "name": {
+            "type": "string",
+            "description": "App Name",
+            "default": "NST Manager"
+        },
+        "author": {
+            "type": "string",
+            "description": "App Author",
+            "default": "Anthony S."
+        },
+        "description": {
+            "type": "string",
+            "description": "App Description",
+            "default": "The Best Solution to integrate your Nest Products with SmartThings."
+        },
+        "category": {
+            "type": "string",
+            "description": "Catagory",
+            "default": "My Apps",
+            "enum": [
+                "My Apps",
+                "Convenience",
+                "Family",
+                "Fun & Social",
+                "Green Living",
+                "Health & Wellness",
+                "Mode Magic",
+                "Pets",
+                "Safety & Security",
+                "SmartThings Labs"
+            ]
+        },
+        "bannerUrl": {
+            "type": "string",
+            "format": "url",
+            "description": "App Banner URL",
+            "default": "https: //community.smartthings.com/t/release-nst-manager-v5-0/"
+        },
+        "forumUrl": {
+            "type": "string",
+            "format": "url",
+            "description": "Forum URL",
+            "default": "https://community.smartthings.com/t/release-nst-manager-v5-0/"
+        },
+        "docUrl": {
+            "type": "string",
+            "format": "url",
+            "description": "Documentation URL",
+            "default": "http://thingsthataresmart.wiki/index.php?title=NST_Manager"
+        },
+        "keywords": {
+            "type": "array",
+            "default": [
+                "keyword"
+            ],
+            "items": {
+                "type": "string"
+            }
+        },
+        "notes": {
+            "type": "string",
+            "format": "html",
+            "description": "Notes",
+            "default": "HTML",
+            "options": {
+                "wysiwyg": true
+            }
+        },
+        "smartApps": {
+            "type": "object",
+            "properties": {
+                "parent": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "description": "App Name",
+                            "default": "Nest Manager"
+                        },
+                        "iconUrl": {
+                            "type": "string",
+                            "format": "url",
+                            "description": "Icon URL",
+                            "default": "https://raw.githubusercontent.com/master/Images/App/nst_manager_5.png"
+                        },
+                        "published": {
+                            "type": "boolean",
+                            "format": "checkbox",
+                            "description": "Publish the app?",
+                            "default": true
+                        },
+                        "oAuth": {
+                            "type": "boolean",
+                            "format": "checkbox",
+                            "description": "Enable Oauth2?",
+                            "default": false
+                        },
+                        "version": {
+                            "type": "string",
+                            "description": "Version Number",
+                            "default": "5.3.2"
+                        },
+                        "appSettings": {
+                            "type": "object",
+                            "properties": {}
+                        },
+                        "appUrl": {
+                            "type": "string",
+                            "format": "url",
+                            "description": "Link to the smartapp/ in github",
+                            "default": "smartapps/tonesto7/nst-automations.src/nst-automations.groovy"
+                        }
+                    }
+                },
+                "children": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "description": "Child App Name",
+                                "default": "Nest Thermostat"
+                            },
+                            "iconUrl": {
+                                "type": "string",
+                                "format": "url",
+                                "description": "Icon URL",
+                                "default": "https://raw.githubusercontent.com/master/Images/App/nst_manager_5.png"
+                            },
+                            "published": {
+                                "type": "boolean",
+                                "format": "checkbox",
+                                "description": "Publish the app?",
+                                "default": true
+                            },
+                            "oAuth": {
+                                "type": "boolean",
+                                "format": "checkbox",
+                                "description": "Enable Oauth2?",
+                                "default": false
+                            },
+                            "version": {
+                                "type": "string",
+                                "description": "Version Number",
+                                "default": "5.3.2"
+                            },
+                            "appSettings": {
+                                "type": "object",
+                                "properties": {}
+                            },
+                            "appUrl": {
+                                "type": "string",
+                                "format": "url",
+                                "description": "Link to the smartapp/ in github",
+                                "default": "smartapps/tonesto7/nst-automations.src/nst-automations.groovy"
+                            },
+                            "optional": {
+                                "type": "boolean",
+                                "format": "checkbox",
+                                "description": "Is this an optional install?",
+                                "default": false
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "deviceHandlers": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Device Names",
+                        "default": "Nest Thermostat"
+                    },
+                    "iconUrl": {
+                        "type": "string",
+                        "format": "url",
+                        "description": "Icon URL",
+                        "default": "https://raw.githubusercontent.com/master/Images/App/nst_manager_5.png"
+                    },
+                    "published": {
+                        "type": "boolean",
+                        "format": "checkbox",
+                        "description": "Publish the app?",
+                        "default": true
+                    },
+                    "version": {
+                        "type": "string",
+                        "description": "Version Number",
+                        "default": "5.3.2"
+                    },
+                    "appUrl": {
+                        "type": "string",
+                        "format": "url",
+                        "description": "Link to the smartapp/ in github",
+                        "default": "smartapps/tonesto7/nst-automations.src/nst-automations.groovy"
+                    },
+                    "optional": {
+                        "type": "boolean",
+                        "format": "checkbox",
+                        "description": "Is this an optional install?",
+                        "default": false
+                    }
+                }
+            }
+        }
+    }
+}
