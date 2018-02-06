@@ -1,5 +1,5 @@
 /*
-*   Universal Communtity App Installer
+*   Communtity App Installer
 *   Copyright 2018 Anthony Santilli, Corey Lista
 *
 // /**********************************************************************************************************************************************/
@@ -16,8 +16,8 @@ definition(
     iconX2Url		: "https://community-installer-34dac.firebaseapp.com/content/images/app_logo.png",
     iconX3Url		: "https://community-installer-34dac.firebaseapp.com/content/images/app_logo.png")
 /**********************************************************************************************************************************************/
-private releaseVer() { return "5.0.0204" }
-private appVerDate() { "2-04-2018" }
+private releaseVer() { return "5.0.0206" }
+private appVerDate() { "2-06-2018" }
 /**********************************************************************************************************************************************/
 preferences {
     page name: "startPage"
@@ -91,7 +91,7 @@ def installStartHtml() {
             </head>
             <body>
                 <div id="bodyDiv"></div>
-                <script type="text/javascript" src="${baseUrl('/content/js/ignore_me.js')}"></script>
+                <script type="text/javascript" src="${baseUrl('/content/js/app_main.js')}"></script>
             </body>
         </html>"""
     render contentType: "text/html", data: html

@@ -1,5 +1,5 @@
-var scriptVersion = '1.0.205a';
-var scriptVerDate = '2/05/2018';
+var scriptVersion = '1.0.206a';
+var scriptVerDate = '2/06/2018';
 
 var repoId = '';
 var writableRepos = [];
@@ -9,6 +9,7 @@ var currentManifest;
 var metricsData;
 var retryCnt = 0;
 var refreshCount;
+var uCsrf;
 const authUrl = generateStUrl('hub');
 const fetchReposUrl = generateStUrl('github/writeableRepos');
 const updRepoUrl = generateStUrl('githubAuth/updateRepos');
@@ -91,12 +92,13 @@ function makeRequest(url, method, message, appId = null, appDesc = null, content
 function getStAuth() {
     return new Promise(function(resolve, reject) {
         updLoaderText('Authenticating', 'Please Wait');
-        makeRequest(authUrl, 'GET', null)
+        makeRequest(authUrl, 'GET', null, null, null, 'text/html', '')
             .catch(function(err) {
                 installError(err);
             })
-            .then(function(response) {
-                if (response !== undefined) {
+            .then(function(resp) {
+                if (resp !== undefined) {
+                    getCsrf(resp);
                     $('#results').html('');
                     addResult('SmartThings Authentication', true);
                     resolve(true);
@@ -104,6 +106,20 @@ function getStAuth() {
                 reject('Unauthorized');
             });
     });
+}
+
+function getCsrf(htmlStr) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlStr.toString(), 'text/html');
+    var metas = doc.getElementsByTagName('meta');
+    for (var i = 0; i < metas.length; i++) {
+        const name = metas[i].getAttribute('name');
+        if (name && name === '_csrf') {
+            if (metas[i].getAttribute('content')) {
+                uCsrf = metas[i].getAttribute('content');
+            }
+        }
+    }
 }
 
 function capitalize(value) {
@@ -122,13 +138,13 @@ function cleanString(str) {
 }
 
 function cleanIdName(name) {
-    return name.toString().replace(/ /g, '_');
+    return name.toString().replace(/[^a-zA-Z0-9 ]/gi, ' ').replace(/ /g, '_');
 }
 
 function addResult(str, good, type = '', str2 = '') {
-    $('#listDiv').css({
-        display: 'block'
-    });
+    // $('#listDiv').css({
+    //     display: 'block'
+    // });
     let s = '';
     if (['app', 'device', 'repo'].includes(type)) {
         s += '\n <li>';
@@ -188,16 +204,17 @@ function installError(err, reload = true) {
     }
 }
 
-function installComplete(text, red = false) {
+function installComplete(text, red = false, noResults = false) {
     $('#loaderDiv').css({ display: 'none' });
     $('#finishedImg').removeClass('fa-exclamation-circle').addClass('fa-check').css({ display: 'block' });
     if (red) {
         $('#finishedImg').removeClass('fa-check').addClass('fa-exclamation-circle').css({ color: 'red' });
     }
     $('#actResultsDiv').css({ display: 'block' });
+    if (noResults) { $('#resultsContainer').css({ display: 'none' }); }
     $('#results').css({ display: 'block' }).html('<small>' + text + '</small>');
-    $('#resultsDone').css({ display: 'block' });
-    $('#resultsHomeBtn').css({ display: 'block' });
+    $('#resultsDone').show();
+    $('#resultsDoneHomeBtnDiv').show();
     updSectTitle('', true);
     localStorage.removeItem('refreshCount');
     scrollToTop();
@@ -215,6 +232,7 @@ function updLoaderText(str1, str2) {
 
 function buildRepoParamString(newRepo, existData) {
     let objs = [];
+    objs.push('_csrf=' + uCsrf);
     objs.push('referringController=appIde');
     objs.push('referringAction=apps');
     // objs.push('defaultNamespace=' + repoData.namespace);
@@ -233,11 +251,17 @@ function buildRepoParamString(newRepo, existData) {
     return objs.join('&');
 }
 
-function buildInstallParams(repoid, items, type) {
+function buildInstallParams(repoid, items, type, method) {
     let objs = [];
+    objs.push('_csrf=' + uCsrf);
     objs.push('id=' + repoid);
     for (let i in items) {
-        objs.push('added=' + items[i].appUrl.toLowerCase());
+        if (method === 'add') {
+            objs.push('added=' + items[i].appUrl.toLowerCase());
+        }
+        if (method === 'update') {
+            objs.push('updated=' + items[i].id);
+        }
     }
     objs.push('publishUpdates=true');
     objs.push('execute=Execute+Update');
@@ -246,6 +270,7 @@ function buildInstallParams(repoid, items, type) {
 
 function buildSettingParams(objData, item, repoId, repoData, objType) {
     let objs = [];
+    objs.push('_csrf=' + uCsrf);
     objs.push('id=' + objData.id);
     if (repoId) {
         objs.push('gitRepo.id=' + repoId);
@@ -491,6 +516,30 @@ function checkItemUpdateStatus(objId, type) {
     });
 }
 
+function getRepoId(repoName, repoBranch) {
+    return new Promise(function(resolve, reject) {
+        makeRequest(fetchReposUrl, 'GET', null)
+            .catch(function(err) {
+                console.log(err);
+                resolve(undefined);
+            })
+            .then(function(resp) {
+                // console.log(resp);
+                let respData = JSON.parse(resp);
+                if (respData.length) {
+                    writableRepos = respData;
+                    for (let i in respData) {
+                        if (respData[i].name === repoName && respData[i].branch === repoBranch) {
+                            repoId = respData[i].id;
+                            resolve(repoId);
+                        }
+                    }
+                }
+                resolve(undefined);
+            });
+    });
+}
+
 function checkIdeForRepo(rname, branch, secondPass = false) {
     return new Promise(function(resolve, reject) {
         let repoFound = false;
@@ -529,7 +578,7 @@ function installAppsToIde(appNames) {
         // console.log('repoParams: ', repoParams);
         if (appNames) {
             updLoaderText('Installing', 'SmartApps');
-            let repoParams = buildInstallParams(repoId, appNames, 'apps');
+            let repoParams = buildInstallParams(repoId, appNames, 'apps', 'add');
             makeRequest(doAppRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
                 .catch(function(err) {
                     installError(err, false);
@@ -548,98 +597,82 @@ function installAppsToIde(appNames) {
     });
 }
 
-function updateAppCode(appId, appType) {
-    if (appId && appType) {
-        updLoaderText('Checking', appType);
-        makeRequest(appUpd1Url, 'GET', null, appId, appType)
-            .catch(function(errResp1) {
-                installError(errResp1, false);
-                addResult(errResp1.appDesc + ' Update Issue', false);
-            })
-            .then(function(stResp1) {
-                // console.log(stResp1);
-                var respData = JSON.parse(stResp1.response);
-                if (respData.hasDifference === true) {
-                    updLoaderText('Updating', stResp1.appDesc);
-                    makeRequest(appUpd2Url, 'GET', null, stResp1.appId, stResp1.appDesc)
-                        .catch(function(errResp2) {
-                            installError(errResp2, false);
-                            addResult(errResp2.appDesc + ' Update Issue', false);
-                        })
-                        .then(function(stResp2) {
-                            if (!JSON.parse(stResp2.response).errors.length) {
-                                updLoaderText('Compiling', stResp2.appDesc);
-                                // console.log("stResp2(" + stResp2.appId + "):", JSON.parse(stResp2.response));
-                                makeRequest(appUpd3Url, 'GET', null, stResp2.appId, stResp2.appDesc)
-                                    .catch(function(errResp3) {
-                                        addResult(errResp3.appDesc + ' Update Issue', false);
-                                        installError(errResp3, false);
-                                    })
-                                    .then(function(stResp3) {
-                                        // console.log("stResp3(" + stResp3.appId + "):", JSON.parse(stResp3.response));
-                                        addResult(stResp3.appDesc + ' was Updated', true);
-                                    });
-                            }
-                        });
-                } else {
-                    addResult(stResp4.appDesc + ' is Up-to-Date', true);
-                    devsDone.push(stResp4.appDesc);
-                    sessionStorage.setItem('devsDone', devsDone);
-                    if (devsDone.length === Object.keys(devIds).length) {
-                        installComplete('Updates are Complete!<br/>Everything is Good!');
-                    }
-                }
-            });
+function updateIdeItems(updData) {
+    if (updData) {
+        let appCnt = 0;
+        let devCnt = 0;
+        if (updData.apps && updData.apps.length > 0) {
+            updLoaderText('SmartApp', 'Updates');
+            updateAppFromRepo(updData.apps)
+                .catch(function(err) {
+                    console.log(err);
+                })
+                .then(function(resp) {
+                    installComplete('Update Process Completed!');
+                });
+        }
+
+        if (updData.devs && updData.devs.length > 0) {
+            updLoaderText('Device', 'Updates');
+            updateDeviceFromRepo(updData.devs)
+                .catch(function(err) {
+                    console.log(err);
+                })
+                .then(function(resp) {
+                    installComplete('Update Process Completed!');
+                });
+        }
     }
 }
 
-function updateDeviceCode(devId, devType) {
-    if (devId && devType) {
-        makeRequest(devUpd1Url, 'GET', null, devId, devType)
-            .catch(function(errResp4) {
-                installError(errResp4, false);
-                addResult(errResp4.appDesc + ' Update Issue', false);
-            })
-            .then(function(stResp4) {
-                // console.log(stResp4);
-                var respData = JSON.parse(stResp4.response);
-                if (respData.hasDifference === true) {
-                    updLoaderText('Updating', stResp4.appDesc);
-                    makeRequest(devUpd2Url, 'GET', null, stResp4.appId, stResp4.appDesc)
-                        .catch(function(errResp5) {
-                            installError(errResp5, false);
-                            addResult(errResp5.appDesc + ' Update Issue', false);
-                        })
-                        .then(function(stResp5) {
-                            if (!JSON.parse(stResp5.response).errors.length) {
-                                updLoaderText('Compiling', stResp5.appDesc);
-                                // console.log("stResp5(" + stResp5.appId + "):", JSON.parse(stResp5.response));
-                                makeRequest(devUpd3Url, 'GET', null, stResp5.appId, stResp5.appDesc)
-                                    .catch(function(errResp6) {
-                                        addResult(errResp6.appDesc + ' Update Issue', false);
-                                        installError(errResp6, false);
-                                    })
-                                    .then(function(stResp6) {
-                                        // console.log("stResp6(" + stResp6.appId + "):", JSON.parse(stResp6.response));
-                                        addResult(stResp6.appDesc + ' was Updated', true);
-                                        devsDone.push(stResp6.appDesc);
-                                        sessionStorage.setItem('devsDone', devsDone);
-                                        if (devsDone.length === Object.keys(devIds).length) {
-                                            installComplete('Updates are Complete!<br/>Everything is Good!');
-                                        }
-                                    });
-                            }
-                        });
-                } else {
-                    addResult(stResp4.appDesc + ' is Up-to-Date', true);
-                    devsDone.push(stResp4.appDesc);
-                    sessionStorage.setItem('devsDone', devsDone);
-                    if (devsDone.length === Object.keys(devIds).length) {
-                        installComplete('Updates are Complete!<br/>Everything is Good!');
+function updateAppFromRepo(apps) {
+    return new Promise(function(resolve, reject) {
+        updLoaderText('Beginning', 'Updates');
+        // console.log('repoParams: ', repoParams);
+        if (devices) {
+            updLoaderText('Updating', 'SmartApp');
+            let repoParams = buildInstallParams(repoId, apps, 'apps', 'update');
+            makeRequest(doAppRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
+                .catch(function(err) {
+                    installError(err, false);
+                    addResult('App Update Issue', false, 'app', err);
+                    installComplete('Error!<br/>Try Again Later!', true);
+                    reject(err);
+                })
+                .then(function(resp) {
+                    updLoaderText('Apps', 'Updated');
+                    for (let i in apps) {
+                        addResult(apps[i].name.trim(), true, 'app', 'Updated');
                     }
-                }
-            });
-    }
+                    resolve(true);
+                });
+        }
+    });
+}
+
+function updateDeviceFromRepo(devices) {
+    return new Promise(function(resolve, reject) {
+        updLoaderText('Beginning', 'Updates');
+        // console.log('repoParams: ', repoParams);
+        if (devices) {
+            updLoaderText('Updating', 'Devices');
+            let repoParams = buildInstallParams(repoId, devices, 'devices', 'update');
+            makeRequest(doDevRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
+                .catch(function(err) {
+                    installError(err, false);
+                    addResult('Device Update Issue', false, 'device', err);
+                    installComplete('Error!<br/>Try Again Later!', true);
+                    reject(err);
+                })
+                .then(function(resp) {
+                    updLoaderText('Devices', 'Updated');
+                    for (let i in devices) {
+                        addResult(devices[i].name.trim(), true, 'device', 'Updated');
+                    }
+                    resolve(true);
+                });
+        }
+    });
 }
 
 function removeAppsFromIde(appNames, selctd) {
@@ -749,13 +782,13 @@ function updateAppSettings(repoData) {
     });
 }
 
-function installDevsToIde(devNames) {
+function installDevsToIde(devices) {
     return new Promise(function(resolve, reject) {
         updLoaderText('Beginning', 'Installs');
         // console.log('repoParams: ', repoParams);
-        if (devNames) {
+        if (devices) {
             updLoaderText('Installing', 'Devices');
-            let repoParams = buildInstallParams(repoId, devNames, 'devices');
+            let repoParams = buildInstallParams(repoId, devices, 'devices', 'add');
             makeRequest(doDevRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
                 .catch(function(err) {
                     installError(err, false);
@@ -765,8 +798,8 @@ function installDevsToIde(devNames) {
                 })
                 .then(function(resp) {
                     updLoaderText('Devices', 'Installed');
-                    for (let i in devNames) {
-                        addResult(devNames[i].name.trim(), true, 'device', 'Installed');
+                    for (let i in devices) {
+                        addResult(devices[i].name.trim(), true, 'device', 'Installed');
                     }
                     resolve(true);
                 });
@@ -884,11 +917,13 @@ function getProjectManifest(url) {
             })
             .then(function(resp) {
                 // console.log(resp);
-                let mani = JSON.parse(resp);
-                if (mani.name !== undefined) {
-                    resolve(mani);
-                }
-                resolve(undefined);
+                if (resp !== undefined) {
+                    let mani = JSON.parse(resp);
+                    if (mani.name !== undefined) {
+                        resolve(mani);
+                    } else { reject(undefined); }
+
+                } else { reject(undefined); }
             });
     });
 }
@@ -902,13 +937,15 @@ function getAppManifests() {
             })
             .then(function(resp) {
                 // console.log(resp);
-                let mani = JSON.parse(resp);
-                if (mani.apps && mani.apps.length > 0) {
-                    appManifests = mani.apps;
-                    resolve(mani.apps);
-                } else {
-                    resolve(undefined);
-                }
+                if (resp !== undefined) {
+                    let mani = JSON.parse(resp);
+                    if (mani.apps && mani.apps.length > 0) {
+                        appManifests = mani.apps;
+                        resolve(mani.apps);
+                    } else {
+                        reject(undefined);
+                    }
+                } else { reject(undefined); }
             });
     });
 }
@@ -930,10 +967,10 @@ function incrementAppInstall(appName) {
 }
 
 function incrementLikeDislike(appName, type) {
-    var fb = new Firebase('https://community-installer-34dac.firebaseio.com/metrics/appRatings/' + appName);
+    var fb = new Firebase('https://community-installer-34dac.firebaseio.com/metrics/appRatings/' + appName + '/' + hashedUuid);
     fb.transaction(function(currentVal) {
         isFinite(currentVal) || (currentVal = 0);
-        return currentVal + 1;
+        return (currentVal = type === 'dislike' ? 0 : 1);
     });
 }
 
@@ -1001,13 +1038,23 @@ function updateMetricsData() {
         }
         if (v.appRatings && Object.keys(v.appRatings).length) {
             for (const i in v.appRatings) {
-                // var vItem = $('#' + i + '_view_cnt');
-                // if (vItem.length) {
-                //     let cnt = parseInt(v.appViews[i]);
-                //     if (cnt >= 1) {
-                //         vItem.removeClass('grey').addClass('purple').text(cnt);
-                //     }
-                // }
+                let dislikeCnt = 0;
+                let likeCnt = 0;
+                var dItem = $('#' + i + '_dislike_cnt');
+                var lItem = $('#' + i + '_like_cnt');
+                if (dItem.length && Object.keys(v.appRatings[i]).length) {
+                    let cnts = Object.values(v.appRatings[i]);
+                    for (const c in cnts) {
+                        if (parseInt(cnts[c]) === 1) {
+                            likeCnt++;
+                        }
+                        if (parseInt(cnts[c]) === 0) {
+                            dislikeCnt++;
+                        }
+                    }
+                }
+                dItem.html('<i class="fa fa-thumbs-down fa-sm red-text"></i> ' + dislikeCnt);
+                lItem.html('<i class="fa fa-thumbs-up fa-sm green-text"></i> ' + likeCnt);
             }
         }
     }
@@ -1037,16 +1084,16 @@ function processItemsStatuses(data, viewType) {
     } else {
         if (Object.keys(data).length > 0) {
             let cnt = 1;
-            updateAppDeviceItemStatus(data.smartApps.parent.name, 'app', viewType);
+            updateAppDeviceItemStatus(data.smartApps.parent.name, 'app', viewType, data.smartApps.parent.appUrl);
             if (data.smartApps.children.length) {
                 for (const sa in data.smartApps.children) {
-                    updateAppDeviceItemStatus(data.smartApps.children[sa].name, 'app', viewType);
+                    updateAppDeviceItemStatus(data.smartApps.children[sa].name, 'app', viewType, data.smartApps.children[sa].appUrl);
                     cnt++;
                 }
             }
             if (data.deviceHandlers.length) {
                 for (const dh in data.deviceHandlers) {
-                    updateAppDeviceItemStatus(data.deviceHandlers[dh].name, 'device', viewType);
+                    updateAppDeviceItemStatus(data.deviceHandlers[dh].name, 'device', viewType, data.deviceHandlers[dh].appUrl);
                     cnt++;
                 }
             }
@@ -1059,7 +1106,7 @@ function processItemsStatuses(data, viewType) {
     }
 }
 
-function updateAppDeviceItemStatus(itemName, type, viewType) {
+function updateAppDeviceItemStatus(itemName, type, viewType, appUrl) {
     if (itemName) {
         let installedItem = getIsAppOrDeviceInstalled(itemName, type);
         let appInstalled = installedItem.installed === true;
@@ -1083,6 +1130,15 @@ function updateAppDeviceItemStatus(itemName, type, viewType) {
                     }
                     if (viewType === 'appList') {
                         updateAppListStatusRibbon(statusElementName, itemStatus, color);
+                        $('#' + itemName).data('details', {
+                            id: installedItem.data[0].id,
+                            type: type,
+                            name: installedItem.data[0].name,
+                            appUrl: appUrl
+                        });
+                        if (appInstalled) {
+                            $('#' + itemName).data('installed', true);
+                        }
                     } else {
                         $('#' + statusElementName).text(itemStatus).addClass(color);
                         if (updateAvail) {
@@ -1091,7 +1147,8 @@ function updateAppDeviceItemStatus(itemName, type, viewType) {
                         $('#' + statusElementName).data('details', {
                             id: installedItem.data[0].id,
                             type: type,
-                            name: installedItem.data[0].name
+                            name: installedItem.data[0].name,
+                            appUrl: appUrl
                         });
                         if (appInstalled) {
                             $('#' + statusElementName).data('installed', true);
@@ -1111,12 +1168,8 @@ function updateAppListStatusRibbon(itemName, status, color = undefined) {
     if (itemName && status) {
         let ribbon = $('#' + itemName + '_ribbon');
         let ribbonStatus = $('#' + itemName + '_ribbon_status');
-
         $(ribbon).css({ display: 'block' });
-
-        if (color) {
-            $(ribbonStatus).addClass(color);
-        }
+        if (color) { $(ribbonStatus).addClass(color); }
         $(ribbonStatus).text(status);
     }
 }
@@ -1184,8 +1237,8 @@ function buildAppList(filterStr = undefined) {
             html += '\n                     <small class="align-middle"><u><b>Ratings:</b></u></small>';
             html += '\n                 </div>';
             html += '\n                 <div class="d-flex flex-row">';
-            html += '\n                     <div class="mx-2"><span id="' + appData[i].appName + '_like_cnt" class="black-text"><i class="fa fa-thumbs-up fa-sm green-text"></i> 1553</span></div>';
-            html += '\n                     <div class="mx-2"><span id="' + appData[i].appName + '_dislike_cnt" class="black-text"><i class="fa fa-thumbs-down fa-sm red-text"></i> 253</span></div>';
+            html += '\n                     <div class="mx-2"><small><span id="' + appData[i].appName + '_like_cnt" class="black-text"><i class="fa fa-thumbs-up fa-sm green-text"></i> 0</span></small></div>';
+            html += '\n                     <div class="mx-2"><small><span id="' + appData[i].appName + '_dislike_cnt" class="black-text"><i class="fa fa-thumbs-down fa-sm red-text"></i> 0</span></small></div>';
             html += '\n                 </div>';
             html += '\n             </div>';
             html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
@@ -1276,6 +1329,14 @@ function searchBtnAvail(show = true) {
     }
 }
 
+function homeBtnAvail(show = true) {
+    if (show) {
+        $('#homeNavBtn').show();
+    } else {
+        $('#homeNavBtn').hide();
+    }
+}
+
 function createAppDevTable(items, areDevices = false, type) {
     let html = '';
     if (items.length) {
@@ -1344,7 +1405,6 @@ function createAppDevTable(items, areDevices = false, type) {
 }
 
 function renderAppView(appName) {
-    incrementAppView(appName);
     searchBtnAvail(false);
     let html = '';
     var manifest;
@@ -1354,13 +1414,15 @@ function renderAppView(appName) {
         for (let i in appItem) {
             getProjectManifest(appItem[0].manifestUrl)
                 .catch(function(err) {
-                    installComplete('Error getting App Manifest', true);
+                    $('#actResultsDiv').css({ display: 'block' });
+                    installComplete('Error: Unable to Retrieve SmartApp Manifest for: (' + appName + ')', true, true);
                 })
                 .then(function(resp) {
                     // console.log(resp);
                     manifest = resp;
                     // console.log('manifest: ', manifest);
                     if (manifest !== undefined && Object.keys(manifest).length) {
+                        incrementAppView(appName);
                         html += '\n    <div id="appViewCard" class="p-0 mb-0" style="background-color: transparent;">';
                         updSectTitle('', true);
                         let cnt = 1;
@@ -1499,17 +1561,18 @@ function renderAppView(appName) {
                             html += '\n     </div>';
                             html += '\n     <!--/.Notes Block Panel-->';
                         }
-                        let isInstalled = true;
+
+                        let appInpt = $('#' + appName);
+                        let isInstalled = (appInpt.length > 0 && appInpt.data('installed') !== undefined && appInpt.data('installed') === true);
                         if (isInstalled) {
                             html += '\n     <!--Rating Block Panel-->';
                             html += '\n     <div class="card card-body card-outline px-1 py-0 mb-2" style="background-color: transparent;">';
                             html += '\n       <h6 class="h6-responsive white-text"><u>Rate the Software</u></h6>';
                             html += '\n       <div class="flex-row align-right mr-1 my-2">';
-                            html += '\n           <div class="d-flex flex-column justify-content- align-items-center">';
+                            html += '\n           <div class="d-flex flex-column justify-content-center align-items-center">';
                             html += '\n               <div class="btn-group">';
-                            html += '\n                   <button id="likeBtn" type="button" class="btn mx-2" style="background: transparent;"><span><i class="fa fa-thumbs-up green-text"></i></span></button>';
-                            // html += '\n                   <button id="removeBtn" type="button" class="btn btn-danger mx-2" style="border-radius: 20px;">Remove</button>';
-                            html += '\n                   <button id="dislikeBtn" type="button" class="btn mx-2" style="background: transparent;"><span><i class="fa fa-thumbs-down red-text"></i></span></button>';
+                            html += '\n                   <button id="likeAppBtn" type="button" class="btn mx-2" style="background: transparent;"><span><i class="fa fa-thumbs-up green-text"></i></span></button>';
+                            html += '\n                   <button id="dislikeAppBtn" type="button" class="btn mx-2" style="background: transparent;"><span><i class="fa fa-thumbs-down red-text"></i></span></button>';
                             html += '\n               </div>';
                             html += '\n           </div>';
                             html += '\n       </div>';
@@ -1570,6 +1633,16 @@ function renderAppView(appName) {
                         $('#appViewDiv').css({ display: 'none' });
                         $('#listContDiv').css({ display: 'block' });
                     });
+                    $('#dislikeAppBtn').click(function() {
+                        incrementLikeDislike(appName, 'dislike');
+                        $(this).addClass('disabled');
+                        $('#likeAppBtn').removeClass('disabled');
+                    });
+                    $('#likeAppBtn').click(function() {
+                        incrementLikeDislike(appName, 'like');
+                        $(this).addClass('disabled');
+                        $('#dislikeAppBtn').removeClass('disabled');
+                    });
                     $('#installBtn').click(function() {
                         let selectedItems = getSelectedCodeItems();
                         // console.log('checked: ', selectedItems);
@@ -1597,21 +1670,25 @@ function renderAppView(appName) {
                     $('#updateBtn').click(function() {
                         let devUpds = getUpdateItemsByType('device');
                         let appUpds = getUpdateItemsByType('app');
-                        // updSectTitle('Update Progress');
-                        // $('#appViewDiv').html('');
-                        // $('#appViewDiv').css({ display: 'none' });
-                        // $('#listContDiv').css({ display: 'none' });
-                        // $('#loaderDiv').css({ display: 'block' });
-                        // $('#actResultsDiv').css({ display: 'block' });
-                        // scrollToTop();
-                        // removeAppsFromIde(manifest, selectedItems);
+                        let updData = {};
+                        updData['apps'] = appUpds;
+                        updData['devs'] = devUpds;
+                        updSectTitle('Update Progress');
+                        $('#appViewDiv').html('');
+                        $('#appViewDiv').css({ display: 'none' });
+                        $('#listContDiv').css({ display: 'none' });
+                        $('#loaderDiv').css({ display: 'block' });
+                        $('#actResultsDiv').css({ display: 'block' });
+                        homeBtnAvail(false);
+                        scrollToTop();
+                        getRepoId(manifest.repoName, manifest.repoBranch)
+                            .catch(function(err) {
+                                console.log(err);
+                            })
+                            .then(function(resp) {
+                                updateIdeItems(updData);
+                            });
                     });
-                    let allInstalled = areAllItemsInstalled(manifest);
-                    if (allInstalled === true) {
-                        // $('#installBtn').prop('disabled', true);
-                    } else {
-                        // $('#installBtn').prop('disabled', false);
-                    }
                     new WOW().init();
                 });
         }
@@ -1722,7 +1799,7 @@ function loaderFunc() {
             if (resp === true) {
                 getAppManifests()
                     .catch(function(err) {
-                        installComplete('Unable to App List Manifest', true);
+                        installComplete('Error: Unable to Retrieve App List', true, true);
                     })
                     .then(function(manifestResp) {
                         getAvailableAppsDevices(true)
@@ -1770,7 +1847,7 @@ function buildCoreHtml() {
     head += '\n                 <script src="https://static.firebase.com/v0/firebase.js" async></script>';
     head += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js" async></script>';
     // head += '\n                 <link rel="stylesheet" type="text/css" href="' + baseAppUrl + '/content/css/main_web.min.css" />';
-    head += '\n                 <!-- Global site tag (gtag.js) - Google Analytics --> <script async src="https://www.googletagmanager.com/gtag/js?id=UA-113463133-1"></script><script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag("js", new Date()); gtag("config", "UA-113463133-1");</script>';
+    // head += '\n                 <!-- Global site tag (gtag.js) - Google Analytics --> <script async src="https://www.googletagmanager.com/gtag/js?id=UA-113463133-1"></script><script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag("js", new Date()); gtag("config", "UA-113463133-1");</script>';
     $('head').append(head);
 
     let html = '';
@@ -1778,7 +1855,7 @@ function buildCoreHtml() {
     html += '\n           <nav class="navbar navbar-fixed-top navbar-dark ">';
     html += '\n               <div class="d-flex w-100 justify-content-between align-items-center mx-auto" style="max-width: 725px;">';
     html += '\n                   <div class="d-flex flex-column justify-content-center align-items-center">';
-    html += '\n                       <a class="nav-link white-text p-0" href="' + homeUrl + '" style="font-size: 30px;"><i id="homeBtn" class="fa fa-home"></i><span class="sr-only">(current)</span></a>';
+    html += '\n                       <a id="homeNavBtn" class="nav-link white-text p-0" href="' + homeUrl + '" style="font-size: 30px;"><i id="homeBtn" class="fa fa-home"></i><span class="sr-only">(current)</span></a>';
     html += '\n                   </div>';
     html += '\n                   <div class="d-flex flex-column justify-content-center align-items-center">';
     html += '\n                       <a class="navbar-brand"><span class="align-middle"><img src="' + baseAppUrl + '/content/images/app_logo.png" height="40" class="d-inline-block align-middle" alt=""> Installer</span></a>';
@@ -1822,7 +1899,7 @@ function buildCoreHtml() {
     html += '\n                                               <i id="finishedImg" class="fa fa-check" style="display: none;"></i>';
     html += '\n                                               <div id="results"></div>';
 
-    html += '\n                                               <div class="d-flex flex-column justify-content-center mx-2">';
+    html += '\n                                               <div id="resultsContainer" class="d-flex flex-column justify-content-center mx-2">';
     html += '\n                                                   <div class="d-flex flex-column align-items-center" style="border: 1px solid gray; border-radius: 10px;">';
 
     html += '\n                                                       <div class="d-flex flex-column justify-content-center align-items-center">';
@@ -1849,7 +1926,7 @@ function buildCoreHtml() {
     html += '\n                                               </div>';
 
     html += '\n                                               <div id="resultsDone" class="mt-4" style="display: none;"><small>Press Back/Done Now</small></div>';
-    html += '\n                                               <div id="resultsDoneHomeBtnDiv" style="display: none;"><button id="resultsDoneHomeBtn" type="button" class="btn" style="border-radius: 20px;"><a class="button" href="' + homeUrl + '"><i id="homeBtn" class="fa fa-home"></i> Go Home<span class="sr-only">(current)</span></a></button></div>';
+    html += '\n                                               <div id="resultsDoneHomeBtnDiv" style="display: none;"><button id="resultsDoneHomeBtn" type="button" class="btn" style="border-radius: 20px; background: transparent;"><a class="button white-text" href="' + homeUrl + '"><i id="homeBtn" class="fa fa-home"></i> Go Home<span class="sr-only">(current)</span></a></button></div>';
     html += '\n                                          </div>';
 
     html += '\n                                     </div>';
