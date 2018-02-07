@@ -211,7 +211,9 @@ function installComplete(text, red = false, noResults = false) {
         $('#finishedImg').removeClass('fa-check').addClass('fa-exclamation-circle').css({ color: 'red' });
     }
     $('#actResultsDiv').css({ display: 'block' });
-    if (noResults) { $('#resultsContainer').css({ display: 'none' }); }
+    if (noResults) {
+        $('#resultsContainer').css({ display: 'none' });
+    }
     $('#results').css({ display: 'block' }).html('<small>' + text + '</small>');
     $('#resultsDone').show();
     $('#resultsDoneHomeBtnDiv').show();
@@ -322,7 +324,7 @@ function processIntall(repoData, selctd) {
                     installError(err, false);
                 })
                 .then(function(resp) {
-                    //console.log(resp);
+                    // console.log(resp);
                     if (resp === false) {
                         addRepoToIde(repoData)
                             .catch(function(err) {
@@ -520,7 +522,7 @@ function getRepoId(repoName, repoBranch) {
     return new Promise(function(resolve, reject) {
         makeRequest(fetchReposUrl, 'GET', null)
             .catch(function(err) {
-                //console.log(err);
+                // console.log(err);
                 resolve(undefined);
             })
             .then(function(resp) {
@@ -605,7 +607,7 @@ function updateIdeItems(updData) {
             updLoaderText('SmartApp', 'Updates');
             updateAppFromRepo(updData.apps)
                 .catch(function(err) {
-                    //console.log(err);
+                    // console.log(err);
                 })
                 .then(function(resp) {
                     installComplete('Update Process Completed!');
@@ -616,7 +618,7 @@ function updateIdeItems(updData) {
             updLoaderText('Device', 'Updates');
             updateDeviceFromRepo(updData.devs)
                 .catch(function(err) {
-                    //console.log(err);
+                    // console.log(err);
                 })
                 .then(function(resp) {
                     installComplete('Update Process Completed!');
@@ -921,17 +923,25 @@ function getProjectManifest(url) {
                     let mani = JSON.parse(resp);
                     if (mani.name !== undefined) {
                         resolve(mani);
-                    } else { reject(undefined); }
-
-                } else { reject(undefined); }
+                    } else {
+                        reject(undefined);
+                    }
+                } else {
+                    reject(undefined);
+                }
             });
     });
+}
+
+function getTimeStamp() {
+    var d = new Date();
+    return d.getTime();
 }
 
 function getAppManifests() {
     return new Promise(function(resolve, reject) {
         updLoaderText('Getting', 'App Manifest');
-        makeRequest(baseAppUrl + '/content/configs/secret_sauce.json?=' + now(), 'GET', null)
+        makeRequest(baseAppUrl + '/content/configs/secret_sauce.json?=' + getTimeStamp(), 'GET', null)
             .catch(function(err) {
                 reject(err);
             })
@@ -945,7 +955,9 @@ function getAppManifests() {
                     } else {
                         reject(undefined);
                     }
-                } else { reject(undefined); }
+                } else {
+                    reject(undefined);
+                }
             });
     });
 }
@@ -999,7 +1011,7 @@ function dynamicSort(property) {
 
 function searchForApp(evtSender) {
     let srchVal = $('#appSearchBox').val();
-    //console.log('AppSearch Event (' + evtSender + '): ' + srchVal);
+    // console.log('AppSearch Event (' + evtSender + '): ' + srchVal);
     buildAppList(srchVal);
 }
 
@@ -1169,7 +1181,9 @@ function updateAppListStatusRibbon(itemName, status, color = undefined) {
         let ribbon = $('#' + itemName + '_ribbon');
         let ribbonStatus = $('#' + itemName + '_ribbon_status');
         $(ribbon).css({ display: 'block' });
-        if (color) { $(ribbonStatus).addClass(color); }
+        if (color) {
+            $(ribbonStatus).addClass(color);
+        }
         $(ribbonStatus).text(status);
     }
 }
@@ -1302,7 +1316,7 @@ function buildAppList(filterStr = undefined) {
         searchForApp('Clicked');
     });
     $('#showSearchBtn').click(function() {
-        //console.log('showSearchBtn clicked...');
+        // console.log('showSearchBtn clicked...');
         if ($('#searchForm').is(':visible')) {
             $('#searchForm').hide();
         } else {
@@ -1310,7 +1324,7 @@ function buildAppList(filterStr = undefined) {
         }
     });
     $('#appListTable').on('click', 'td a', function() {
-        //console.log('App Item Clicked: (' + this.id + ')');
+        // console.log('App Item Clicked: (' + this.id + ')');
         if (this.id) {
             renderAppView(this.id);
         }
@@ -1563,7 +1577,7 @@ function renderAppView(appName) {
                         }
 
                         let appInpt = $('#' + appName);
-                        let isInstalled = (appInpt.length > 0 && appInpt.data('installed') !== undefined && appInpt.data('installed') === true);
+                        let isInstalled = appInpt.length > 0 && appInpt.data('installed') !== undefined && appInpt.data('installed') === true;
                         if (isInstalled) {
                             html += '\n     <!--Rating Block Panel-->';
                             html += '\n     <div class="card card-body card-outline px-1 py-0 mb-2" style="background-color: transparent;">';
@@ -1627,7 +1641,7 @@ function renderAppView(appName) {
                     $('#actResultsDiv').css({ display: 'none' });
                     processItemsStatuses(manifest, 'appView');
                     $('#appCloseBtn').click(function() {
-                        //console.log('appCloseBtn');
+                        // console.log('appCloseBtn');
                         updSectTitle('Select an Item');
                         $('#appViewDiv').html('');
                         $('#appViewDiv').css({ display: 'none' });
@@ -1683,7 +1697,7 @@ function renderAppView(appName) {
                         scrollToTop();
                         getRepoId(manifest.repoName, manifest.repoBranch)
                             .catch(function(err) {
-                                //console.log(err);
+                                // console.log(err);
                             })
                             .then(function(resp) {
                                 updateIdeItems(updData);
@@ -1697,9 +1711,9 @@ function renderAppView(appName) {
 
 function areAllItemsInstalled(manifest) {
     let appsInst = getInstalledItemsByType('app');
-    //console.log(getInstalledItemsByType('app'));
+    // console.log(getInstalledItemsByType('app'));
     let devsInst = getInstalledItemsByType('device');
-    //console.log(getInstalledItemsByType('device'));
+    // console.log(getInstalledItemsByType('device'));
     if (Object.keys(manifest).length > 0) {
         if (appsInst.filter(app => app.name === manifest.smartApps.parent.name).length >= 1) {
             delete manifest.smartApps['parent'];
