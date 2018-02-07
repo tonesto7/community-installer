@@ -142,9 +142,6 @@ function cleanIdName(name) {
 }
 
 function addResult(str, good, type = '', str2 = '') {
-    // $('#listDiv').css({
-    //     display: 'block'
-    // });
     let s = '';
     if (['app', 'device', 'repo'].includes(type)) {
         s += '\n <li>';
@@ -152,7 +149,6 @@ function addResult(str, good, type = '', str2 = '') {
         s += '\n         <div class="d-flex align-items-start flex-column">';
         s += '\n             <p class="mb-2"><span style="color: ' + (good !== false ? '#25c225' : '#FF0000') + ';"><i class="fa fa-' + (good !== false ? 'check' : 'exclamation') + '"></i></span> ' + str + ':</p>';
         s += '\n         </div>';
-
         s += '\n         <div class="d-flex align-items-end flex-column mt-1">';
         s += '\n             <span class="align-middle"><small><b><u>' + str2 + '</u></b></small></span>';
         s += '\n         </div>';
@@ -631,7 +627,7 @@ function updateAppFromRepo(apps) {
     return new Promise(function(resolve, reject) {
         updLoaderText('Beginning', 'Updates');
         // console.log('repoParams: ', repoParams);
-        if (devices) {
+        if (apps) {
             updLoaderText('Updating', 'SmartApp');
             let repoParams = buildInstallParams(repoId, apps, 'apps', 'update');
             makeRequest(doAppRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
@@ -1098,13 +1094,10 @@ function processItemsStatuses(data, viewType) {
     if (viewType === 'appList') {
         if (data.length > 0) {
             for (let i in data) {
-                updateAppDeviceItemStatus(data[i].appName, 'app', viewType);
-                // .catch(function(err) {
-                //     // console.log(err);
-                // })
-                // .then(function(resp) {
-                //     // console.log(resp);
-                // });
+                if (updateAppDeviceItemStatus(data[i].appName, 'app', viewType) === true) {
+                    cnt++;
+                    installBtnAvail(cnt, data);
+                }
             }
         }
     } else {
@@ -1115,13 +1108,6 @@ function processItemsStatuses(data, viewType) {
                     cnt++;
                     installBtnAvail(cnt, data);
                 }
-                // .catch(function(err) {
-                //     // console.log(err);
-                // })
-                // .then(function(resp) {
-                //     cnt++;
-                //     installBtnAvail(cnt, data);
-                // });
             }
 
             if (data.smartApps.children.length) {
@@ -1130,13 +1116,6 @@ function processItemsStatuses(data, viewType) {
                         cnt++;
                         installBtnAvail(cnt, data);
                     }
-                    // .catch(function(err) {
-                    //     // console.log(err);
-                    // })
-                    // .then(function(resp) {
-                    //     cnt++;
-                    //     installBtnAvail(cnt, data);
-                    // });
                 }
             }
         }
@@ -1146,20 +1125,12 @@ function processItemsStatuses(data, viewType) {
                     cnt++;
                     installBtnAvail(cnt, data);
                 }
-                // .catch(function(err) {
-                //     // console.log(err);
-                // })
-                // .then(function(resp) {
-                //     cnt++;
-                //     installBtnAvail(cnt, data);
-                // });
             }
         }
     }
 }
 
 function updateAppDeviceItemStatus(itemName, type, viewType, appUrl) {
-    // return new Promise(function(resolve, reject) {
     if (itemName) {
         let installedItem = getIsAppOrDeviceInstalled(itemName, type);
         let appInstalled = installedItem.installed === true;
@@ -1187,29 +1158,30 @@ function updateAppDeviceItemStatus(itemName, type, viewType, appUrl) {
                         }
                         if (viewType === 'appList') {
                             updateAppListStatusRibbon(statusElementName, itemStatus, color);
-                            $('#' + itemName).data('details', {
-                                id: installedItem.data[0].id,
-                                type: type,
-                                name: installedItem.data[0].name,
-                                appUrl: appUrl
-                            });
                             if (appInstalled) {
                                 $('#' + itemName).data('installed', true);
+                                $('#' + itemName).data('details', {
+                                    id: installedItem.data[0].id,
+                                    type: type,
+                                    name: installedItem.data[0].name,
+                                    appUrl: appUrl
+                                });
                             }
                         } else {
                             $('#' + statusElementName).text(itemStatus).addClass(color);
-                            if (updateAvail) {}
-                            $('#' + statusElementName).data('details', {
-                                id: installedItem.data[0].id,
-                                type: type,
-                                name: installedItem.data[0].name,
-                                appUrl: appUrl
-                            });
+                            if (updateAvail) {
+                                $('#' + statusElementName).data('hasUpdate', true);
+                            }
                             if (appInstalled) {
                                 $('#' + statusElementName).data('installed', true);
+                                $('#' + statusElementName).data('details', {
+                                    id: installedItem.data[0].id,
+                                    type: type,
+                                    name: installedItem.data[0].name,
+                                    appUrl: appUrl
+                                });
                             }
                         }
-                        // resolve(true);
                     }
                 });
         } else {
@@ -1218,8 +1190,6 @@ function updateAppDeviceItemStatus(itemName, type, viewType, appUrl) {
             }
         }
     }
-    // resolve(false);
-    // });
 }
 
 function updateAppListStatusRibbon(itemName, status, color = undefined) {
@@ -1484,7 +1454,6 @@ function renderAppView(appName) {
                     manifest = resp;
                     // console.log('manifest: ', manifest);
                     if (manifest !== undefined && Object.keys(manifest).length) {
-
                         incrementAppView(appName);
                         html += '\n    <div id="appViewCard" class="p-0 mb-0" style="background-color: transparent;">';
                         updSectTitle('', true);
@@ -1989,8 +1958,8 @@ function buildCoreHtml() {
     html += '\n                                                   </div>';
     html += '\n                                               </div>';
 
-    html += '\n                                               <div id="resultsDone" class="mt-4" style="display: none;"><small>Press Back/Done Now</small></div>';
-    html += '\n                                               <div id="resultsDoneHomeBtnDiv" style="display: none;"><button id="resultsDoneHomeBtn" type="button" class="btn" style="border-radius: 20px; background: transparent;"><a class="button white-text" href="' + homeUrl + '"><i id="homeBtn" class="fa fa-home"></i> Go Home<span class="sr-only">(current)</span></a></button></div>';
+    html += '\n                                               <div id="resultsDoneHomeBtnDiv" class="mt-3" style="display: none;"><a class="button white-text" href="' + homeUrl + '"><button id="resultsDoneHomeBtn" type="button" class="btn" style="border-radius: 20px; background: transparent;"><i id="homeBtn" class="fa fa-home"></i> Go Home<span class="sr-only">(current)</span></button></a></div>';
+    html += '\n                                               <div id="resultsDone" class="mt-2" style="display: none;"><small>To Exit Press Back/Save</small></div>';
     html += '\n                                          </div>';
 
     html += '\n                                     </div>';
