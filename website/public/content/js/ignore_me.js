@@ -1,4 +1,4 @@
-var scriptVersion = '1.0.207b';
+var scriptVersion = '1.0.207c';
 var scriptRelType = 'beta';
 var scriptVerDate = '2/07/2018';
 
@@ -1481,7 +1481,11 @@ function renderAppView(appName) {
                         html += '\n           </button>';
                         html += '\n       </div>';
                         html += '\n       <div class="flex-row align-center mt-0 mb-1">';
-                        html += '\n           <img class="align-center" src="' + manifest.bannerUrl + '" style="height: auto; max-height: 75px;">';
+                        if (manifest.bannerUrl && manifest.bannerUrl.length > 0 && manifest.bannerUrl !== '') {
+                            html += '\n           <img class="align-center" src="' + manifest.bannerUrl + '" style="height: auto; max-height: 75px;">';
+                        } else {
+                            html += '\n           <img class="align-center" src="' + manifest.smartApps.parent.iconUrl + '" style="height: auto; max-height: 75px;">';
+                        }
                         html += '\n       </div>';
                         html += '\n       <div class="flex-row align-center m-3">';
                         html += '\n           <small class="white-text"><b>Author:</b> ' + manifest.author + '</small>';
@@ -1665,7 +1669,7 @@ function renderAppView(appName) {
                         html += '\n</div>';
                         html += '\n<div class="clearfix"></div>';
                     }
-
+                    $('#appViewDiv').append(html);
                     // AppCloseButton Event
                     $('#appCloseBtn').click(function() {
                         // console.log('appCloseBtn');
@@ -1733,7 +1737,6 @@ function renderAppView(appName) {
                                 updateIdeItems(updData);
                             });
                     });
-                    $('#appViewDiv').append(html);
                     $('#listContDiv').css({ display: 'none' });
                     $('#loaderDiv').css({ display: 'none' });
                     $('#actResultsDiv').css({ display: 'none' });
