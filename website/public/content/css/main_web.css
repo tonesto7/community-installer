@@ -284,3 +284,8 @@ input[type=checkbox]:disabled:checked+label:before {
 .ribbon-orange {
     background: orange !important;
 }
+
+footer.page-footer .footer-copyright {
+    height: 60px;
+    line-height: 5px;
+}

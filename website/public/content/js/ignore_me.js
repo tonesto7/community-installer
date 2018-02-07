@@ -1,5 +1,6 @@
-var scriptVersion = '1.0.206b';
-var scriptVerDate = '2/06/2018';
+var scriptVersion = '1.0.207b';
+var scriptRelType = 'beta';
+var scriptVerDate = '2/07/2018';
 
 var repoId = '';
 var writableRepos = [];
@@ -1072,6 +1073,21 @@ function getIsAppOrDeviceInstalled(itemName, type) {
     let res = {};
     if (itemName && type) {
         let data = type === 'app' ? availableApps : availableDevs;
+        // let instApp;
+        // for (const i in data) {
+        //     if (data[i] && data[i].name) {
+        //         let name = data[i].name;
+        //         if (name.toString() === itemName.toString()) {
+        //             return data[i];
+        //         }
+        //         if (name.toString() === cleanString(itemName.toString())) {
+        //             return data[i];
+        //         }
+        //         if (name.toString().toLowerCase() === itemName.toString().toLowerCase()) {
+        //             return data[i];
+        //         }
+        //     }
+        // }
         let instApp = data.filter(app => app.name.toString() === itemName.toString() || app.name.toString() === cleanString(itemName.toString()) || app.name.toString().toLowerCase() === itemName.toString().toLowerCase());
         res['installed'] = instApp[0] !== undefined && instApp.length > 0;
         res['data'] = instApp;
@@ -1238,7 +1254,7 @@ function buildAppList(filterStr = undefined) {
             html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
             html += '\n                 <div class="d-flex flex-row">';
             html += '\n                     <div class="d-flex justify-content-start align-items-center">';
-            html += '\n                         <h6 class="h6-responsive" style="font-size: 100%;"><img src="' + appData[i].iconUrl + '" height="40" class="d-inline-block align-middle" alt=""> ' + appData[i].name + '</h6>';
+            html += '\n                         <h6 class="h6-responsive"><img src="' + appData[i].iconUrl + '" height="40" class="d-inline-block align-middle" alt=""> ' + appData[i].name + '</h6>';
             html += '\n                     </div>';
             html += '\n                 </div>';
             html += '\n             </div>';
@@ -1435,7 +1451,6 @@ function createAppDevTable(items, areDevices = false, type) {
 }
 
 function renderAppView(appName) {
-    searchBtnAvail(false);
     let html = '';
     var manifest;
     if (appManifests.length > 0) {
@@ -1650,18 +1665,15 @@ function renderAppView(appName) {
                         html += '\n</div>';
                         html += '\n<div class="clearfix"></div>';
                     }
-                    scrollToTop();
-                    $('#appViewDiv').append(html).css({ display: 'block' });
-                    $('#listContDiv').css({ display: 'none' });
-                    $('#loaderDiv').css({ display: 'none' });
-                    $('#actResultsDiv').css({ display: 'none' });
-                    processItemsStatuses(manifest, 'appView');
+
+                    // AppCloseButton Event
                     $('#appCloseBtn').click(function() {
                         // console.log('appCloseBtn');
                         updSectTitle('Select an Item');
                         $('#appViewDiv').html('');
                         $('#appViewDiv').css({ display: 'none' });
                         $('#listContDiv').css({ display: 'block' });
+                        searchBtnAvail(true);
                     });
                     $('#dislikeAppBtn').click(function() {
                         incrementLikeDislike(appName, 'dislike');
@@ -1721,6 +1733,15 @@ function renderAppView(appName) {
                                 updateIdeItems(updData);
                             });
                     });
+                    $('#appViewDiv').append(html);
+                    $('#listContDiv').css({ display: 'none' });
+                    $('#loaderDiv').css({ display: 'none' });
+                    $('#actResultsDiv').css({ display: 'none' });
+                    $('#appViewDiv').css({ display: 'block' });
+                    searchBtnAvail(false);
+                    scrollToTop();
+                    processItemsStatuses(manifest, 'appView');
+
                     new WOW().init();
                 });
         }
@@ -1973,7 +1994,10 @@ function buildCoreHtml() {
     html += '\n       <footer id="ftrSect" class="page-footer center-on-small-only m-0 p-0">';
     html += '\n           <div class="footer-copyright">';
     html += '\n               <div class="containter-fluid">';
-    html += '\n                   <button class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#aboutModal" style="background: transparent; border-color: white;"><span class="white-text"><i class="fa fa-info"></i> About</span></button>';
+    html += '\n                       <div class="d-flex flex-column justify-content-center align-items-center">';
+    html += '\n                           <button class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#aboutModal" style="background: transparent; border-color: white;"><span class="white-text"><i class="fa fa-info"></i> About</span></button>';
+    html += '\n                           <small class="align-middle"><u>v' + scriptVersion + ' (' + scriptRelType + ')</u></small>';
+    html += '\n                       </div>';
     html += '\n               </div>';
     html += '\n           </div>';
     html += '\n       </footer>';
@@ -2005,7 +2029,7 @@ function buildCoreHtml() {
     html += '\n                                   </div>';
     html += '\n                                   <div class="d-flex flex-column justify-content-center align-items-center">';
     html += '\n                                       <small><u>WebApp Version:</u></small>';
-    html += '\n                                       <small>v' + scriptVersion + '</small>';
+    html += '\n                                       <small>v' + scriptVersion + ' (' + scriptRelType + ')</small>';
     html += '\n                                   </div>';
     html += '\n                               </div>';
     html += '\n                           </div>';
