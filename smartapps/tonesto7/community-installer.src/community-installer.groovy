@@ -56,7 +56,7 @@ def mainPage() {
         }
         section("") {
             paragraph title: "What now?", "Tap on the input below to launch the Installer Web App and signin to the IDE"
-            href "", title: "Tap Here to Get Started", url: getLoginUrl(), style: "embedded", required: false, description: "", image: ""
+            href "", title: "Installer Home", url: getLoginUrl(), style: "embedded", required: false, description: "", image: ""
         }
     }
 }

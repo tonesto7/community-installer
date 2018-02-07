@@ -1,4 +1,4 @@
-var scriptVersion = '1.0.206a';
+var scriptVersion = '1.0.206b';
 var scriptVerDate = '2/06/2018';
 
 var repoId = '';
@@ -912,7 +912,7 @@ function checkIfItemsInstalled(itemObj, type, secondPass = false) {
 function getProjectManifest(url) {
     return new Promise(function(resolve, reject) {
         updLoaderText('Getting', 'Manifest');
-        makeRequest(url, 'GET', null)
+        makeRequest(url + '?=' + getTimeStamp(), 'GET', null)
             .catch(function(err) {
                 installError(err, false);
                 reject(err);
@@ -1086,39 +1086,80 @@ function getIsAppOrDeviceInstalled(itemName, type) {
     return res;
 }
 
+function installBtnAvail(cnt, data) {
+    if (data.smartApps.children.length + data.deviceHandlers.length === cnt) {
+        $('#installBtn').addClass('disabled');
+    } else {
+        $('#installBtn').removeClass('disabled');
+    }
+}
+
 function processItemsStatuses(data, viewType) {
     if (viewType === 'appList') {
         if (data.length > 0) {
             for (let i in data) {
                 updateAppDeviceItemStatus(data[i].appName, 'app', viewType);
+                // .catch(function(err) {
+                //     // console.log(err);
+                // })
+                // .then(function(resp) {
+                //     // console.log(resp);
+                // });
             }
         }
     } else {
         if (Object.keys(data).length > 0) {
             let cnt = 1;
-            updateAppDeviceItemStatus(data.smartApps.parent.name, 'app', viewType, data.smartApps.parent.appUrl);
+            if (data.smartApps.parent) {
+                if (updateAppDeviceItemStatus(data.smartApps.parent.name, 'app', viewType, data.smartApps.parent.appUrl) === true) {
+                    cnt++;
+                    installBtnAvail(cnt, data);
+                }
+                // .catch(function(err) {
+                //     // console.log(err);
+                // })
+                // .then(function(resp) {
+                //     cnt++;
+                //     installBtnAvail(cnt, data);
+                // });
+            }
+
             if (data.smartApps.children.length) {
                 for (const sa in data.smartApps.children) {
-                    updateAppDeviceItemStatus(data.smartApps.children[sa].name, 'app', viewType, data.smartApps.children[sa].appUrl);
-                    cnt++;
+                    if (updateAppDeviceItemStatus(data.smartApps.children[sa].name, 'app', viewType, data.smartApps.children[sa].appUrl) === true) {
+                        cnt++;
+                        installBtnAvail(cnt, data);
+                    }
+                    // .catch(function(err) {
+                    //     // console.log(err);
+                    // })
+                    // .then(function(resp) {
+                    //     cnt++;
+                    //     installBtnAvail(cnt, data);
+                    // });
                 }
             }
-            if (data.deviceHandlers.length) {
-                for (const dh in data.deviceHandlers) {
-                    updateAppDeviceItemStatus(data.deviceHandlers[dh].name, 'device', viewType, data.deviceHandlers[dh].appUrl);
+        }
+        if (data.deviceHandlers.length) {
+            for (const dh in data.deviceHandlers) {
+                if (updateAppDeviceItemStatus(data.deviceHandlers[dh].name, 'device', viewType, data.deviceHandlers[dh].appUrl) === true) {
                     cnt++;
+                    installBtnAvail(cnt, data);
                 }
-            }
-            if (data.smartApps.children.length + data.deviceHandlers.length + 1) {
-                $('#installBtn').addClass('disabled');
-            } else {
-                $('#installBtn').removeClass('disabled');
+                // .catch(function(err) {
+                //     // console.log(err);
+                // })
+                // .then(function(resp) {
+                //     cnt++;
+                //     installBtnAvail(cnt, data);
+                // });
             }
         }
     }
 }
 
 function updateAppDeviceItemStatus(itemName, type, viewType, appUrl) {
+    // return new Promise(function(resolve, reject) {
     if (itemName) {
         let installedItem = getIsAppOrDeviceInstalled(itemName, type);
         let appInstalled = installedItem.installed === true;
@@ -1127,53 +1168,58 @@ function updateAppDeviceItemStatus(itemName, type, viewType, appUrl) {
             if (viewType === 'appList') {
                 statusElementName = itemName;
             }
-            checkItemUpdateStatus(installedItem.data[0].id, type).catch(function(err) {}).then(function(resp) {
-                updateAvail = resp === true;
-                if (appInstalled || updateAvail) {
-                    let itemStatus;
-                    let color;
-                    if (updateAvail) {
-                        itemStatus = 'Updates';
-                        color = viewType === 'appList' ? 'ribbon-orange' : 'orange';
-                        $('#updateBtn').show();
-                    } else {
-                        itemStatus = 'Installed';
-                        color = viewType === 'appList' ? 'ribbon-blue' : 'blue';
-                    }
-                    if (viewType === 'appList') {
-                        updateAppListStatusRibbon(statusElementName, itemStatus, color);
-                        $('#' + itemName).data('details', {
-                            id: installedItem.data[0].id,
-                            type: type,
-                            name: installedItem.data[0].name,
-                            appUrl: appUrl
-                        });
-                        if (appInstalled) {
-                            $('#' + itemName).data('installed', true);
-                        }
-                    } else {
-                        $('#' + statusElementName).text(itemStatus).addClass(color);
+            checkItemUpdateStatus(installedItem.data[0].id, type)
+                .catch(function(err) {
+                    // console.log(err);
+                })
+                .then(function(resp) {
+                    updateAvail = resp === true;
+                    if (appInstalled || updateAvail) {
+                        let itemStatus;
+                        let color;
                         if (updateAvail) {
-                            $('#' + statusElementName).data('hasUpdate', true);
+                            itemStatus = 'Updates';
+                            color = viewType === 'appList' ? 'ribbon-orange' : 'orange';
+                            $('#updateBtn').show();
+                        } else {
+                            itemStatus = 'Installed';
+                            color = viewType === 'appList' ? 'ribbon-blue' : 'blue';
                         }
-                        $('#' + statusElementName).data('details', {
-                            id: installedItem.data[0].id,
-                            type: type,
-                            name: installedItem.data[0].name,
-                            appUrl: appUrl
-                        });
-                        if (appInstalled) {
-                            $('#' + statusElementName).data('installed', true);
+                        if (viewType === 'appList') {
+                            updateAppListStatusRibbon(statusElementName, itemStatus, color);
+                            $('#' + itemName).data('details', {
+                                id: installedItem.data[0].id,
+                                type: type,
+                                name: installedItem.data[0].name,
+                                appUrl: appUrl
+                            });
+                            if (appInstalled) {
+                                $('#' + itemName).data('installed', true);
+                            }
+                        } else {
+                            $('#' + statusElementName).text(itemStatus).addClass(color);
+                            if (updateAvail) {}
+                            $('#' + statusElementName).data('details', {
+                                id: installedItem.data[0].id,
+                                type: type,
+                                name: installedItem.data[0].name,
+                                appUrl: appUrl
+                            });
+                            if (appInstalled) {
+                                $('#' + statusElementName).data('installed', true);
+                            }
                         }
+                        // resolve(true);
                     }
-                }
-            });
+                });
         } else {
             if (viewType === 'appView') {
                 $('#' + statusElementName).text('Not Installed');
             }
         }
     }
+    // resolve(false);
+    // });
 }
 
 function updateAppListStatusRibbon(itemName, status, color = undefined) {
@@ -1424,6 +1470,8 @@ function renderAppView(appName) {
     var manifest;
     if (appManifests.length > 0) {
         let appItem = appManifests.filter(app => app.appName === appName);
+        let appInpt = $('#' + appName);
+        let isInstalled = appInpt.length > 0 && appInpt.data('installed') !== undefined && appInpt.data('installed') === true;
         // console.log(appItem);
         for (let i in appItem) {
             getProjectManifest(appItem[0].manifestUrl)
@@ -1436,6 +1484,7 @@ function renderAppView(appName) {
                     manifest = resp;
                     // console.log('manifest: ', manifest);
                     if (manifest !== undefined && Object.keys(manifest).length) {
+
                         incrementAppView(appName);
                         html += '\n    <div id="appViewCard" class="p-0 mb-0" style="background-color: transparent;">';
                         updSectTitle('', true);
@@ -1576,8 +1625,6 @@ function renderAppView(appName) {
                             html += '\n     <!--/.Notes Block Panel-->';
                         }
 
-                        let appInpt = $('#' + appName);
-                        let isInstalled = appInpt.length > 0 && appInpt.data('installed') !== undefined && appInpt.data('installed') === true;
                         if (isInstalled) {
                             html += '\n     <!--Rating Block Panel-->';
                             html += '\n     <div class="card card-body card-outline px-1 py-0 mb-2" style="background-color: transparent;">';
@@ -1667,7 +1714,9 @@ function renderAppView(appName) {
                         $('#loaderDiv').css({ display: 'block' });
                         $('#actResultsDiv').css({ display: 'block' });
                         scrollToTop();
-                        incrementAppInstall(appName);
+                        if (!isInstalled) {
+                            incrementAppInstall(appName);
+                        }
                         processIntall(manifest, selectedItems);
                     });
                     $('#removeBtn').click(function() {
@@ -1784,6 +1833,7 @@ function getSelectedCodeItems() {
             selected['devices'].push($('#' + $(this).attr('id') + 'name').text());
         }
     });
+    return selected;
 }
 
 function scrollToTop() {
