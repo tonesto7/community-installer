@@ -1,6 +1,6 @@
-var scriptVersion = '1.0.207c';
+var scriptVersion = '1.0.208a';
 var scriptRelType = 'beta';
-var scriptVerDate = '2/07/2018';
+var scriptVerDate = '2/08/2018';
 
 var repoId = '';
 var writableRepos = [];
@@ -11,6 +11,7 @@ var metricsData;
 var retryCnt = 0;
 var refreshCount;
 var uCsrf;
+var currentAppName;
 const authUrl = generateStUrl('hub');
 const fetchReposUrl = generateStUrl('github/writeableRepos');
 const updRepoUrl = generateStUrl('githubAuth/updateRepos');
@@ -211,10 +212,14 @@ function installComplete(text, red = false, noResults = false) {
     if (noResults) {
         $('#resultsContainer').css({ display: 'none' });
     }
+    if (!red && !noResults) {
+        $('#whatNextBtn').css({ display: 'block' });
+    }
     $('#results').css({ display: 'block' }).html('<small>' + text + '</small>');
     $('#resultsDone').show();
-    $('#resultsDoneHomeBtnDiv').show();
+    $('#resultsDoneHomeBtn').show();
     updSectTitle('', true);
+    defineClickActions();
     localStorage.removeItem('refreshCount');
     scrollToTop();
 }
@@ -1073,21 +1078,6 @@ function getIsAppOrDeviceInstalled(itemName, type) {
     let res = {};
     if (itemName && type) {
         let data = type === 'app' ? availableApps : availableDevs;
-        // let instApp;
-        // for (const i in data) {
-        //     if (data[i] && data[i].name) {
-        //         let name = data[i].name;
-        //         if (name.toString() === itemName.toString()) {
-        //             return data[i];
-        //         }
-        //         if (name.toString() === cleanString(itemName.toString())) {
-        //             return data[i];
-        //         }
-        //         if (name.toString().toLowerCase() === itemName.toString().toLowerCase()) {
-        //             return data[i];
-        //         }
-        //     }
-        // }
         let instApp = data.filter(app => app.name.toString() === itemName.toString() || app.name.toString() === cleanString(itemName.toString()) || app.name.toString().toLowerCase() === itemName.toString().toLowerCase());
         res['installed'] = instApp[0] !== undefined && instApp.length > 0;
         res['data'] = instApp;
@@ -1470,6 +1460,7 @@ function renderAppView(appName) {
                     // console.log('manifest: ', manifest);
                     if (manifest !== undefined && Object.keys(manifest).length) {
                         incrementAppView(appName);
+                        $('#appNameListItem').text('Tap On (' + appName + ')');
                         html += '\n    <div id="appViewCard" class="p-0 mb-0" style="background-color: transparent;">';
                         updSectTitle('', true);
                         let cnt = 1;
@@ -1744,7 +1735,6 @@ function renderAppView(appName) {
                     searchBtnAvail(false);
                     scrollToTop();
                     processItemsStatuses(manifest, 'appView');
-
                     new WOW().init();
                 });
         }
@@ -1835,7 +1825,11 @@ function scrollToTop() {
     });
 }
 
-function defineClickActions() {}
+function defineClickActions() {
+    $('#resultsDoneHomeBtn').click(function() {
+        location.href = homeUrl;
+    });
+}
 
 function loaderFunc() {
     if (localStorage.getItem('refreshCount') === null) {
@@ -1904,7 +1898,7 @@ function buildCoreHtml() {
     head += '\n                 <script src="https://static.firebase.com/v0/firebase.js" async></script>';
     head += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js" async></script>';
     // head += '\n                 <link rel="stylesheet" type="text/css" href="' + baseAppUrl + '/content/css/main_web.min.css" />';
-    // head += '\n                 <!-- Global site tag (gtag.js) - Google Analytics --> <script async src="https://www.googletagmanager.com/gtag/js?id=UA-113463133-1"></script><script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag("js", new Date()); gtag("config", "UA-113463133-1");</script>';
+    head += '\n                 <!-- Global site tag (gtag.js) - Google Analytics --> <script async src="https://www.googletagmanager.com/gtag/js?id=UA-113463133-1"></script><script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag("js", new Date()); gtag("config", "UA-113463133-1");</script>';
     $('head').append(head);
 
     let html = '';
@@ -1955,7 +1949,7 @@ function buildCoreHtml() {
     html += '\n                                           <div class="d-flex w-100 flex-column mb-3">';
     html += '\n                                               <i id="finishedImg" class="fa fa-check" style="display: none;"></i>';
     html += '\n                                               <div id="results"></div>';
-
+    html += '\n                                               <div id="resultsDone" class="mt-2" style="display: none;"><small>To Exit App Press Back/Save</small></div>';
     html += '\n                                               <div id="resultsContainer" class="d-flex flex-column justify-content-center mx-2">';
     html += '\n                                                   <div class="d-flex flex-column align-items-center" style="border: 1px solid gray; border-radius: 10px;">';
 
@@ -1970,7 +1964,7 @@ function buildCoreHtml() {
     html += '\n                                                       </div>';
 
     html += '\n                                                       <div class="d-flex w-100 flex-column justify-content-center align-items-center">';
-    html += '\n                                                           <h6 id="appResultsTitle" class="mt-2 mb-0" style="display: none;"><u>SmartApps</u></h6>';
+    html += '\n                                                            <h6 id="appResultsTitle" class="mt-2 mb-0" style="display: none;"><u>SmartApps</u></h6>';
     html += '\n                                                           <ul id="appResultUl" class="w-100 px-3" style="display: none;"></ul>';
     html += '\n                                                       </div>';
 
@@ -1981,9 +1975,12 @@ function buildCoreHtml() {
 
     html += '\n                                                   </div>';
     html += '\n                                               </div>';
-
-    html += '\n                                               <div id="resultsDoneHomeBtnDiv" class="mt-3" style="display: none;"><a class="button white-text" href="' + homeUrl + '"><button id="resultsDoneHomeBtn" type="button" class="btn" style="border-radius: 20px; background: transparent;"><i id="homeBtn" class="fa fa-home"></i> Go Home<span class="sr-only">(current)</span></button></a></div>';
-    html += '\n                                               <div id="resultsDone" class="mt-2" style="display: none;"><small>To Exit Press Back/Save</small></div>';
+    html += '\n                                               <div class="d-flex flex-column justify-content-center align-items-center">';
+    html += '\n                                                 <div class="btn-group">';
+    html += '\n                                                   <button id="resultsDoneHomeBtn" type="button" class="btn white-text mt-3 mx-2 px-2" style="display: none; border-radius: 20px; background: transparent; width: 130px;"><i id="homeBtn" class="fa fa-home"></i> Go Home</button>';
+    html += '\n                                                   <button id="whatNextBtn" type="button" class="btn waves-effect waves-light mt-3 mx-2 px-2 blue" style="border-radius: 20px; display: none; width: 130px;" data-toggle="modal" data-target="#doneModal"><span class="white-text"><i class="fa fa-chevron-circle-right"></i> What Next?</span></button>';
+    html += '\n                                                 </div>';
+    html += '\n                                               </div>';
     html += '\n                                          </div>';
 
     html += '\n                                     </div>';
@@ -2004,6 +2001,41 @@ function buildCoreHtml() {
     html += '\n               </div>';
     html += '\n           </div>';
     html += '\n       </footer>';
+
+    html += '\n       <!-- Modal -->';
+    html += '\n       <div class="modal fade-in" id="doneModal" tabindex="-1" role="dialog" aria-labelledby="doneModalLabel" aria-hidden="true">';
+    html += '\n           <div class="modal-dialog modal-dialog-centered" role="document">';
+    html += '\n               <div class="modal-content darkModalBg">';
+    html += '\n                   <!--  Modal BODY -->';
+    html += '\n                   <div class="modal-body py-2">';
+    html += '\n                       <div class="card card-body pt-3" style="background-color: transparent;">';
+    html += '\n                           <div class="flex-row align-center">';
+    html += '\n                               <div class="d-flex flex-row justify-content-center">';
+    html += '\n                                   <div class="d-flex flex-column justify-content-center align-items-center text-center">';
+    html += '\n                                       <h5><u>What Next?</u></h5>';
+    html += '\n                                       <ol class="m-0 p-0 text-left">';
+    html += '\n                                          <li style="font-size: 12px">Press Save All the way out of the app.</li>';
+    html += '\n                                          <li style="font-size: 12px">Tap Marketplace</li>';
+    html += '\n                                          <li style="font-size: 12px">Tap SmartApps Tab</li>';
+    html += '\n                                          <li style="font-size: 12px">Tap My Apps</li>';
+    html += '\n                                          <li style="font-size: 12px" id="appNameListItem"></li>';
+    html += '\n                                          <li style="font-size: 12px">That\'s It!</li>';
+    html += '\n                                       </ol>';
+    html += '\n                                   </div>';
+    html += '\n                               </div>';
+    html += '\n                           </div>';
+    html += '\n                       </div>';
+    html += '\n                   </div>';
+    html += '\n                   <!--  Modal FOOTER -->';
+    html += '\n                   <div class="modal-body py-2">';
+    html += '\n                       <div class="card card-body pt-3" style="background-color: transparent;">';
+    html += '\n                           <button type="button" class="btn btn-sm btn-secondary mx-5 my-0" data-dismiss="modal">Close</button>';
+    html += '\n                       </div>';
+    html += '\n                   </div>';
+    html += '\n               </div>';
+    html += '\n           </div>';
+    html += '\n       </div>';
+
     html += '\n       <!-- Modal -->';
     html += '\n       <div class="modal fade-in" id="aboutModal" tabindex="-1" role="dialog" aria-labelledby="aboutModalLabel" aria-hidden="true">';
     html += '\n           <div class="modal-dialog modal-dialog-centered" role="document">';
@@ -2076,6 +2108,7 @@ function buildCoreHtml() {
     html += '\n               </div>';
     html += '\n           </div>';
     html += '\n       </div>';
+
     $('body').css({ 'overflow-x': 'hidden' });
     $('#bodyDiv').html(html);
 }
