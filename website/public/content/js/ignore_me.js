@@ -1,4 +1,4 @@
-var scriptVersion = '1.0.208a';
+var scriptVersion = '1.0.208c';
 var scriptRelType = 'beta';
 var scriptVerDate = '2/08/2018';
 
@@ -7,6 +7,7 @@ var writableRepos = [];
 var availableApps;
 var availableDevs;
 var currentManifest;
+var selectedAppManifest;
 var metricsData;
 var retryCnt = 0;
 var refreshCount;
@@ -195,9 +196,9 @@ function installError(err, reload = true) {
         setTimeout(loaderFunc, 1000);
     } else {
         if (err === 'Unauthorized') {
-            installComplete('Your Auth Session Expired.  Please go back and sign in again', true);
+            installComplete(resultStrings.inst_comp_text.errors.auth_expired, true);
         } else {
-            installComplete(err, true);
+            installComplete(resultStrings.inst_comp_text.errors.generic_error + err, true);
         }
     }
 }
@@ -218,6 +219,7 @@ function installComplete(text, red = false, noResults = false) {
     $('#results').css({ display: 'block' }).html('<small>' + text + '</small>');
     $('#resultsDone').show();
     $('#resultsDoneHomeBtn').show();
+    appCloseBtnAvail(false);
     updSectTitle('', true);
     defineClickActions();
     localStorage.removeItem('refreshCount');
@@ -255,7 +257,7 @@ function buildRepoParamString(newRepo, existData) {
     return objs.join('&');
 }
 
-function buildInstallParams(repoid, items, type, method) {
+function buildInstallParams(repoid, items, type, method, publish = true) {
     let objs = [];
     objs.push('_csrf=' + uCsrf);
     objs.push('id=' + repoid);
@@ -267,7 +269,9 @@ function buildInstallParams(repoid, items, type, method) {
             objs.push('updated=' + items[i].id);
         }
     }
-    objs.push('publishUpdates=true');
+    if (publish) {
+        objs.push('publishUpdates=true');
+    }
     objs.push('execute=Execute+Update');
     return objs.join('&');
 }
@@ -399,18 +403,18 @@ function processIntall(repoData, selctd) {
                                                                                                 .then(function(resp) {
                                                                                                     if (Object.keys(resp).length) {
                                                                                                         if (Object.keys(repoData.deviceHandlers).length) {
-                                                                                                            installComplete('Install Process Completed!');
+                                                                                                            installComplete(resultStrings.inst_comp_text.general.install_complete);
                                                                                                         }
                                                                                                     }
                                                                                                 });
                                                                                         }
                                                                                     });
                                                                             } else {
-                                                                                installComplete('Install Process Completed!');
+                                                                                installComplete(resultStrings.inst_comp_text.general.install_complete);
                                                                             }
                                                                         });
                                                                 } else {
-                                                                    installComplete('Install Process Completed!');
+                                                                    installComplete(resultStrings.inst_comp_text.general.install_complete);
                                                                 }
                                                             });
                                                     });
@@ -443,18 +447,18 @@ function processIntall(repoData, selctd) {
                                                                 .then(function(resp) {
                                                                     if (Object.keys(resp).length) {
                                                                         if (Object.keys(repoData.deviceHandlers).length) {
-                                                                            installComplete('Install Process Completed!');
+                                                                            installComplete(resultStrings.inst_comp_text.general.install_complete);
                                                                         }
                                                                     }
                                                                 });
                                                         }
                                                     });
                                             } else {
-                                                installComplete('Install Process Completed!');
+                                                installComplete(resultStrings.inst_comp_text.general.install_complete);
                                             }
                                         });
                                 } else {
-                                    installComplete('Install Process Completed!');
+                                    installComplete(resultStrings.inst_comp_text.general.install_complete);
                                 }
                             });
                     }
@@ -463,7 +467,7 @@ function processIntall(repoData, selctd) {
             if (retryCnt < 5) {
                 processIntall(repoData, selctd);
             } else {
-                installComplete('Authentication Issue!<br/>Make Sure you Signed In!', true);
+                installComplete(resultStrings.inst_comp_text.errors.auth_issue, true);
             }
         }
     });
@@ -479,7 +483,7 @@ function addRepoToIde(repoData) {
             .catch(function(err) {
                 installError(err, false);
                 addResult('Github Repo Issue', false, 'repo', err);
-                installComplete('Error!<br/>Try Again Later!', true);
+                installComplete(resultStrings.inst_comp_text.errors.add_repo_error + err, true);
                 reject(err);
             })
             .then(function(resp) {
@@ -576,82 +580,105 @@ function checkIdeForRepo(rname, branch, secondPass = false) {
     });
 }
 
-function installAppsToIde(appNames) {
+function installAppsToIde(apps, actType = 'install') {
     return new Promise(function(resolve, reject) {
-        updLoaderText('Beginning', 'Installs');
+        updLoaderText('Beginning', actType === 'update' ? 'Updates' : 'Installs');
         // console.log('repoParams: ', repoParams);
-        if (appNames) {
-            updLoaderText('Installing', 'SmartApps');
-            let repoParams = buildInstallParams(repoId, appNames, 'apps', 'add');
-            makeRequest(doAppRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
-                .catch(function(err) {
-                    installError(err, false);
-                    addResult('Install IDE Apps', false, 'app', err);
-                    installComplete('Error!<br/>Try Again Later!', true);
-                    reject(err);
-                })
-                .then(function(resp) {
-                    updLoaderText('Apps', 'Installed');
-                    for (let i in appNames) {
-                        addResult(appNames[i].name, true, 'app', 'Installed');
+        if (apps) {
+            updLoaderText(actType === 'update' ? 'Updating' : 'Installing', 'SmartApps');
+            let pubApps = apps.filter(app => app.published === true);
+            let noPubApps = apps.filter(app => app.published === false);
+            let repoParams;
+            var noPubPromise;
+            var pubPromise = new Promise(function(resolve, reject) {
+                if (pubApps.length > 0) {
+                    repoParams = buildInstallParams(repoId, pubApps, 'apps', actType === 'update' ? 'update' : 'add');
+                    makeRequest(doAppRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
+                        .catch(function(err) {
+                            installError(err, false);
+                            addResult(actType === 'update' ? 'Updating' : 'Installing' + ' IDE Apps', false, 'app', err);
+                            installComplete('App ' + capitalize(actType) + ' Error:<br/><br/>' + err, true);
+                            reject(err);
+                        })
+                        .then(function(resp) {
+                            updLoaderText('Apps', actType === 'update' ? 'Updated' : 'Installed');
+                            for (let i in pubApps) {
+                                addResult(pubApps[i].name.trim(), true, 'app', actType === 'update' ? 'Updated (+Pub)' : 'Installed (+Pub)');
+                            }
+                            resolve(true);
+                        });
+                } else {
+                    resolve(true);
+                }
+            });
+            Promise.all([pubPromise]).then(values => {
+                var noPubPromise = new Promise(function(resolve, reject) {
+                    if (noPubApps.length > 0) {
+                        repoParams = buildInstallParams(repoId, noPubApps, 'apps', actType === 'update' ? 'update' : 'add', false);
+                        makeRequest(doAppRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
+                            .catch(function(err) {
+                                installError(err, false);
+                                addResult(actType === 'update' ? 'Updating' : 'Installing' + ' IDE Apps', false, 'app', err);
+                                installComplete('App ' + capitalize(actType) + ' Error:<br/><br/>' + err, true);
+                                reject(err);
+                            })
+                            .then(function(resp) {
+                                updLoaderText('Apps', actType === 'update' ? 'Updated' : 'Installed');
+                                for (let i in noPubApps) {
+                                    addResult(noPubApps[i].name.trim(), true, 'app', actType === 'update' ? 'Updated (+Pub)' : 'Installed (+Pub)');
+                                }
+                                resolve(true);
+                            });
+                    } else {
+                        resolve(true);
                     }
+                });
+                Promise.all([noPubPromise]).then(values => {
                     resolve(true);
                 });
+            });
+        } else {
+            addResult('Nothing to ' + actType === 'update' ? 'Update' : 'Install', false, 'app', 'No Apps Received');
+            resolve(true);
         }
     });
 }
 
 function updateIdeItems(updData) {
     if (updData) {
-        let appCnt = 0;
-        let devCnt = 0;
-        if (updData.apps && updData.apps.length > 0) {
-            updLoaderText('SmartApp', 'Updates');
-            updateAppFromRepo(updData.apps)
-                .catch(function(err) {
-                    // console.log(err);
-                })
-                .then(function(resp) {
-                    installComplete('Update Process Completed!');
-                });
-        }
+        var appUpdProm = new Promise(function(resolve, reject) {
+            if (updData.apps && updData.apps.length > 0) {
+                updLoaderText('SmartApp', 'Updates');
+                installAppsToIde(updData.apps, 'update')
+                    .catch(function(err) {
+                        // console.log(err);
+                    })
+                    .then(function(resp) {
+                        resolve(true);
+                    });
+            } else {
+                resolve(true);
+            }
+        });
 
-        if (updData.devs && updData.devs.length > 0) {
-            updLoaderText('Device', 'Updates');
-            updateDeviceFromRepo(updData.devs)
-                .catch(function(err) {
-                    // console.log(err);
-                })
-                .then(function(resp) {
-                    installComplete('Update Process Completed!');
-                });
-        }
+        var devUpdProm = new Promise(function(resolve, reject) {
+            if (updData.devs && updData.devs.length > 0) {
+                updLoaderText('Device', 'Updates');
+                updateDeviceFromRepo(updData.devs)
+                    .catch(function(err) {
+                        // console.log(err);
+                    })
+                    .then(function(resp) {
+                        resolve(true);
+                    });
+            } else {
+                resolve(true);
+            }
+        });
+        Promise.all([appUpdProm, devUpdProm]).then(values => {
+            installComplete(resultStrings.inst_comp_text.general.update_complete);
+        });
     }
-}
-
-function updateAppFromRepo(apps) {
-    return new Promise(function(resolve, reject) {
-        updLoaderText('Beginning', 'Updates');
-        // console.log('repoParams: ', repoParams);
-        if (apps) {
-            updLoaderText('Updating', 'SmartApp');
-            let repoParams = buildInstallParams(repoId, apps, 'apps', 'update');
-            makeRequest(doAppRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
-                .catch(function(err) {
-                    installError(err, false);
-                    addResult('App Update Issue', false, 'app', err);
-                    installComplete('Error!<br/>Try Again Later!', true);
-                    reject(err);
-                })
-                .then(function(resp) {
-                    updLoaderText('Apps', 'Updated');
-                    for (let i in apps) {
-                        addResult(apps[i].name.trim(), true, 'app', 'Updated');
-                    }
-                    resolve(true);
-                });
-        }
-    });
 }
 
 function updateDeviceFromRepo(devices) {
@@ -665,7 +692,7 @@ function updateDeviceFromRepo(devices) {
                 .catch(function(err) {
                     installError(err, false);
                     addResult('Device Update Issue', false, 'device', err);
-                    installComplete('Error!<br/>Try Again Later!', true);
+                    installComplete(resultStrings.inst_comp_text.errors.device_update_error + err, true);
                     reject(err);
                 })
                 .then(function(resp) {
@@ -706,13 +733,13 @@ function removeAppsFromIde(appNames, selctd) {
                             .catch(function(err) {
                                 installError(err, false);
                                 addResult('App Removal Issue', false, 'app', err);
-                                installComplete('Error!<br/>Try Again Later!', true);
+                                installComplete(resultStrings.inst_comp_text.errors.app_removal_error + err, true);
                                 reject(err);
                             })
                             .then(function(resp) {
                                 updLoaderText('Apps', 'Removed');
                                 addResult(allAppItems[i].name, true, 'app', 'App Removed');
-                                installComplete('Removals are Complete!<br/>Everything is Good!');
+                                installComplete(resultStrings.inst_comp_text.general.app_removal_complete);
                             });
                     }
                 }
@@ -727,19 +754,19 @@ function removeAppsFromIde(appNames, selctd) {
                             .catch(function(err) {
                                 installError(err, false);
                                 addResult('Device Removal Issue', false, 'device', err);
-                                installComplete('Error!<br/>Try Again Later!', true);
+                                installComplete(resultStrings.inst_comp_text.errors.app_removal_error + err, true);
                                 reject(err);
                             })
                             .then(function(resp) {
                                 updLoaderText('Devices', 'Removed');
                                 addResult(allDevItems[i].name, true, 'device', 'Device Removed');
-                                installComplete('Removals are Complete!<br/>Everything is Good!');
+                                installComplete(resultStrings.inst_comp_text.general.app_removal_complete);
                             });
                     }
                 }
             }
         } else {
-            installComplete('Removals are Complete!<br/>Everything is Good!');
+            installComplete(resultStrings.inst_comp_text.general.app_dev_removal_complete);
         }
     });
 }
@@ -763,7 +790,7 @@ function updateAppSettings(repoData) {
                             .catch(function(err) {
                                 installError(err, false);
                                 addResult('App Settings Update', false, 'app', err);
-                                installComplete('Error!<br/>Try Again Later!', true);
+                                installComplete(resultStrings.inst_comp_text.errors.app_setting_update_error + err, true);
                                 reject(err);
                             })
                             .then(function(resp) {
@@ -797,7 +824,7 @@ function installDevsToIde(devices) {
                 .catch(function(err) {
                     installError(err, false);
                     addResult('Install Devices Issue', false, 'device', err);
-                    installComplete('Error!<br/>Try Again Later!', true);
+                    installComplete(resultStrings.inst_comp_text.errors.device_install_error + err, true);
                     reject(err);
                 })
                 .then(function(resp) {
@@ -894,14 +921,11 @@ function checkIfItemsInstalled(itemObj, type, secondPass = false) {
                     for (let a in itemObj) {
                         for (let i in itemsFnd) {
                             if (itemsFnd[i].name === itemObj[a].name) {
-                                // console.error('itemsFnd: ', itemsFnd[i].name, ' | requested ' + type + ': ' + itemObj[a].name, 'isMatch: (' + (itemsFnd[i].name === itemObj[a].name) + ')');
                                 if (!secondPass) {
                                     addResult(itemObj[a].name, true, type, 'Already Installed');
                                 }
                                 delete itemObj[a];
                                 break;
-                            } else {
-                                // console.log('itemsFnd: ', itemsFnd[i].name, ' | requested ' + type + ': ' + itemObj[a].name, 'isMatch: (' + (itemsFnd[i].name === itemObj[a].name) + ')');
                             }
                         }
                     }
@@ -965,27 +989,27 @@ function getAppManifests() {
 }
 
 function incrementAppView(appName) {
-    var fb = new Firebase('https://community-installer-34dac.firebaseio.com/metrics/appViews/' + appName);
-    fb.transaction(function(currentVal) {
-        isFinite(currentVal) || (currentVal = 0);
-        return currentVal + 1;
-    });
+    // var fb = new Firebase('https://community-installer-34dac.firebaseio.com/metrics/appViews/' + appName);
+    // fb.transaction(function(currentVal) {
+    //     isFinite(currentVal) || (currentVal = 0);
+    //     return currentVal + 1;
+    // });
 }
 
 function incrementAppInstall(appName) {
-    var fb = new Firebase('https://community-installer-34dac.firebaseio.com/metrics/appInstalls/' + appName);
-    fb.transaction(function(currentVal) {
-        isFinite(currentVal) || (currentVal = 0);
-        return currentVal + 1;
-    });
+    // var fb = new Firebase('https://community-installer-34dac.firebaseio.com/metrics/appInstalls/' + appName);
+    // fb.transaction(function(currentVal) {
+    //     isFinite(currentVal) || (currentVal = 0);
+    //     return currentVal + 1;
+    // });
 }
 
 function incrementLikeDislike(appName, type) {
-    var fb = new Firebase('https://community-installer-34dac.firebaseio.com/metrics/appRatings/' + appName + '/' + hashedUuid);
-    fb.transaction(function(currentVal) {
-        isFinite(currentVal) || (currentVal = 0);
-        return (currentVal = type === 'dislike' ? 0 : 1);
-    });
+    // var fb = new Firebase('https://community-installer-34dac.firebaseio.com/metrics/appRatings/' + appName + '/' + hashedUuid);
+    // fb.transaction(function(currentVal) {
+    //     isFinite(currentVal) || (currentVal = 0);
+    //     return (currentVal = type === 'dislike' ? 0 : 1);
+    // });
 }
 
 function findAppMatch(srchStr, data) {
@@ -1014,6 +1038,7 @@ function dynamicSort(property) {
 function searchForApp(evtSender) {
     let srchVal = $('#appSearchBox').val();
     // console.log('AppSearch Event (' + evtSender + '): ' + srchVal);
+    if (evtSender === 'clear') { srchVal = ''; }
     buildAppList(srchVal);
 }
 
@@ -1118,7 +1143,7 @@ function processItemsStatuses(data, viewType) {
 
             if (data.smartApps.children.length) {
                 for (const sa in data.smartApps.children) {
-                    if (updateAppDeviceItemStatus(data.smartApps.children[sa].name, 'app', viewType, data.smartApps.children[sa].appUrl) === true) {
+                    if ((updateAppDeviceItemStatus(data.smartApps.children[sa].name, 'app', viewType, data.smartApps.children[sa].appUrl) === true, data.smartApps.children[sa].published !== false)) {
                         cnt++;
                         installBtnAvail(cnt, data);
                     }
@@ -1136,7 +1161,7 @@ function processItemsStatuses(data, viewType) {
     }
 }
 
-function updateAppDeviceItemStatus(itemName, type, viewType, appUrl) {
+function updateAppDeviceItemStatus(itemName, type, viewType, appUrl, published = true) {
     if (itemName) {
         let installedItem = getIsAppOrDeviceInstalled(itemName, type);
         let appInstalled = installedItem.installed === true;
@@ -1180,11 +1205,13 @@ function updateAppDeviceItemStatus(itemName, type, viewType, appUrl) {
                             }
                             if (appInstalled) {
                                 $('#' + statusElementName).data('installed', true);
+                                $('#' + statusElementName).data('published', published);
                                 $('#' + statusElementName).data('details', {
                                     id: installedItem.data[0].id,
                                     type: type,
                                     name: installedItem.data[0].name,
-                                    appUrl: appUrl
+                                    appUrl: appUrl,
+                                    published: published
                                 });
                             }
                         }
@@ -1215,9 +1242,9 @@ function buildAppList(filterStr = undefined) {
     let html = '';
     let appData = findAppMatch(filterStr, appManifests);
     currentManifest = appData;
-    html += '\n           <div id="searchFormDiv" class="d-flex flex-row justify-content-center align-items-center">';
+    html += '\n           <div id="searchFormDiv" class="d-flex flex-row justify-content-center align-items-center" style="display: none;">';
     html += '\n               <div class="d-flex w-100 flex-column m-2">';
-    html += '\n                <form id="searchForm" style="display: none;">';
+    html += '\n                <form id="searchForm"  style="display: none;">';
     html += '\n                   <div class="input-group md-form form-sm form-2 mb-0">';
     html += '\n                       <input id="appSearchBox" class="form-control grey-border white-text" type="text" placeholder="Search" aria-label="Search">';
     html += '\n                       <span class="input-group-addon waves-effect grey lighten-3" id="searchBtn"><a><i class="fa fa-search text-grey" aria-hidden="true"></i></a></span>';
@@ -1320,11 +1347,12 @@ function buildAppList(filterStr = undefined) {
         html += '\n</div>';
     } else {
         html += '\n  <h6>No Items Found</h6>';
+        html += '\n  <button id="clearSearchBtn" type="button" class="btn btn-md btn-outline-secondary mx-2" style="background: transparent;border: 2px solid white; color: white !important;"><span><i class="fa fa-times white-text"></i> Clear Search</span></button>';
     }
     scrollToTop();
     updSectTitle('Select an Item');
     $('#listContDiv').html('').html(html);
-
+    searchBtnAvail(true);
     $('#loaderDiv').css({ display: 'none' });
     $('#actResultsDiv').css({ display: 'none' });
     $('#appViewDiv').css({ display: 'none' });
@@ -1338,12 +1366,10 @@ function buildAppList(filterStr = undefined) {
         searchForApp('Clicked');
     });
     $('#showSearchBtn').click(function() {
-        // console.log('showSearchBtn clicked...');
-        if ($('#searchForm').is(':visible')) {
-            $('#searchForm').hide();
-        } else {
-            $('#searchForm').show();
-        }
+        searchFormToggle();
+    });
+    $('#clearSearchBtn').click(function() {
+        searchForApp('clear');
     });
     $('#appListTable').on('click', 'td a', function() {
         // console.log('App Item Clicked: (' + this.id + ')');
@@ -1357,11 +1383,30 @@ function buildAppList(filterStr = undefined) {
     new WOW().init();
 }
 
+function searchFormToggle() {
+    // console.log('showSearchBtn clicked...');
+    if ($('#searchForm').is(':visible')) {
+        $('#searchForm').hide();
+        $('#searchFormDiv').hide();
+    } else {
+        $('#searchForm').show();
+        $('#searchFormDiv').show();
+    }
+}
+
 function searchBtnAvail(show = true) {
     if (show) {
         $('#showSearchBtn').show();
     } else {
         $('#showSearchBtn').hide();
+    }
+}
+
+function appCloseBtnAvail(show = true) {
+    if (show) {
+        $('#appCloseBtn').show();
+    } else {
+        $('#appCloseBtn').hide();
     }
 }
 
@@ -1452,7 +1497,7 @@ function renderAppView(appName) {
             getProjectManifest(appItem[0].manifestUrl)
                 .catch(function(err) {
                     $('#actResultsDiv').css({ display: 'block' });
-                    installComplete('Error: Unable to Retrieve SmartApp Manifest for: (' + appName + ')', true, true);
+                    installComplete(resultStrings.inst_comp_text.errors.smartapp_manifest_error + ' (' + appName + ')<br/><br/>' + err, true, true);
                 })
                 .then(function(resp) {
                     // console.log(resp);
@@ -1460,17 +1505,18 @@ function renderAppView(appName) {
                     // console.log('manifest: ', manifest);
                     if (manifest !== undefined && Object.keys(manifest).length) {
                         incrementAppView(appName);
+                        appCloseBtnAvail(true);
                         $('#appNameListItem').text('Tap On (' + appName + ')');
                         html += '\n    <div id="appViewCard" class="p-0 mb-0" style="background-color: transparent;">';
                         updSectTitle('', true);
                         let cnt = 1;
                         html += '\n     <!--App Description Panel-->';
                         html += '\n     <div class="card card-body card-outline p-1 mb-2" style="background-color: transparent;">';
-                        html += '\n        <div class="flex-row align-right mr-1 mt-1">';
-                        html += '\n           <button type="button" id="appCloseBtn" class="close white-text" aria-label="Close">';
-                        html += '\n               <span aria-hidden="true">&times;</span>';
-                        html += '\n           </button>';
-                        html += '\n       </div>';
+                        // html += '\n        <div class="flex-row align-right mr-1 mt-1">';
+                        // html += '\n           <button type="button" id="appCloseBtn" class="close white-text" aria-label="Close">';
+                        // html += '\n               <span aria-hidden="true">&times;</span>';
+                        // html += '\n           </button>';
+                        // html += '\n       </div>';
                         html += '\n       <div class="flex-row align-center mt-0 mb-1">';
                         if (manifest.bannerUrl && manifest.bannerUrl.length > 0 && manifest.bannerUrl !== '') {
                             html += '\n           <img class="align-center" src="' + manifest.bannerUrl + '" style="height: auto; max-height: 75px;">';
@@ -1646,13 +1692,13 @@ function renderAppView(appName) {
                         html += '\n      </div>';
                         html += '\n  </div>';
                         // Stop Here
-                        html += '\n  <div class="card card-body card-outline p-1 my-2" style="background-color: transparent;">';
+                        html += '\n  <div class="p-1 my-2" style="background-color: transparent;">';
                         html += '\n       <div class="flex-row align-right mr-1 my-2">';
                         html += '\n           <div class="d-flex flex-column justify-content- align-items-center">';
                         html += '\n               <div class="btn-group">';
-                        html += '\n                   <button id="installBtn" type="button" class="btn btn-success mx-2" style="border-radius: 20px;">Install</button>';
-                        // html += '\n                   <button id="removeBtn" type="button" class="btn btn-danger mx-2" style="border-radius: 20px;">Remove</button>';
-                        html += '\n                   <button id="updateBtn" type="button" class="btn btn-warning mx-2" style="border-radius: 20px; display: none;">Update</button>';
+                        html += '\n                   <button id="installBtn" type="button" class="btn btn-success mx-2 p-0" style="border-radius: 20px;height: 40px;width: 100px;"><span><i class="fa fa-plus white-text"></i> Install</span></button>';
+                        // html += '\n                   <button id="removeBtn" type="button" class="btn btn-danger mx-2" style="border-radius: 20px;height: 30px;">Remove</button>';
+                        html += '\n                   <button id="updateBtn" type="button" class="btn btn-warning mx-2 p-0" style="border-radius: 20px;height: 40px;width: 100px; display: none;"><span><i class="fa fa-arrow-up white-text"></i> Update</span></button>';
                         html += '\n               </div>';
                         html += '\n           </div>';
                         html += '\n       </div>';
@@ -1668,6 +1714,7 @@ function renderAppView(appName) {
                         $('#appViewDiv').html('');
                         $('#appViewDiv').css({ display: 'none' });
                         $('#listContDiv').css({ display: 'block' });
+                        appCloseBtnAvail(false);
                         searchBtnAvail(true);
                     });
                     $('#dislikeAppBtn').click(function() {
@@ -1841,7 +1888,7 @@ function loaderFunc() {
     getStAuth()
         .catch(function(err) {
             if (err === 'Unauthorized' && parseInt(localStorage.getItem('refreshCount')) > 6) {
-                installComplete('Your Auth Session Expired.  Please go back and sign in again', true);
+                installComplete(resultStrings.inst_comp_text.errors.auth_expired, true);
             } else {
                 installError(err, true);
             }
@@ -1850,13 +1897,13 @@ function loaderFunc() {
             if (resp === true) {
                 getAppManifests()
                     .catch(function(err) {
-                        installComplete('Error: Unable to Retrieve App List', true, true);
+                        installComplete(resultStrings.inst_comp_text.errors.app_list_manifest_error + err, true, true);
                     })
                     .then(function(manifestResp) {
                         getAvailableAppsDevices(true)
                             .catch(function(err) {
                                 if (err === 'Unauthorized') {
-                                    installComplete('Your Auth Session Expired.  Please go back and sign in again', true);
+                                    installComplete(resultStrings.inst_comp_text.errors.auth_expired, true);
                                 }
                                 installError(err, false);
                             })
@@ -1898,7 +1945,7 @@ function buildCoreHtml() {
     head += '\n                 <script src="https://static.firebase.com/v0/firebase.js" async></script>';
     head += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js" async></script>';
     // head += '\n                 <link rel="stylesheet" type="text/css" href="' + baseAppUrl + '/content/css/main_web.min.css" />';
-    head += '\n                 <!-- Global site tag (gtag.js) - Google Analytics --> <script async src="https://www.googletagmanager.com/gtag/js?id=UA-113463133-1"></script><script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag("js", new Date()); gtag("config", "UA-113463133-1");</script>';
+    // head += '\n                 <!-- Global site tag (gtag.js) - Google Analytics --> <script async src="https://www.googletagmanager.com/gtag/js?id=UA-113463133-1"></script><script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag("js", new Date()); gtag("config", "UA-113463133-1");</script>';
     $('head').append(head);
 
     let html = '';
@@ -1912,7 +1959,8 @@ function buildCoreHtml() {
     html += '\n                       <a class="navbar-brand"><span class="align-middle"><img src="' + baseAppUrl + '/content/images/app_logo.png" height="40" class="d-inline-block align-middle" alt=""> Installer</span></a>';
     html += '\n                   </div>';
     html += '\n                   <div class="d-flex flex-column justify-content-center align-items-center">';
-    html += '\n                       <a id="showSearchBtn" class="nav-link white-text p-0" style="font-size: 30px;"><i class="fa fa-search"></i><span class="sr-only">(current)</span></a>';
+    html += '\n                       <a id="showSearchBtn" class="nav-link white-text p-0" style="font-size: 30px; display: none;"><i class="fa fa-search"></i><span class="sr-only">(current)</span></a>';
+    html += '\n                       <button type="button" id="appCloseBtn" class="btn-md close white-text" aria-label="Close" style="display: none;"><span aria-hidden="true"><i class="fa fa-arrow-left white-text"></i></span></button>';
     html += '\n                   </div>';
     html += '\n               </div>';
     html += '\n           </nav>';
@@ -2112,6 +2160,31 @@ function buildCoreHtml() {
     $('body').css({ 'overflow-x': 'hidden' });
     $('#bodyDiv').html(html);
 }
+
+const resultStrings = {
+    inst_comp_text: {
+        general: {
+            install_complete: 'Install Process Completed!',
+            update_complete: 'Update Process Completed!',
+            app_removal_complete: 'SmartApp Removals Complete!<br/>Everything is Good!',
+            device_removal_complete: 'Device Removals Complete!<br/>Everything is Good!',
+            app_dev_removal_complete: 'SmartApp/Device Removals are Complete!<br/>Everything is Good!'
+        },
+        errors: {
+            generic_error: 'Application Error:<br/><br/>',
+            add_repo_error: 'Add Repo to IDE Error:<br/>Please Try Again Later<br/><br/>',
+            auth_expired: 'Your Auth Session Expired.<br/>Please go back and sign in again',
+            auth_issue: 'Authentication Issue!<br/>Make Sure you Signed In!',
+            app_list_manifest_error: 'App Manifest Error:<br/>Unable to Retrieve App List<br/>',
+            smartapp_manifest_error: 'SmartApp Manifest Error:<br/>App could not retrieve the file for:',
+            device_install_error: 'Device Install Error:<br/></br>',
+            device_update_error: 'Device Update Error:<br/><br/>',
+            app_removal_error: 'App Removal Error:<br/><br/>',
+            device_removal_error: 'Device Removal Error:<br/><br/>',
+            app_setting_update_error: 'SmartApp Setting Update Error:<br/><br/>',
+        }
+    }
+};
 
 $.ajaxSetup({
     cache: true
