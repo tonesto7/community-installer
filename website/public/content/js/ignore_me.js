@@ -1,6 +1,6 @@
-var scriptVersion = '1.0.208e';
+var scriptVersion = '1.0.209a';
 var scriptRelType = 'beta';
-var scriptVerDate = '2/08/2018';
+var scriptVerDate = '2/09/2018';
 
 var repoId = '';
 var writableRepos = [];
@@ -405,7 +405,7 @@ function processIntall(repoData, selctd) {
                                                                                                         if (Object.keys(repoData.deviceHandlers).length) {
                                                                                                             installComplete(resultStrings.inst_comp_text.general.install_complete);
                                                                                                         }
-                                                                                                    }
+                                                                                                    } else { installComplete(resultStrings.inst_comp_text.general.install_complete); }
                                                                                                 });
                                                                                         }
                                                                                     });
@@ -449,7 +449,7 @@ function processIntall(repoData, selctd) {
                                                                         if (Object.keys(repoData.deviceHandlers).length) {
                                                                             installComplete(resultStrings.inst_comp_text.general.install_complete);
                                                                         }
-                                                                    }
+                                                                    } else { installComplete(resultStrings.inst_comp_text.general.install_complete); }
                                                                 });
                                                         }
                                                     });
@@ -990,27 +990,27 @@ function getAppManifests() {
 }
 
 function incrementAppView(appName) {
-    // var fb = new Firebase('https://community-installer-34dac.firebaseio.com/metrics/appViews/' + appName);
-    // fb.transaction(function(currentVal) {
-    //     isFinite(currentVal) || (currentVal = 0);
-    //     return currentVal + 1;
-    // });
+    var fb = new Firebase('https://community-installer-34dac.firebaseio.com/metrics/appViews/' + appName);
+    fb.transaction(function(currentVal) {
+        isFinite(currentVal) || (currentVal = 0);
+        return currentVal + 1;
+    });
 }
 
 function incrementAppInstall(appName) {
-    // var fb = new Firebase('https://community-installer-34dac.firebaseio.com/metrics/appInstalls/' + appName);
-    // fb.transaction(function(currentVal) {
-    //     isFinite(currentVal) || (currentVal = 0);
-    //     return currentVal + 1;
-    // });
+    var fb = new Firebase('https://community-installer-34dac.firebaseio.com/metrics/appInstalls/' + appName);
+    fb.transaction(function(currentVal) {
+        isFinite(currentVal) || (currentVal = 0);
+        return currentVal + 1;
+    });
 }
 
 function incrementLikeDislike(appName, type) {
-    // var fb = new Firebase('https://community-installer-34dac.firebaseio.com/metrics/appRatings/' + appName + '/' + hashedUuid);
-    // fb.transaction(function(currentVal) {
-    //     isFinite(currentVal) || (currentVal = 0);
-    //     return (currentVal = type === 'dislike' ? 0 : 1);
-    // });
+    var fb = new Firebase('https://community-installer-34dac.firebaseio.com/metrics/appRatings/' + appName + '/' + hashedUuid);
+    fb.transaction(function(currentVal) {
+        isFinite(currentVal) || (currentVal = 0);
+        return (currentVal = type === 'dislike' ? 0 : 1);
+    });
 }
 
 function findAppMatch(srchStr, data) {
@@ -2029,12 +2029,12 @@ function buildCoreHtml() {
 
     html += '\n                                                       <div class="d-flex w-100 flex-column justify-content-center align-items-center">';
     html += '\n                                                            <h6 id="appResultsTitle" class="mt-2 mb-0" style="display: none;"><u>SmartApps</u></h6>';
-    html += '\n                                                           <ul id="appResultUl" class="w-100 px-3" style="display: none;"></ul>';
+    html += '\n                                                           <ul id="appResultUl" class="w-100 px-3" style="display: none; font-size: 0.9em;"></ul>';
     html += '\n                                                       </div>';
 
     html += '\n                                                       <div class="d-flex w-100 flex-column justify-content-center align-items-center">';
     html += '\n                                                           <h6 id="devResultsTitle" class="mt-2 mb-0" style="display: none;"><u>Devices</u></h6>';
-    html += '\n                                                           <ul id="devResultUl" class="w-100 px-3" style="display: none;"></ul>';
+    html += '\n                                                           <ul id="devResultUl" class="w-100 px-3" style="display: none; font-size: 0.9em;"></ul>';
     html += '\n                                                       </div>';
 
     html += '\n                                                   </div>';
