@@ -1,4 +1,4 @@
-var scriptVersion = '1.0.208d';
+var scriptVersion = '1.0.208e';
 var scriptRelType = 'beta';
 var scriptVerDate = '2/08/2018';
 
@@ -851,6 +851,7 @@ function parseDomForDevices(domData) {
         fndDTH.push({
             id: theApps[i].id,
             name: (devName.length > 1 ? devName[1] : devName).toString().trim(),
+            namespace: devName.length > 1 ? devName[0].toString().trim() : undefined,
             published: theApps[i].getElementsByTagName('td')[3].innerText.replace(/\n/g, '').trim() === 'Published'
                 // capabilities: theApps[i].getElementsByTagName('td')[4].innerText.replace(/\n/g, '').trim(),
                 // oAuth: theApps[i].getElementsByTagName('td')[5].innerText.replace(/\n/g, '').trim()
@@ -1107,8 +1108,12 @@ function getIsAppOrDeviceInstalled(itemName, type, manData) {
         let data = type === 'app' ? availableApps : availableDevs;
         let clnName = cleanString(itemName);
         let instApp = data.filter(item => item.name.toString() === itemName.toString() || item.name.toString() === clnName.toString() || cleanString(item.name).toString() === clnName.toString() || item.name.toString().toLowerCase() === itemName.toString().toLowerCase());
-        res['installed'] = instApp[0] !== undefined && instApp.length > 0;
-        res['data'] = instApp;
+        let appFnd;
+        if (instApp.length > 0 && type === 'device') {
+            appFnd = instApp.filter(item => item.namespace === undefined || item.namespace.toString() === manData.namespace.toString());
+        } else { appFnd = instApp; }
+        res['installed'] = appFnd[0] !== undefined && appFnd.length > 0;
+        res['data'] = appFnd;
     } else {
         res['installed'] = false;
         res['data'] = [];
@@ -1118,7 +1123,7 @@ function getIsAppOrDeviceInstalled(itemName, type, manData) {
 
 function installBtnAvail(cnt, data) {
     let itemCnt = data.smartApps.children.length + data.deviceHandlers.length;
-    console.log(itemCnt);
+    // console.log(itemCnt);
     if (itemCnt + 1 === cnt) {
         $('#installBtn').addClass('disabled');
     } else {
