@@ -1,15 +1,18 @@
-var scriptVersion = '1.0.206a';
-var scriptVerDate = '2/06/2018';
+var scriptVersion = '1.0.209a';
+var scriptRelType = 'beta';
+var scriptVerDate = '2/09/2018';
 
 var repoId = '';
 var writableRepos = [];
 var availableApps;
 var availableDevs;
 var currentManifest;
+var selectedAppManifest;
 var metricsData;
 var retryCnt = 0;
 var refreshCount;
 var uCsrf;
+var currentAppName;
 const authUrl = generateStUrl('hub');
 const fetchReposUrl = generateStUrl('github/writeableRepos');
 const updRepoUrl = generateStUrl('githubAuth/updateRepos');
@@ -142,9 +145,6 @@ function cleanIdName(name) {
 }
 
 function addResult(str, good, type = '', str2 = '') {
-    // $('#listDiv').css({
-    //     display: 'block'
-    // });
     let s = '';
     if (['app', 'device', 'repo'].includes(type)) {
         s += '\n <li>';
@@ -152,7 +152,6 @@ function addResult(str, good, type = '', str2 = '') {
         s += '\n         <div class="d-flex align-items-start flex-column">';
         s += '\n             <p class="mb-2"><span style="color: ' + (good !== false ? '#25c225' : '#FF0000') + ';"><i class="fa fa-' + (good !== false ? 'check' : 'exclamation') + '"></i></span> ' + str + ':</p>';
         s += '\n         </div>';
-
         s += '\n         <div class="d-flex align-items-end flex-column mt-1">';
         s += '\n             <span class="align-middle"><small><b><u>' + str2 + '</u></b></small></span>';
         s += '\n         </div>';
@@ -197,9 +196,9 @@ function installError(err, reload = true) {
         setTimeout(loaderFunc, 1000);
     } else {
         if (err === 'Unauthorized') {
-            installComplete('Your Auth Session Expired.  Please go back and sign in again', true);
+            installComplete(resultStrings.inst_comp_text.errors.auth_expired, true);
         } else {
-            installComplete(err, true);
+            installComplete(resultStrings.inst_comp_text.errors.generic_error + err, true);
         }
     }
 }
@@ -211,11 +210,18 @@ function installComplete(text, red = false, noResults = false) {
         $('#finishedImg').removeClass('fa-check').addClass('fa-exclamation-circle').css({ color: 'red' });
     }
     $('#actResultsDiv').css({ display: 'block' });
-    if (noResults) { $('#resultsContainer').css({ display: 'none' }); }
+    if (noResults) {
+        $('#resultsContainer').css({ display: 'none' });
+    }
+    if (!red && !noResults) {
+        $('#whatNextBtn').css({ display: 'block' });
+    }
     $('#results').css({ display: 'block' }).html('<small>' + text + '</small>');
     $('#resultsDone').show();
-    $('#resultsDoneHomeBtnDiv').show();
+    $('#resultsDoneHomeBtn').show();
+    appCloseBtnAvail(false);
     updSectTitle('', true);
+    defineClickActions();
     localStorage.removeItem('refreshCount');
     scrollToTop();
 }
@@ -251,7 +257,7 @@ function buildRepoParamString(newRepo, existData) {
     return objs.join('&');
 }
 
-function buildInstallParams(repoid, items, type, method) {
+function buildInstallParams(repoid, items, type, method, publish = true) {
     let objs = [];
     objs.push('_csrf=' + uCsrf);
     objs.push('id=' + repoid);
@@ -263,7 +269,9 @@ function buildInstallParams(repoid, items, type, method) {
             objs.push('updated=' + items[i].id);
         }
     }
-    objs.push('publishUpdates=true');
+    if (publish) {
+        objs.push('publishUpdates=true');
+    }
     objs.push('execute=Execute+Update');
     return objs.join('&');
 }
@@ -322,7 +330,7 @@ function processIntall(repoData, selctd) {
                     installError(err, false);
                 })
                 .then(function(resp) {
-                    //console.log(resp);
+                    // console.log(resp);
                     if (resp === false) {
                         addRepoToIde(repoData)
                             .catch(function(err) {
@@ -395,18 +403,18 @@ function processIntall(repoData, selctd) {
                                                                                                 .then(function(resp) {
                                                                                                     if (Object.keys(resp).length) {
                                                                                                         if (Object.keys(repoData.deviceHandlers).length) {
-                                                                                                            installComplete('Install Process Completed!');
+                                                                                                            installComplete(resultStrings.inst_comp_text.general.install_complete);
                                                                                                         }
-                                                                                                    }
+                                                                                                    } else { installComplete(resultStrings.inst_comp_text.general.install_complete); }
                                                                                                 });
                                                                                         }
                                                                                     });
                                                                             } else {
-                                                                                installComplete('Install Process Completed!');
+                                                                                installComplete(resultStrings.inst_comp_text.general.install_complete);
                                                                             }
                                                                         });
                                                                 } else {
-                                                                    installComplete('Install Process Completed!');
+                                                                    installComplete(resultStrings.inst_comp_text.general.install_complete);
                                                                 }
                                                             });
                                                     });
@@ -439,18 +447,18 @@ function processIntall(repoData, selctd) {
                                                                 .then(function(resp) {
                                                                     if (Object.keys(resp).length) {
                                                                         if (Object.keys(repoData.deviceHandlers).length) {
-                                                                            installComplete('Install Process Completed!');
+                                                                            installComplete(resultStrings.inst_comp_text.general.install_complete);
                                                                         }
-                                                                    }
+                                                                    } else { installComplete(resultStrings.inst_comp_text.general.install_complete); }
                                                                 });
                                                         }
                                                     });
                                             } else {
-                                                installComplete('Install Process Completed!');
+                                                installComplete(resultStrings.inst_comp_text.general.install_complete);
                                             }
                                         });
                                 } else {
-                                    installComplete('Install Process Completed!');
+                                    installComplete(resultStrings.inst_comp_text.general.install_complete);
                                 }
                             });
                     }
@@ -459,7 +467,7 @@ function processIntall(repoData, selctd) {
             if (retryCnt < 5) {
                 processIntall(repoData, selctd);
             } else {
-                installComplete('Authentication Issue!<br/>Make Sure you Signed In!', true);
+                installComplete(resultStrings.inst_comp_text.errors.auth_issue, true);
             }
         }
     });
@@ -475,7 +483,7 @@ function addRepoToIde(repoData) {
             .catch(function(err) {
                 installError(err, false);
                 addResult('Github Repo Issue', false, 'repo', err);
-                installComplete('Error!<br/>Try Again Later!', true);
+                installComplete(resultStrings.inst_comp_text.errors.add_repo_error + err, true);
                 reject(err);
             })
             .then(function(resp) {
@@ -520,7 +528,7 @@ function getRepoId(repoName, repoBranch) {
     return new Promise(function(resolve, reject) {
         makeRequest(fetchReposUrl, 'GET', null)
             .catch(function(err) {
-                //console.log(err);
+                // console.log(err);
                 resolve(undefined);
             })
             .then(function(resp) {
@@ -572,82 +580,105 @@ function checkIdeForRepo(rname, branch, secondPass = false) {
     });
 }
 
-function installAppsToIde(appNames) {
+function installAppsToIde(apps, actType = 'install') {
     return new Promise(function(resolve, reject) {
-        updLoaderText('Beginning', 'Installs');
+        updLoaderText('Beginning', actType === 'update' ? 'Updates' : 'Installs');
         // console.log('repoParams: ', repoParams);
-        if (appNames) {
-            updLoaderText('Installing', 'SmartApps');
-            let repoParams = buildInstallParams(repoId, appNames, 'apps', 'add');
-            makeRequest(doAppRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
-                .catch(function(err) {
-                    installError(err, false);
-                    addResult('Install IDE Apps', false, 'app', err);
-                    installComplete('Error!<br/>Try Again Later!', true);
-                    reject(err);
-                })
-                .then(function(resp) {
-                    updLoaderText('Apps', 'Installed');
-                    for (let i in appNames) {
-                        addResult(appNames[i].name, true, 'app', 'Installed');
+        if (apps) {
+            updLoaderText(actType === 'update' ? 'Updating' : 'Installing', 'SmartApps');
+            let pubApps = apps.filter(app => app.published === true);
+            let noPubApps = apps.filter(app => app.published === false);
+            let repoParams;
+            var noPubPromise;
+            var pubPromise = new Promise(function(resolve, reject) {
+                if (pubApps.length > 0) {
+                    repoParams = buildInstallParams(repoId, pubApps, 'apps', actType === 'update' ? 'update' : 'add');
+                    makeRequest(doAppRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
+                        .catch(function(err) {
+                            installError(err, false);
+                            addResult(actType === 'update' ? 'Updating' : 'Installing' + ' IDE Apps', false, 'app', err);
+                            installComplete('App ' + capitalize(actType) + ' Error:<br/><br/>' + err, true);
+                            reject(err);
+                        })
+                        .then(function(resp) {
+                            updLoaderText('Apps', actType === 'update' ? 'Updated' : 'Installed');
+                            for (let i in pubApps) {
+                                addResult(pubApps[i].name.trim(), true, 'app', actType === 'update' ? 'Updated (+Pub)' : 'Installed (+Pub)');
+                            }
+                            resolve(true);
+                        });
+                } else {
+                    resolve(true);
+                }
+            });
+            Promise.all([pubPromise]).then(values => {
+                var noPubPromise = new Promise(function(resolve, reject) {
+                    if (noPubApps.length > 0) {
+                        repoParams = buildInstallParams(repoId, noPubApps, 'apps', actType === 'update' ? 'update' : 'add', false);
+                        makeRequest(doAppRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
+                            .catch(function(err) {
+                                installError(err, false);
+                                addResult(actType === 'update' ? 'Updating' : 'Installing' + ' IDE Apps', false, 'app', err);
+                                installComplete('App ' + capitalize(actType) + ' Error:<br/><br/>' + err, true);
+                                reject(err);
+                            })
+                            .then(function(resp) {
+                                updLoaderText('Apps', actType === 'update' ? 'Updated' : 'Installed');
+                                for (let i in noPubApps) {
+                                    addResult(noPubApps[i].name.trim(), true, 'app', actType === 'update' ? 'Updated (+Pub)' : 'Installed (+Pub)');
+                                }
+                                resolve(true);
+                            });
+                    } else {
+                        resolve(true);
                     }
+                });
+                Promise.all([noPubPromise]).then(values => {
                     resolve(true);
                 });
+            });
+        } else {
+            addResult('Nothing to ' + actType === 'update' ? 'Update' : 'Install', false, 'app', 'No Apps Received');
+            resolve(true);
         }
     });
 }
 
 function updateIdeItems(updData) {
     if (updData) {
-        let appCnt = 0;
-        let devCnt = 0;
-        if (updData.apps && updData.apps.length > 0) {
-            updLoaderText('SmartApp', 'Updates');
-            updateAppFromRepo(updData.apps)
-                .catch(function(err) {
-                    //console.log(err);
-                })
-                .then(function(resp) {
-                    installComplete('Update Process Completed!');
-                });
-        }
+        var appUpdProm = new Promise(function(resolve, reject) {
+            if (updData.apps && updData.apps.length > 0) {
+                updLoaderText('SmartApp', 'Updates');
+                installAppsToIde(updData.apps, 'update')
+                    .catch(function(err) {
+                        // console.log(err);
+                    })
+                    .then(function(resp) {
+                        resolve(true);
+                    });
+            } else {
+                resolve(true);
+            }
+        });
 
-        if (updData.devs && updData.devs.length > 0) {
-            updLoaderText('Device', 'Updates');
-            updateDeviceFromRepo(updData.devs)
-                .catch(function(err) {
-                    //console.log(err);
-                })
-                .then(function(resp) {
-                    installComplete('Update Process Completed!');
-                });
-        }
+        var devUpdProm = new Promise(function(resolve, reject) {
+            if (updData.devs && updData.devs.length > 0) {
+                updLoaderText('Device', 'Updates');
+                updateDeviceFromRepo(updData.devs)
+                    .catch(function(err) {
+                        // console.log(err);
+                    })
+                    .then(function(resp) {
+                        resolve(true);
+                    });
+            } else {
+                resolve(true);
+            }
+        });
+        Promise.all([appUpdProm, devUpdProm]).then(values => {
+            installComplete(resultStrings.inst_comp_text.general.update_complete);
+        });
     }
-}
-
-function updateAppFromRepo(apps) {
-    return new Promise(function(resolve, reject) {
-        updLoaderText('Beginning', 'Updates');
-        // console.log('repoParams: ', repoParams);
-        if (devices) {
-            updLoaderText('Updating', 'SmartApp');
-            let repoParams = buildInstallParams(repoId, apps, 'apps', 'update');
-            makeRequest(doAppRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
-                .catch(function(err) {
-                    installError(err, false);
-                    addResult('App Update Issue', false, 'app', err);
-                    installComplete('Error!<br/>Try Again Later!', true);
-                    reject(err);
-                })
-                .then(function(resp) {
-                    updLoaderText('Apps', 'Updated');
-                    for (let i in apps) {
-                        addResult(apps[i].name.trim(), true, 'app', 'Updated');
-                    }
-                    resolve(true);
-                });
-        }
-    });
 }
 
 function updateDeviceFromRepo(devices) {
@@ -661,7 +692,7 @@ function updateDeviceFromRepo(devices) {
                 .catch(function(err) {
                     installError(err, false);
                     addResult('Device Update Issue', false, 'device', err);
-                    installComplete('Error!<br/>Try Again Later!', true);
+                    installComplete(resultStrings.inst_comp_text.errors.device_update_error + err, true);
                     reject(err);
                 })
                 .then(function(resp) {
@@ -702,13 +733,13 @@ function removeAppsFromIde(appNames, selctd) {
                             .catch(function(err) {
                                 installError(err, false);
                                 addResult('App Removal Issue', false, 'app', err);
-                                installComplete('Error!<br/>Try Again Later!', true);
+                                installComplete(resultStrings.inst_comp_text.errors.app_removal_error + err, true);
                                 reject(err);
                             })
                             .then(function(resp) {
                                 updLoaderText('Apps', 'Removed');
                                 addResult(allAppItems[i].name, true, 'app', 'App Removed');
-                                installComplete('Removals are Complete!<br/>Everything is Good!');
+                                installComplete(resultStrings.inst_comp_text.general.app_removal_complete);
                             });
                     }
                 }
@@ -723,19 +754,19 @@ function removeAppsFromIde(appNames, selctd) {
                             .catch(function(err) {
                                 installError(err, false);
                                 addResult('Device Removal Issue', false, 'device', err);
-                                installComplete('Error!<br/>Try Again Later!', true);
+                                installComplete(resultStrings.inst_comp_text.errors.app_removal_error + err, true);
                                 reject(err);
                             })
                             .then(function(resp) {
                                 updLoaderText('Devices', 'Removed');
                                 addResult(allDevItems[i].name, true, 'device', 'Device Removed');
-                                installComplete('Removals are Complete!<br/>Everything is Good!');
+                                installComplete(resultStrings.inst_comp_text.general.app_removal_complete);
                             });
                     }
                 }
             }
         } else {
-            installComplete('Removals are Complete!<br/>Everything is Good!');
+            installComplete(resultStrings.inst_comp_text.general.app_dev_removal_complete);
         }
     });
 }
@@ -759,7 +790,7 @@ function updateAppSettings(repoData) {
                             .catch(function(err) {
                                 installError(err, false);
                                 addResult('App Settings Update', false, 'app', err);
-                                installComplete('Error!<br/>Try Again Later!', true);
+                                installComplete(resultStrings.inst_comp_text.errors.app_setting_update_error + err, true);
                                 reject(err);
                             })
                             .then(function(resp) {
@@ -793,7 +824,7 @@ function installDevsToIde(devices) {
                 .catch(function(err) {
                     installError(err, false);
                     addResult('Install Devices Issue', false, 'device', err);
-                    installComplete('Error!<br/>Try Again Later!', true);
+                    installComplete(resultStrings.inst_comp_text.errors.device_install_error + err, true);
                     reject(err);
                 })
                 .then(function(resp) {
@@ -820,6 +851,7 @@ function parseDomForDevices(domData) {
         fndDTH.push({
             id: theApps[i].id,
             name: (devName.length > 1 ? devName[1] : devName).toString().trim(),
+            namespace: devName.length > 1 ? devName[0].toString().trim() : undefined,
             published: theApps[i].getElementsByTagName('td')[3].innerText.replace(/\n/g, '').trim() === 'Published'
                 // capabilities: theApps[i].getElementsByTagName('td')[4].innerText.replace(/\n/g, '').trim(),
                 // oAuth: theApps[i].getElementsByTagName('td')[5].innerText.replace(/\n/g, '').trim()
@@ -890,14 +922,11 @@ function checkIfItemsInstalled(itemObj, type, secondPass = false) {
                     for (let a in itemObj) {
                         for (let i in itemsFnd) {
                             if (itemsFnd[i].name === itemObj[a].name) {
-                                // console.error('itemsFnd: ', itemsFnd[i].name, ' | requested ' + type + ': ' + itemObj[a].name, 'isMatch: (' + (itemsFnd[i].name === itemObj[a].name) + ')');
                                 if (!secondPass) {
                                     addResult(itemObj[a].name, true, type, 'Already Installed');
                                 }
                                 delete itemObj[a];
                                 break;
-                            } else {
-                                // console.log('itemsFnd: ', itemsFnd[i].name, ' | requested ' + type + ': ' + itemObj[a].name, 'isMatch: (' + (itemsFnd[i].name === itemObj[a].name) + ')');
                             }
                         }
                     }
@@ -910,7 +939,7 @@ function checkIfItemsInstalled(itemObj, type, secondPass = false) {
 function getProjectManifest(url) {
     return new Promise(function(resolve, reject) {
         updLoaderText('Getting', 'Manifest');
-        makeRequest(url, 'GET', null)
+        makeRequest(url + '?=' + getTimeStamp(), 'GET', null)
             .catch(function(err) {
                 installError(err, false);
                 reject(err);
@@ -921,17 +950,25 @@ function getProjectManifest(url) {
                     let mani = JSON.parse(resp);
                     if (mani.name !== undefined) {
                         resolve(mani);
-                    } else { reject(undefined); }
-
-                } else { reject(undefined); }
+                    } else {
+                        reject(undefined);
+                    }
+                } else {
+                    reject(undefined);
+                }
             });
     });
+}
+
+function getTimeStamp() {
+    var d = new Date();
+    return d.getTime();
 }
 
 function getAppManifests() {
     return new Promise(function(resolve, reject) {
         updLoaderText('Getting', 'App Manifest');
-        makeRequest(baseAppUrl + '/content/configs/secret_sauce.json?=' + now(), 'GET', null)
+        makeRequest(baseAppUrl + '/content/configs/secret_sauce.json?=' + getTimeStamp(), 'GET', null)
             .catch(function(err) {
                 reject(err);
             })
@@ -945,7 +982,9 @@ function getAppManifests() {
                     } else {
                         reject(undefined);
                     }
-                } else { reject(undefined); }
+                } else {
+                    reject(undefined);
+                }
             });
     });
 }
@@ -999,7 +1038,10 @@ function dynamicSort(property) {
 
 function searchForApp(evtSender) {
     let srchVal = $('#appSearchBox').val();
-    //console.log('AppSearch Event (' + evtSender + '): ' + srchVal);
+    // console.log('AppSearch Event (' + evtSender + '): ' + srchVal);
+    if (evtSender === 'clear') {
+        srchVal = '';
+    }
     buildAppList(srchVal);
 }
 
@@ -1060,13 +1102,18 @@ function updateMetricsData() {
     }
 }
 
-function getIsAppOrDeviceInstalled(itemName, type) {
+function getIsAppOrDeviceInstalled(itemName, type, manData) {
     let res = {};
     if (itemName && type) {
         let data = type === 'app' ? availableApps : availableDevs;
-        let instApp = data.filter(app => app.name.toString() === itemName.toString() || app.name.toString() === cleanString(itemName.toString()) || app.name.toString().toLowerCase() === itemName.toString().toLowerCase());
-        res['installed'] = instApp[0] !== undefined && instApp.length > 0;
-        res['data'] = instApp;
+        let clnName = cleanString(itemName);
+        let instApp = data.filter(item => item.name.toString() === itemName.toString() || item.name.toString() === clnName.toString() || cleanString(item.name).toString() === clnName.toString() || item.name.toString().toLowerCase() === itemName.toString().toLowerCase());
+        let appFnd;
+        if (instApp.length > 0 && type === 'device') {
+            appFnd = instApp.filter(item => item.namespace === undefined || item.namespace.toString() === manData.namespace.toString());
+        } else { appFnd = instApp; }
+        res['installed'] = appFnd[0] !== undefined && appFnd.length > 0;
+        res['data'] = appFnd;
     } else {
         res['installed'] = false;
         res['data'] = [];
@@ -1074,88 +1121,118 @@ function getIsAppOrDeviceInstalled(itemName, type) {
     return res;
 }
 
+function installBtnAvail(cnt, data) {
+    let itemCnt = data.smartApps.children.length + data.deviceHandlers.length;
+    // console.log(itemCnt);
+    if (itemCnt + 1 === cnt) {
+        $('#installBtn').addClass('disabled');
+    } else {
+        $('#installBtn').removeClass('disabled');
+    }
+}
+
 function processItemsStatuses(data, viewType) {
     if (viewType === 'appList') {
         if (data.length > 0) {
             for (let i in data) {
-                updateAppDeviceItemStatus(data[i].appName, 'app', viewType);
+                let mData = { published: true, namespace: data.namespace, author: data.author };
+                if (updateAppDeviceItemStatus(data[i].appName, 'app', viewType, undefined, mData) === true) {
+                    // cnt++;
+                    // installBtnAvail(cnt, data);
+                }
             }
         }
     } else {
         if (Object.keys(data).length > 0) {
             let cnt = 1;
-            updateAppDeviceItemStatus(data.smartApps.parent.name, 'app', viewType, data.smartApps.parent.appUrl);
+            if (data.smartApps.parent) {
+                let mData = { published: true, namespace: data.namespace, author: data.author };
+                if (updateAppDeviceItemStatus(data.smartApps.parent.name, 'app', viewType, data.smartApps.parent.appUrl, mData) === true) {
+                    cnt++;
+                    installBtnAvail(cnt, data);
+                }
+            }
+
             if (data.smartApps.children.length) {
                 for (const sa in data.smartApps.children) {
-                    updateAppDeviceItemStatus(data.smartApps.children[sa].name, 'app', viewType, data.smartApps.children[sa].appUrl);
-                    cnt++;
+                    let mData = { published: data.smartApps.children[sa].published !== false, namespace: data.namespace, author: data.author };
+                    if (updateAppDeviceItemStatus(data.smartApps.children[sa].name, 'app', viewType, data.smartApps.children[sa].appUrl, mData) === true) {
+                        cnt++;
+                        installBtnAvail(cnt, data);
+                    }
                 }
             }
-            if (data.deviceHandlers.length) {
-                for (const dh in data.deviceHandlers) {
-                    updateAppDeviceItemStatus(data.deviceHandlers[dh].name, 'device', viewType, data.deviceHandlers[dh].appUrl);
+        }
+        if (data.deviceHandlers.length) {
+            for (const dh in data.deviceHandlers) {
+                let mData = { published: true, namespace: data.namespace, author: data.author };
+                if (updateAppDeviceItemStatus(data.deviceHandlers[dh].name, 'device', viewType, data.deviceHandlers[dh].appUrl, mData) === true) {
                     cnt++;
+                    installBtnAvail(cnt, data);
                 }
-            }
-            if (data.smartApps.children.length + data.deviceHandlers.length + 1) {
-                $('#installBtn').addClass('disabled');
-            } else {
-                $('#installBtn').removeClass('disabled');
             }
         }
     }
 }
 
-function updateAppDeviceItemStatus(itemName, type, viewType, appUrl) {
+function updateAppDeviceItemStatus(itemName, type, viewType, appUrl, manData) {
     if (itemName) {
-        let installedItem = getIsAppOrDeviceInstalled(itemName, type);
+        let installedItem = getIsAppOrDeviceInstalled(itemName, type, manData);
         let appInstalled = installedItem.installed === true;
         let statusElementName = cleanIdName(itemName) + '_appview_status_' + type;
         if (installedItem && installedItem.data && installedItem.data[0] !== undefined) {
             if (viewType === 'appList') {
                 statusElementName = itemName;
             }
-            checkItemUpdateStatus(installedItem.data[0].id, type).catch(function(err) {}).then(function(resp) {
-                updateAvail = resp === true;
-                if (appInstalled || updateAvail) {
-                    let itemStatus;
-                    let color;
-                    if (updateAvail) {
-                        itemStatus = 'Updates';
-                        color = viewType === 'appList' ? 'ribbon-orange' : 'orange';
-                        $('#updateBtn').show();
-                    } else {
-                        itemStatus = 'Installed';
-                        color = viewType === 'appList' ? 'ribbon-blue' : 'blue';
-                    }
-                    if (viewType === 'appList') {
-                        updateAppListStatusRibbon(statusElementName, itemStatus, color);
-                        $('#' + itemName).data('details', {
-                            id: installedItem.data[0].id,
-                            type: type,
-                            name: installedItem.data[0].name,
-                            appUrl: appUrl
-                        });
-                        if (appInstalled) {
-                            $('#' + itemName).data('installed', true);
-                        }
-                    } else {
-                        $('#' + statusElementName).text(itemStatus).addClass(color);
+            checkItemUpdateStatus(installedItem.data[0].id, type)
+                .catch(function(err) {
+                    // console.log(err);
+                })
+                .then(function(resp) {
+                    updateAvail = resp === true;
+                    if (appInstalled || updateAvail) {
+                        let itemStatus;
+                        let color;
                         if (updateAvail) {
-                            $('#' + statusElementName).data('hasUpdate', true);
+                            itemStatus = 'Updates';
+                            color = viewType === 'appList' ? 'ribbon-orange' : 'orange';
+                            $('#updateBtn').show();
+                        } else {
+                            itemStatus = 'Installed';
+                            color = viewType === 'appList' ? 'ribbon-blue' : 'blue';
                         }
-                        $('#' + statusElementName).data('details', {
-                            id: installedItem.data[0].id,
-                            type: type,
-                            name: installedItem.data[0].name,
-                            appUrl: appUrl
-                        });
-                        if (appInstalled) {
-                            $('#' + statusElementName).data('installed', true);
+                        if (viewType === 'appList') {
+                            updateAppListStatusRibbon(statusElementName, itemStatus, color);
+                            if (appInstalled) {
+                                $('#' + itemName).data('installed', true);
+                                $('#' + itemName).data('details', {
+                                    id: installedItem.data[0].id,
+                                    type: type,
+                                    name: installedItem.data[0].name,
+                                    appUrl: appUrl
+                                });
+                            }
+                        } else {
+                            $('#' + statusElementName).text(itemStatus).addClass(color);
+                            if (updateAvail) {
+                                $('#' + statusElementName).data('hasUpdate', true);
+                            }
+                            if (appInstalled) {
+                                $('#' + statusElementName).data('installed', true);
+                                $('#' + statusElementName).data('published', manData.published);
+                                $('#' + statusElementName).data('details', {
+                                    id: installedItem.data[0].id,
+                                    type: type,
+                                    name: installedItem.data[0].name,
+                                    appUrl: appUrl,
+                                    published: manData.published,
+                                    namespace: manData.namespace,
+                                    author: manData.author
+                                });
+                            }
                         }
                     }
-                }
-            });
+                });
         } else {
             if (viewType === 'appView') {
                 $('#' + statusElementName).text('Not Installed');
@@ -1169,7 +1246,9 @@ function updateAppListStatusRibbon(itemName, status, color = undefined) {
         let ribbon = $('#' + itemName + '_ribbon');
         let ribbonStatus = $('#' + itemName + '_ribbon_status');
         $(ribbon).css({ display: 'block' });
-        if (color) { $(ribbonStatus).addClass(color); }
+        if (color) {
+            $(ribbonStatus).addClass(color);
+        }
         $(ribbonStatus).text(status);
     }
 }
@@ -1179,9 +1258,9 @@ function buildAppList(filterStr = undefined) {
     let html = '';
     let appData = findAppMatch(filterStr, appManifests);
     currentManifest = appData;
-    html += '\n           <div id="searchFormDiv" class="d-flex flex-row justify-content-center align-items-center">';
+    html += '\n           <div id="searchFormDiv" class="d-flex flex-row justify-content-center align-items-center" style="display: none;">';
     html += '\n               <div class="d-flex w-100 flex-column m-2">';
-    html += '\n                <form id="searchForm" style="display: none;">';
+    html += '\n                <form id="searchForm"  style="display: none;">';
     html += '\n                   <div class="input-group md-form form-sm form-2 mb-0">';
     html += '\n                       <input id="appSearchBox" class="form-control grey-border white-text" type="text" placeholder="Search" aria-label="Search">';
     html += '\n                       <span class="input-group-addon waves-effect grey lighten-3" id="searchBtn"><a><i class="fa fa-search text-grey" aria-hidden="true"></i></a></span>';
@@ -1208,7 +1287,7 @@ function buildAppList(filterStr = undefined) {
             html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
             html += '\n                 <div class="d-flex flex-row">';
             html += '\n                     <div class="d-flex justify-content-start align-items-center">';
-            html += '\n                         <h6 class="h6-responsive" style="font-size: 100%;"><img src="' + appData[i].iconUrl + '" height="40" class="d-inline-block align-middle" alt=""> ' + appData[i].name + '</h6>';
+            html += '\n                         <h6 class="h6-responsive"><img src="' + appData[i].iconUrl + '" height="40" class="d-inline-block align-middle" alt=""> ' + appData[i].name + '</h6>';
             html += '\n                     </div>';
             html += '\n                 </div>';
             html += '\n             </div>';
@@ -1284,11 +1363,12 @@ function buildAppList(filterStr = undefined) {
         html += '\n</div>';
     } else {
         html += '\n  <h6>No Items Found</h6>';
+        html += '\n  <button id="clearSearchBtn" type="button" class="btn btn-md btn-outline-secondary mx-2" style="background: transparent;border: 2px solid white; color: white !important;"><span><i class="fa fa-times white-text"></i> Clear Search</span></button>';
     }
     scrollToTop();
     updSectTitle('Select an Item');
     $('#listContDiv').html('').html(html);
-
+    searchBtnAvail(true);
     $('#loaderDiv').css({ display: 'none' });
     $('#actResultsDiv').css({ display: 'none' });
     $('#appViewDiv').css({ display: 'none' });
@@ -1302,15 +1382,13 @@ function buildAppList(filterStr = undefined) {
         searchForApp('Clicked');
     });
     $('#showSearchBtn').click(function() {
-        //console.log('showSearchBtn clicked...');
-        if ($('#searchForm').is(':visible')) {
-            $('#searchForm').hide();
-        } else {
-            $('#searchForm').show();
-        }
+        searchFormToggle();
+    });
+    $('#clearSearchBtn').click(function() {
+        searchForApp('clear');
     });
     $('#appListTable').on('click', 'td a', function() {
-        //console.log('App Item Clicked: (' + this.id + ')');
+        // console.log('App Item Clicked: (' + this.id + ')');
         if (this.id) {
             renderAppView(this.id);
         }
@@ -1321,11 +1399,30 @@ function buildAppList(filterStr = undefined) {
     new WOW().init();
 }
 
+function searchFormToggle() {
+    // console.log('showSearchBtn clicked...');
+    if ($('#searchForm').is(':visible')) {
+        $('#searchForm').hide();
+        $('#searchFormDiv').hide();
+    } else {
+        $('#searchForm').show();
+        $('#searchFormDiv').show();
+    }
+}
+
 function searchBtnAvail(show = true) {
     if (show) {
         $('#showSearchBtn').show();
     } else {
         $('#showSearchBtn').hide();
+    }
+}
+
+function appCloseBtnAvail(show = true) {
+    if (show) {
+        $('#appCloseBtn').show();
+    } else {
+        $('#appCloseBtn').hide();
     }
 }
 
@@ -1405,17 +1502,18 @@ function createAppDevTable(items, areDevices = false, type) {
 }
 
 function renderAppView(appName) {
-    searchBtnAvail(false);
     let html = '';
     var manifest;
     if (appManifests.length > 0) {
         let appItem = appManifests.filter(app => app.appName === appName);
+        let appInpt = $('#' + appName);
+        let isInstalled = appInpt.length > 0 && appInpt.data('installed') !== undefined && appInpt.data('installed') === true;
         // console.log(appItem);
         for (let i in appItem) {
             getProjectManifest(appItem[0].manifestUrl)
                 .catch(function(err) {
                     $('#actResultsDiv').css({ display: 'block' });
-                    installComplete('Error: Unable to Retrieve SmartApp Manifest for: (' + appName + ')', true, true);
+                    installComplete(resultStrings.inst_comp_text.errors.smartapp_manifest_error + ' (' + appName + ')<br/><br/>' + err, true, true);
                 })
                 .then(function(resp) {
                     // console.log(resp);
@@ -1423,18 +1521,24 @@ function renderAppView(appName) {
                     // console.log('manifest: ', manifest);
                     if (manifest !== undefined && Object.keys(manifest).length) {
                         incrementAppView(appName);
+                        appCloseBtnAvail(true);
+                        $('#appNameListItem').text('Tap On (' + appName + ')');
                         html += '\n    <div id="appViewCard" class="p-0 mb-0" style="background-color: transparent;">';
                         updSectTitle('', true);
                         let cnt = 1;
                         html += '\n     <!--App Description Panel-->';
                         html += '\n     <div class="card card-body card-outline p-1 mb-2" style="background-color: transparent;">';
-                        html += '\n        <div class="flex-row align-right mr-1 mt-1">';
-                        html += '\n           <button type="button" id="appCloseBtn" class="close white-text" aria-label="Close">';
-                        html += '\n               <span aria-hidden="true">&times;</span>';
-                        html += '\n           </button>';
-                        html += '\n       </div>';
+                        // html += '\n        <div class="flex-row align-right mr-1 mt-1">';
+                        // html += '\n           <button type="button" id="appCloseBtn" class="close white-text" aria-label="Close">';
+                        // html += '\n               <span aria-hidden="true">&times;</span>';
+                        // html += '\n           </button>';
+                        // html += '\n       </div>';
                         html += '\n       <div class="flex-row align-center mt-0 mb-1">';
-                        html += '\n           <img class="align-center" src="' + manifest.bannerUrl + '" style="height: auto; max-height: 75px;">';
+                        if (manifest.bannerUrl && manifest.bannerUrl.length > 0 && manifest.bannerUrl !== '') {
+                            html += '\n           <img class="align-center" src="' + manifest.bannerUrl + '" style="height: auto; max-height: 75px;">';
+                        } else {
+                            html += '\n           <img class="align-center" src="' + manifest.smartApps.parent.iconUrl + '" style="height: auto; max-height: 75px;">';
+                        }
                         html += '\n       </div>';
                         html += '\n       <div class="flex-row align-center m-3">';
                         html += '\n           <small class="white-text"><b>Author:</b> ' + manifest.author + '</small>';
@@ -1562,8 +1666,6 @@ function renderAppView(appName) {
                             html += '\n     <!--/.Notes Block Panel-->';
                         }
 
-                        let appInpt = $('#' + appName);
-                        let isInstalled = (appInpt.length > 0 && appInpt.data('installed') !== undefined && appInpt.data('installed') === true);
                         if (isInstalled) {
                             html += '\n     <!--Rating Block Panel-->';
                             html += '\n     <div class="card card-body card-outline px-1 py-0 mb-2" style="background-color: transparent;">';
@@ -1606,13 +1708,13 @@ function renderAppView(appName) {
                         html += '\n      </div>';
                         html += '\n  </div>';
                         // Stop Here
-                        html += '\n  <div class="card card-body card-outline p-1 my-2" style="background-color: transparent;">';
+                        html += '\n  <div class="p-1 my-2" style="background-color: transparent;">';
                         html += '\n       <div class="flex-row align-right mr-1 my-2">';
                         html += '\n           <div class="d-flex flex-column justify-content- align-items-center">';
                         html += '\n               <div class="btn-group">';
-                        html += '\n                   <button id="installBtn" type="button" class="btn btn-success mx-2" style="border-radius: 20px;">Install</button>';
-                        // html += '\n                   <button id="removeBtn" type="button" class="btn btn-danger mx-2" style="border-radius: 20px;">Remove</button>';
-                        html += '\n                   <button id="updateBtn" type="button" class="btn btn-warning mx-2" style="border-radius: 20px; display: none;">Update</button>';
+                        html += '\n                   <button id="installBtn" type="button" class="btn btn-success mx-2 p-0" style="border-radius: 20px;height: 40px;width: 100px;"><span><i class="fa fa-plus white-text"></i> Install</span></button>';
+                        // html += '\n                   <button id="removeBtn" type="button" class="btn btn-danger mx-2" style="border-radius: 20px;height: 30px;">Remove</button>';
+                        html += '\n                   <button id="updateBtn" type="button" class="btn btn-warning mx-2 p-0" style="border-radius: 20px;height: 40px;width: 100px; display: none;"><span><i class="fa fa-arrow-up white-text"></i> Update</span></button>';
                         html += '\n               </div>';
                         html += '\n           </div>';
                         html += '\n       </div>';
@@ -1620,18 +1722,16 @@ function renderAppView(appName) {
                         html += '\n</div>';
                         html += '\n<div class="clearfix"></div>';
                     }
-                    scrollToTop();
-                    $('#appViewDiv').append(html).css({ display: 'block' });
-                    $('#listContDiv').css({ display: 'none' });
-                    $('#loaderDiv').css({ display: 'none' });
-                    $('#actResultsDiv').css({ display: 'none' });
-                    processItemsStatuses(manifest, 'appView');
+                    $('#appViewDiv').append(html);
+                    // AppCloseButton Event
                     $('#appCloseBtn').click(function() {
-                        //console.log('appCloseBtn');
+                        // console.log('appCloseBtn');
                         updSectTitle('Select an Item');
                         $('#appViewDiv').html('');
                         $('#appViewDiv').css({ display: 'none' });
                         $('#listContDiv').css({ display: 'block' });
+                        appCloseBtnAvail(false);
+                        searchBtnAvail(true);
                     });
                     $('#dislikeAppBtn').click(function() {
                         incrementLikeDislike(appName, 'dislike');
@@ -1653,7 +1753,9 @@ function renderAppView(appName) {
                         $('#loaderDiv').css({ display: 'block' });
                         $('#actResultsDiv').css({ display: 'block' });
                         scrollToTop();
-                        incrementAppInstall(appName);
+                        if (!isInstalled) {
+                            incrementAppInstall(appName);
+                        }
                         processIntall(manifest, selectedItems);
                     });
                     $('#removeBtn').click(function() {
@@ -1683,12 +1785,19 @@ function renderAppView(appName) {
                         scrollToTop();
                         getRepoId(manifest.repoName, manifest.repoBranch)
                             .catch(function(err) {
-                                //console.log(err);
+                                // console.log(err);
                             })
                             .then(function(resp) {
                                 updateIdeItems(updData);
                             });
                     });
+                    $('#listContDiv').css({ display: 'none' });
+                    $('#loaderDiv').css({ display: 'none' });
+                    $('#actResultsDiv').css({ display: 'none' });
+                    $('#appViewDiv').css({ display: 'block' });
+                    searchBtnAvail(false);
+                    scrollToTop();
+                    processItemsStatuses(manifest, 'appView');
                     new WOW().init();
                 });
         }
@@ -1697,9 +1806,9 @@ function renderAppView(appName) {
 
 function areAllItemsInstalled(manifest) {
     let appsInst = getInstalledItemsByType('app');
-    //console.log(getInstalledItemsByType('app'));
+    // console.log(getInstalledItemsByType('app'));
     let devsInst = getInstalledItemsByType('device');
-    //console.log(getInstalledItemsByType('device'));
+    // console.log(getInstalledItemsByType('device'));
     if (Object.keys(manifest).length > 0) {
         if (appsInst.filter(app => app.name === manifest.smartApps.parent.name).length >= 1) {
             delete manifest.smartApps['parent'];
@@ -1770,6 +1879,7 @@ function getSelectedCodeItems() {
             selected['devices'].push($('#' + $(this).attr('id') + 'name').text());
         }
     });
+    return selected;
 }
 
 function scrollToTop() {
@@ -1778,7 +1888,11 @@ function scrollToTop() {
     });
 }
 
-function defineClickActions() {}
+function defineClickActions() {
+    $('#resultsDoneHomeBtn').click(function() {
+        location.href = homeUrl;
+    });
+}
 
 function loaderFunc() {
     if (localStorage.getItem('refreshCount') === null) {
@@ -1790,7 +1904,7 @@ function loaderFunc() {
     getStAuth()
         .catch(function(err) {
             if (err === 'Unauthorized' && parseInt(localStorage.getItem('refreshCount')) > 6) {
-                installComplete('Your Auth Session Expired.  Please go back and sign in again', true);
+                installComplete(resultStrings.inst_comp_text.errors.auth_expired, true);
             } else {
                 installError(err, true);
             }
@@ -1799,13 +1913,13 @@ function loaderFunc() {
             if (resp === true) {
                 getAppManifests()
                     .catch(function(err) {
-                        installComplete('Error: Unable to Retrieve App List', true, true);
+                        installComplete(resultStrings.inst_comp_text.errors.app_list_manifest_error + err, true, true);
                     })
                     .then(function(manifestResp) {
                         getAvailableAppsDevices(true)
                             .catch(function(err) {
                                 if (err === 'Unauthorized') {
-                                    installComplete('Your Auth Session Expired.  Please go back and sign in again', true);
+                                    installComplete(resultStrings.inst_comp_text.errors.auth_expired, true);
                                 }
                                 installError(err, false);
                             })
@@ -1861,7 +1975,8 @@ function buildCoreHtml() {
     html += '\n                       <a class="navbar-brand"><span class="align-middle"><img src="' + baseAppUrl + '/content/images/app_logo.png" height="40" class="d-inline-block align-middle" alt=""> Installer</span></a>';
     html += '\n                   </div>';
     html += '\n                   <div class="d-flex flex-column justify-content-center align-items-center">';
-    html += '\n                       <a id="showSearchBtn" class="nav-link white-text p-0" style="font-size: 30px;"><i class="fa fa-search"></i><span class="sr-only">(current)</span></a>';
+    html += '\n                       <a id="showSearchBtn" class="nav-link white-text p-0" style="font-size: 30px; display: none;"><i class="fa fa-search"></i><span class="sr-only">(current)</span></a>';
+    html += '\n                       <button type="button" id="appCloseBtn" class="btn-md close white-text" aria-label="Close" style="display: none;"><span aria-hidden="true"><i class="fa fa-arrow-left white-text"></i></span></button>';
     html += '\n                   </div>';
     html += '\n               </div>';
     html += '\n           </nav>';
@@ -1898,7 +2013,7 @@ function buildCoreHtml() {
     html += '\n                                           <div class="d-flex w-100 flex-column mb-3">';
     html += '\n                                               <i id="finishedImg" class="fa fa-check" style="display: none;"></i>';
     html += '\n                                               <div id="results"></div>';
-
+    html += '\n                                               <div id="resultsDone" class="mt-2" style="display: none;"><small>To Exit App Press Back/Save</small></div>';
     html += '\n                                               <div id="resultsContainer" class="d-flex flex-column justify-content-center mx-2">';
     html += '\n                                                   <div class="d-flex flex-column align-items-center" style="border: 1px solid gray; border-radius: 10px;">';
 
@@ -1913,20 +2028,23 @@ function buildCoreHtml() {
     html += '\n                                                       </div>';
 
     html += '\n                                                       <div class="d-flex w-100 flex-column justify-content-center align-items-center">';
-    html += '\n                                                           <h6 id="appResultsTitle" class="mt-2 mb-0" style="display: none;"><u>SmartApps</u></h6>';
-    html += '\n                                                           <ul id="appResultUl" class="w-100 px-3" style="display: none;"></ul>';
+    html += '\n                                                            <h6 id="appResultsTitle" class="mt-2 mb-0" style="display: none;"><u>SmartApps</u></h6>';
+    html += '\n                                                           <ul id="appResultUl" class="w-100 px-3" style="display: none; font-size: 0.9em;"></ul>';
     html += '\n                                                       </div>';
 
     html += '\n                                                       <div class="d-flex w-100 flex-column justify-content-center align-items-center">';
     html += '\n                                                           <h6 id="devResultsTitle" class="mt-2 mb-0" style="display: none;"><u>Devices</u></h6>';
-    html += '\n                                                           <ul id="devResultUl" class="w-100 px-3" style="display: none;"></ul>';
+    html += '\n                                                           <ul id="devResultUl" class="w-100 px-3" style="display: none; font-size: 0.9em;"></ul>';
     html += '\n                                                       </div>';
 
     html += '\n                                                   </div>';
     html += '\n                                               </div>';
-
-    html += '\n                                               <div id="resultsDone" class="mt-4" style="display: none;"><small>Press Back/Done Now</small></div>';
-    html += '\n                                               <div id="resultsDoneHomeBtnDiv" style="display: none;"><button id="resultsDoneHomeBtn" type="button" class="btn" style="border-radius: 20px; background: transparent;"><a class="button white-text" href="' + homeUrl + '"><i id="homeBtn" class="fa fa-home"></i> Go Home<span class="sr-only">(current)</span></a></button></div>';
+    html += '\n                                               <div class="d-flex flex-column justify-content-center align-items-center">';
+    html += '\n                                                 <div class="btn-group">';
+    html += '\n                                                   <button id="resultsDoneHomeBtn" type="button" class="btn white-text mt-3 mx-2 px-2" style="display: none; border-radius: 20px; background: transparent; width: 130px;"><i id="homeBtn" class="fa fa-home"></i> Go Home</button>';
+    html += '\n                                                   <button id="whatNextBtn" type="button" class="btn waves-effect waves-light mt-3 mx-2 px-2 blue" style="border-radius: 20px; display: none; width: 130px;" data-toggle="modal" data-target="#doneModal"><span class="white-text"><i class="fa fa-chevron-circle-right"></i> What Next?</span></button>';
+    html += '\n                                                 </div>';
+    html += '\n                                               </div>';
     html += '\n                                          </div>';
 
     html += '\n                                     </div>';
@@ -1940,10 +2058,48 @@ function buildCoreHtml() {
     html += '\n       <footer id="ftrSect" class="page-footer center-on-small-only m-0 p-0">';
     html += '\n           <div class="footer-copyright">';
     html += '\n               <div class="containter-fluid">';
-    html += '\n                   <button class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#aboutModal" style="background: transparent; border-color: white;"><span class="white-text"><i class="fa fa-info"></i> About</span></button>';
+    html += '\n                       <div class="d-flex flex-column justify-content-center align-items-center">';
+    html += '\n                           <button class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#aboutModal" style="background: transparent; border-color: white;"><span class="white-text"><i class="fa fa-info"></i> About</span></button>';
+    html += '\n                           <small class="align-middle"><u>v' + scriptVersion + ' (' + scriptRelType + ')</u></small>';
+    html += '\n                       </div>';
     html += '\n               </div>';
     html += '\n           </div>';
     html += '\n       </footer>';
+
+    html += '\n       <!-- Modal -->';
+    html += '\n       <div class="modal fade-in" id="doneModal" tabindex="-1" role="dialog" aria-labelledby="doneModalLabel" aria-hidden="true">';
+    html += '\n           <div class="modal-dialog modal-dialog-centered" role="document">';
+    html += '\n               <div class="modal-content darkModalBg">';
+    html += '\n                   <!--  Modal BODY -->';
+    html += '\n                   <div class="modal-body py-2">';
+    html += '\n                       <div class="card card-body pt-3" style="background-color: transparent;">';
+    html += '\n                           <div class="flex-row align-center">';
+    html += '\n                               <div class="d-flex flex-row justify-content-center">';
+    html += '\n                                   <div class="d-flex flex-column justify-content-center align-items-center text-center">';
+    html += '\n                                       <h5><u>What Next?</u></h5>';
+    html += '\n                                       <ol class="m-0 p-0 text-left">';
+    html += '\n                                          <li style="font-size: 12px">Press Save All the way out of the app.</li>';
+    html += '\n                                          <li style="font-size: 12px">Tap Marketplace</li>';
+    html += '\n                                          <li style="font-size: 12px">Tap SmartApps Tab</li>';
+    html += '\n                                          <li style="font-size: 12px">Tap My Apps</li>';
+    html += '\n                                          <li style="font-size: 12px" id="appNameListItem"></li>';
+    html += '\n                                          <li style="font-size: 12px">That\'s It!</li>';
+    html += '\n                                       </ol>';
+    html += '\n                                   </div>';
+    html += '\n                               </div>';
+    html += '\n                           </div>';
+    html += '\n                       </div>';
+    html += '\n                   </div>';
+    html += '\n                   <!--  Modal FOOTER -->';
+    html += '\n                   <div class="modal-body py-2">';
+    html += '\n                       <div class="card card-body pt-3" style="background-color: transparent;">';
+    html += '\n                           <button type="button" class="btn btn-sm btn-secondary mx-5 my-0" data-dismiss="modal">Close</button>';
+    html += '\n                       </div>';
+    html += '\n                   </div>';
+    html += '\n               </div>';
+    html += '\n           </div>';
+    html += '\n       </div>';
+
     html += '\n       <!-- Modal -->';
     html += '\n       <div class="modal fade-in" id="aboutModal" tabindex="-1" role="dialog" aria-labelledby="aboutModalLabel" aria-hidden="true">';
     html += '\n           <div class="modal-dialog modal-dialog-centered" role="document">';
@@ -1972,7 +2128,7 @@ function buildCoreHtml() {
     html += '\n                                   </div>';
     html += '\n                                   <div class="d-flex flex-column justify-content-center align-items-center">';
     html += '\n                                       <small><u>WebApp Version:</u></small>';
-    html += '\n                                       <small>v' + scriptVersion + '</small>';
+    html += '\n                                       <small>v' + scriptVersion + ' (' + scriptRelType + ')</small>';
     html += '\n                                   </div>';
     html += '\n                               </div>';
     html += '\n                           </div>';
@@ -2016,9 +2172,35 @@ function buildCoreHtml() {
     html += '\n               </div>';
     html += '\n           </div>';
     html += '\n       </div>';
+
     $('body').css({ 'overflow-x': 'hidden' });
     $('#bodyDiv').html(html);
 }
+
+const resultStrings = {
+    inst_comp_text: {
+        general: {
+            install_complete: 'Install Process Completed!',
+            update_complete: 'Update Process Completed!',
+            app_removal_complete: 'SmartApp Removals Complete!<br/>Everything is Good!',
+            device_removal_complete: 'Device Removals Complete!<br/>Everything is Good!',
+            app_dev_removal_complete: 'SmartApp/Device Removals are Complete!<br/>Everything is Good!'
+        },
+        errors: {
+            generic_error: 'Application Error:<br/><br/>',
+            add_repo_error: 'Add Repo to IDE Error:<br/>Please Try Again Later<br/><br/>',
+            auth_expired: 'Your Auth Session Expired.<br/>Please go back and sign in again',
+            auth_issue: 'Authentication Issue!<br/>Make Sure you Signed In!',
+            app_list_manifest_error: 'App Manifest Error:<br/>Unable to Retrieve App List<br/>',
+            smartapp_manifest_error: 'SmartApp Manifest Error:<br/>App could not retrieve the file for:',
+            device_install_error: 'Device Install Error:<br/></br>',
+            device_update_error: 'Device Update Error:<br/><br/>',
+            app_removal_error: 'App Removal Error:<br/><br/>',
+            device_removal_error: 'Device Removal Error:<br/><br/>',
+            app_setting_update_error: 'SmartApp Setting Update Error:<br/><br/>'
+        }
+    }
+};
 
 $.ajaxSetup({
     cache: true
