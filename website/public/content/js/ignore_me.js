@@ -1,6 +1,9 @@
-var scriptVersion = '1.0.209a';
-var scriptRelType = 'beta';
-var scriptVerDate = '2/09/2018';
+const scriptVersion = '1.0.2011a';
+const scriptRelType = 'beta';
+const scriptVerDate = '2/11/2018';
+const allowInstalls = true;
+const allowUpdates = true;
+const allowRemoval = false;
 
 var repoId = '';
 var writableRepos = [];
@@ -13,6 +16,8 @@ var retryCnt = 0;
 var refreshCount;
 var uCsrf;
 var currentAppName;
+var appManifests;
+
 const authUrl = generateStUrl('hub');
 const fetchReposUrl = generateStUrl('github/writeableRepos');
 const updRepoUrl = generateStUrl('githubAuth/updateRepos');
@@ -32,8 +37,6 @@ const devUpdApplyUrl = generateStUrl('ide/device/updateOneFromRepo/');
 const devUpdPubUrl = generateStUrl('ide/device/publishAjax/');
 const availableSaUrl = generateStUrl('api/smartapps/editable');
 const availableDevsUrl = generateStUrl('ide/devices');
-
-var appManifests;
 
 function generateStUrl(path) {
     return serverUrl + path;
@@ -405,7 +408,9 @@ function processIntall(repoData, selctd) {
                                                                                                         if (Object.keys(repoData.deviceHandlers).length) {
                                                                                                             installComplete(resultStrings.inst_comp_text.general.install_complete);
                                                                                                         }
-                                                                                                    } else { installComplete(resultStrings.inst_comp_text.general.install_complete); }
+                                                                                                    } else {
+                                                                                                        installComplete(resultStrings.inst_comp_text.general.install_complete);
+                                                                                                    }
                                                                                                 });
                                                                                         }
                                                                                     });
@@ -449,7 +454,9 @@ function processIntall(repoData, selctd) {
                                                                         if (Object.keys(repoData.deviceHandlers).length) {
                                                                             installComplete(resultStrings.inst_comp_text.general.install_complete);
                                                                         }
-                                                                    } else { installComplete(resultStrings.inst_comp_text.general.install_complete); }
+                                                                    } else {
+                                                                        installComplete(resultStrings.inst_comp_text.general.install_complete);
+                                                                    }
                                                                 });
                                                         }
                                                     });
@@ -1111,7 +1118,9 @@ function getIsAppOrDeviceInstalled(itemName, type, manData) {
         let appFnd;
         if (instApp.length > 0 && type === 'device') {
             appFnd = instApp.filter(item => item.namespace === undefined || item.namespace.toString() === manData.namespace.toString());
-        } else { appFnd = instApp; }
+        } else {
+            appFnd = instApp;
+        }
         res['installed'] = appFnd[0] !== undefined && appFnd.length > 0;
         res['data'] = appFnd;
     } else {
@@ -1640,13 +1649,13 @@ function renderAppView(appName) {
 
                             html += '\n                   <!-- Card header -->';
                             html += '\n                   <div class="card-header my-0" role="tab" id="notesCardCollapseHeading">';
-                            html += '\n                       <a data-toggle="collapse" data-parent="#notesAccordionEx" href="#notesCardCollapse" aria-expanded="true" aria-controls="notesCardCollapse">';
+                            html += '\n                       <a data-toggle="collapse" data-parent="#notesAccordionEx" href="#notesCardCollapse" aria-expanded="false" aria-controls="notesCardCollapse">';
                             html += '\n                           <h6 class="white-text mb-0"><u>Notes</u> <i class="fa fa-angle-down rotate-icon"></i></h6>';
                             html += '\n                       </a>';
                             html += '\n                   </div>';
 
                             html += '\n                   <!-- Card body -->';
-                            html += '\n                   <div id="notesCardCollapse" class="collapse" role="tabpanel" aria-labelledby="notesCardCollapseHeading">';
+                            html += '\n                   <div id="notesCardCollapse" class="collapse show" role="tabpanel" aria-labelledby="notesCardCollapseHeading">';
                             html += '\n                       <div class="card-body white-text py-0">';
                             html += '\n                         <div class="d-flex justify-content-center align-items-center mx-auto mb-2">';
                             html += '\n                             <div class="d-flex flex-column justify-content-center align-items-center mx-2">';
@@ -1712,9 +1721,15 @@ function renderAppView(appName) {
                         html += '\n       <div class="flex-row align-right mr-1 my-2">';
                         html += '\n           <div class="d-flex flex-column justify-content- align-items-center">';
                         html += '\n               <div class="btn-group">';
-                        html += '\n                   <button id="installBtn" type="button" class="btn btn-success mx-2 p-0" style="border-radius: 20px;height: 40px;width: 100px;"><span><i class="fa fa-plus white-text"></i> Install</span></button>';
-                        // html += '\n                   <button id="removeBtn" type="button" class="btn btn-danger mx-2" style="border-radius: 20px;height: 30px;">Remove</button>';
-                        html += '\n                   <button id="updateBtn" type="button" class="btn btn-warning mx-2 p-0" style="border-radius: 20px;height: 40px;width: 100px; display: none;"><span><i class="fa fa-arrow-up white-text"></i> Update</span></button>';
+                        if (allowInstalls === true) {
+                            html += '\n                   <button id="installBtn" type="button" class="btn btn-success mx-2 p-0" style="border-radius: 20px;height: 40px;width: 100px;"><span><i class="fa fa-plus white-text"></i> Install</span></button>';
+                        }
+                        if (allowRemoval === true) {
+                            html += '\n                   <button id="removeBtn" type="button" class="btn btn-danger mx-2" style="border-radius: 20px;height: 30px;">Remove</button>';
+                        }
+                        if (allowUpdates === true) {
+                            html += '\n                   <button id="updateBtn" type="button" class="btn btn-warning mx-2 p-0" style="border-radius: 20px;height: 40px;width: 100px; display: none;"><span><i class="fa fa-arrow-up white-text"></i> Update</span></button>';
+                        }
                         html += '\n               </div>';
                         html += '\n           </div>';
                         html += '\n       </div>';
