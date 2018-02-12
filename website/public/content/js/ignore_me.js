@@ -1,9 +1,10 @@
-const scriptVersion = '1.0.2011a';
+const scriptVersion = '1.0.2012a';
 const scriptRelType = 'beta';
-const scriptVerDate = '2/11/2018';
+const scriptVerDate = '2/12/2018';
 const allowInstalls = true;
 const allowUpdates = true;
 const allowRemoval = false;
+const isDevMode = false; //devMode !== undefined && devMode === true;
 
 var repoId = '';
 var writableRepos = [];
@@ -1114,7 +1115,14 @@ function getIsAppOrDeviceInstalled(itemName, type, manData) {
     if (itemName && type) {
         let data = type === 'app' ? availableApps : availableDevs;
         let clnName = cleanString(itemName);
-        let instApp = data.filter(item => item.name.toString() === itemName.toString() || item.name.toString() === clnName.toString() || cleanString(item.name).toString() === clnName.toString() || item.name.toString().toLowerCase() === itemName.toString().toLowerCase());
+        let clnIdName = cleanIdName(itemName);
+        let instApp = data.filter(item =>
+            item.name.toString() === itemName.toString() ||
+            item.name.toString() === clnName.toString() ||
+            cleanString(item.name).toString() === clnName.toString() ||
+            item.name.toString().toLowerCase() === itemName.toString().toLowerCase() ||
+            cleanIdName(item.name.toString()) === clnIdName.toString() ||
+            cleanIdName(item.name.toString()).toString().toLowerCase() === clnIdName.toString().toLowerCase());
         let appFnd;
         if (instApp.length > 0 && type === 'device') {
             appFnd = instApp.filter(item => item.namespace === undefined || item.namespace.toString() === manData.namespace.toString());
@@ -1152,7 +1160,7 @@ function processItemsStatuses(data, viewType) {
             }
         }
     } else {
-        if (Object.keys(data).length > 0) {
+        if (data && data.smartApps) {
             let cnt = 1;
             if (data.smartApps.parent) {
                 let mData = { published: true, namespace: data.namespace, author: data.author };
@@ -1172,7 +1180,7 @@ function processItemsStatuses(data, viewType) {
                 }
             }
         }
-        if (data.deviceHandlers.length) {
+        if (data && data.deviceHandlers.length) {
             for (const dh in data.deviceHandlers) {
                 let mData = { published: true, namespace: data.namespace, author: data.author };
                 if (updateAppDeviceItemStatus(data.deviceHandlers[dh].name, 'device', viewType, data.deviceHandlers[dh].appUrl, mData) === true) {
@@ -1529,7 +1537,7 @@ function renderAppView(appName) {
                     manifest = resp;
                     // console.log('manifest: ', manifest);
                     if (manifest !== undefined && Object.keys(manifest).length) {
-                        incrementAppView(appName);
+                        if (!isDevMode === true) { incrementAppView(appName); }
                         appCloseBtnAvail(true);
                         $('#appNameListItem').text('Tap On (' + appName + ')');
                         html += '\n    <div id="appViewCard" class="p-0 mb-0" style="background-color: transparent;">';
@@ -1768,7 +1776,7 @@ function renderAppView(appName) {
                         $('#loaderDiv').css({ display: 'block' });
                         $('#actResultsDiv').css({ display: 'block' });
                         scrollToTop();
-                        if (!isInstalled) {
+                        if (!isInstalled && !isDevMode === true) {
                             incrementAppInstall(appName);
                         }
                         processIntall(manifest, selectedItems);
