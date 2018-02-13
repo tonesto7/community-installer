@@ -289,3 +289,7 @@ footer.page-footer .footer-copyright {
     height: 60px;
     line-height: 5px;
 }
+
+#toast-container.nopacity>div {
+    opacity: 1;
+}
