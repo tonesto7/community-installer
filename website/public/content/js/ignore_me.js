@@ -4,7 +4,7 @@ const scriptVerDate = '2/12/2018';
 const allowInstalls = true;
 const allowUpdates = true;
 const allowRemoval = false;
-const isDevMode = false; //devMode !== undefined && devMode === true;
+const isDevMode = devMode !== undefined && devMode === true;
 
 var repoId = '';
 var writableRepos = [];
