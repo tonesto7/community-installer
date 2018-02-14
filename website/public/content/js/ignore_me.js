@@ -1,11 +1,12 @@
-const scriptVersion = '1.0.0213d';
+const scriptVersion = '1.0.0214a';
 const scriptRelType = 'beta';
-const scriptVerDate = '2/13/2018';
+const scriptVerDate = '2/14/2018';
 const latestSaVer = '1.0.0213a';
 const allowInstalls = true;
 const allowUpdates = true;
 const allowRemoval = false;
-const isDevMode = false; //devMode !== undefined && devMode === true;
+const isDevMode = false;
+const manifestCache = true;
 
 var repoId = '';
 var writableRepos = [];
@@ -18,7 +19,8 @@ var retryCnt = 0;
 var refreshCount;
 var uCsrf;
 var currentAppName;
-var appManifests;
+var mainManifest;
+var communityManifests;
 
 const authUrl = generateStUrl('hub');
 const fetchReposUrl = generateStUrl('github/writeableRepos');
@@ -145,8 +147,8 @@ function cleanString(str) {
     }
 }
 
-function cleanIdName(name) {
-    return name.toString().replace(/[^a-zA-Z0-9 ]/gi, ' ').replace(/ /g, '_');
+function cleanIdName(name, repStr = '_') {
+    return name.toString().replace(/[^a-zA-Z0-9 ]/gi, ' ').replace(/ /g, repStr);
 }
 
 function addResult(str, good, type = '', str2 = '') {
@@ -969,7 +971,8 @@ function checkIfItemsInstalled(itemObj, type, secondPass = false) {
 function getProjectManifest(url) {
     return new Promise(function(resolve, reject) {
         updLoaderText('Getting', 'Manifest');
-        makeRequest(url + '?=' + getTimeStamp(), 'GET', null)
+        url = manifestCache ? url : url + '?=' + getTimeStamp();
+        makeRequest(url, 'GET', null)
             .catch(function(err) {
                 installError(err, false);
                 reject(err);
@@ -995,9 +998,33 @@ function getTimeStamp() {
     return d.getTime();
 }
 
-function getAppManifests() {
+function getMainManifest_New() {
     return new Promise(function(resolve, reject) {
-        updLoaderText('Getting', 'App Manifest');
+        updLoaderText('Getting', 'Available Apps');
+        makeRequest(baseAppUrl + '/content/configs/mc_awesome.json?=' + getTimeStamp(), 'GET', null)
+            .catch(function(err) {
+                reject(err);
+            })
+            .then(function(resp) {
+                // console.log(resp);
+                if (resp !== undefined) {
+                    let mani = JSON.parse(resp);
+                    if (mani.apps && mani.apps.length > 0) {
+                        mainManifest = mani.apps;
+                        resolve(mani.apps);
+                    } else {
+                        reject(undefined);
+                    }
+                } else {
+                    reject(undefined);
+                }
+            });
+    });
+}
+
+function getMainManifest() {
+    return new Promise(function(resolve, reject) {
+        updLoaderText('Getting', 'Available Apps');
         makeRequest(baseAppUrl + '/content/configs/secret_sauce.json?=' + getTimeStamp(), 'GET', null)
             .catch(function(err) {
                 reject(err);
@@ -1007,7 +1034,7 @@ function getAppManifests() {
                 if (resp !== undefined) {
                     let mani = JSON.parse(resp);
                     if (mani.apps && mani.apps.length > 0) {
-                        appManifests = mani.apps;
+                        mainManifest = mani.apps;
                         resolve(mani.apps);
                     } else {
                         reject(undefined);
@@ -1044,13 +1071,10 @@ function incrementLikeDislike(appName, type) {
 }
 
 function findAppMatch(srchStr, data) {
-    if (srchStr === undefined) {
+    if (srchStr === undefined || srchStr.length < 3) {
         return data.sort(dynamicSort('name'));
-    }
-    if (srchStr.length >= 3) {
-        return data.filter(appItem => JSON.stringify(appItem).toString().toLowerCase().includes(srchStr.toLowerCase())).sort(dynamicSort('name'));
     } else {
-        return data.sort(dynamicSort('name'));
+        return data.filter(appItem => JSON.stringify(appItem).toString().toLowerCase().includes(srchStr.toLowerCase())).sort(dynamicSort('name'));
     }
 }
 
@@ -1136,17 +1160,16 @@ function getIsAppOrDeviceInstalled(itemName, type, manData) {
     let res = {};
     if (itemName && type) {
         let data = type === 'app' ? availableApps : availableDevs;
-        let clnName = cleanString(itemName);
-        let clnIdName = cleanIdName(itemName);
-        let instApp = data.filter(
-            item =>
-            item.name.toString() === itemName.toString() ||
-            item.name.toString() === clnName.toString() ||
-            cleanString(item.name).toString() === clnName.toString() ||
-            item.name.toString().toLowerCase() === itemName.toString().toLowerCase() ||
-            cleanIdName(item.name.toString()) === clnIdName.toString() ||
-            cleanIdName(item.name.toString()).toString().toLowerCase() === clnIdName.toString().toLowerCase()
-        );
+        let srchGrp = [...new Set([cleanIdName(itemName).toString(), cleanString(itemName).toString(), itemName.toString(), cleanIdName(itemName).toString().toLowerCase(), cleanString(itemName).toString().toLowerCase(), itemName.toString().toLowerCase()])];
+        let instApp = data.filter(function(item) {
+            let g = [...new Set([item.name.toString(), item.name.toString().toLowerCase(), cleanString(item.name).toString(), cleanString(item.name).toString().toLowerCase(), cleanIdName(item.name).toString(), cleanIdName(item.name).toString().toLowerCase()])];
+            for (const i in g) {
+                let t = g[i];
+                if (srchGrp.includes(t)) {
+                    return item;
+                }
+            }
+        });
         let appFnd;
         if (instApp.length > 0 && type === 'device') {
             appFnd = instApp.filter(item => item.namespace === undefined || item.namespace.toString() === manData.namespace.toString());
@@ -1177,7 +1200,7 @@ function processItemsStatuses(data, viewType) {
         if (data.length > 0) {
             for (let i in data) {
                 let mData = { published: true, namespace: data.namespace, author: data.author };
-                if (updateAppDeviceItemStatus(data[i].appName, 'app', viewType, undefined, mData) === true) {
+                if (updateAppDeviceItemStatus(data[i].name, 'app', viewType, undefined, mData) === true) {
                     // cnt++;
                     // installBtnAvail(cnt, data);
                 }
@@ -1220,10 +1243,10 @@ function updateAppDeviceItemStatus(itemName, type, viewType, appUrl, manData) {
     if (itemName) {
         let installedItem = getIsAppOrDeviceInstalled(itemName, type, manData);
         let appInstalled = installedItem.installed === true;
-        let statusElementName = cleanIdName(itemName) + '_appview_status_' + type;
+        let statusElementName = cleanIdName(itemName, '-') + '_appview_status_' + type;
         if (installedItem && installedItem.data && installedItem.data[0] !== undefined) {
             if (viewType === 'appList') {
-                statusElementName = itemName;
+                statusElementName = cleanIdName(itemName, '-');
             }
             checkItemUpdateStatus(installedItem.data[0].id, type)
                 .catch(function(err) {
@@ -1245,8 +1268,8 @@ function updateAppDeviceItemStatus(itemName, type, viewType, appUrl, manData) {
                         if (viewType === 'appList') {
                             updateAppListStatusRibbon(statusElementName, itemStatus, color);
                             if (appInstalled) {
-                                $('#' + itemName).data('installed', true);
-                                $('#' + itemName).data('details', {
+                                $('#' + statusElementName).data('installed', true);
+                                $('#' + statusElementName).data('details', {
                                     id: installedItem.data[0].id,
                                     type: type,
                                     name: installedItem.data[0].name,
@@ -1282,32 +1305,6 @@ function updateAppDeviceItemStatus(itemName, type, viewType, appUrl, manData) {
     }
 }
 
-function installerAppUpdAvail() {
-    if (appVersion !== latestSaVer) {
-        toastr.options = {
-            "closeButton": true,
-            "debug": false,
-            "newestOnTop": true,
-            "positionClass": "toast-top-full-width",
-            "preventDuplicates": true,
-            "progressBar": true,
-            "onclick": null,
-            "showDuration": "300",
-            "hideDuration": "1000",
-            "timeOut": "8000",
-            "extendedTimeOut": "1000",
-            "showEasing": "easeOutBounce",
-            "hideEasing": "linear",
-            "showMethod": "slideDown",
-            "hideMethod": "slideUp",
-            "closeMethod": "slideUp"
-        };
-        Command: toastr["info"]("There is an update available to this installer SmartApp.<br/>Please visit the IDE to perform the Update. <br/><strong>Latest Version:</strong> v" + latestSaVer, "");
-        $('#toast-container').addClass('nopacity');
-    }
-    return false;
-}
-
 function updateAppListStatusRibbon(itemName, status, color = undefined) {
     if (itemName && status) {
         let ribbon = $('#' + itemName + '_ribbon');
@@ -1320,10 +1317,56 @@ function updateAppListStatusRibbon(itemName, status, color = undefined) {
     }
 }
 
+function loadAllManifests() {
+    var loadManifests = new Promise(function(resolve, reject) {
+        if (communityManifests === undefined) {
+            if (mainManifest.length > 0) {
+                updLoaderText('Loading', 'Manifest');
+                let cnt = 0;
+                for (let i in mainManifest) {
+                    getProjectManifest(mainManifest[i].manifestUrl)
+                        .catch(function(err) {
+                            cnt++;
+                            if (cnt === mainManifest.length) {
+                                resolve(true);
+                            }
+                        })
+                        .then(function(resp) {
+                            // console.log(resp);
+                            cnt++;
+                            if (communityManifests === undefined) {
+                                communityManifests = {};
+                                communityManifests['apps'] = [];
+                                communityManifests['devices'] = [];
+                            }
+                            if (resp !== undefined && Object.keys(resp).length > 0) {
+                                if (resp.smartApps.parent !== undefined) { resp["ideLabel"] = cleanIdName(resp.smartApps.parent.name, '-'); }
+                                communityManifests.apps.push(resp);
+                            }
+                            if (cnt === mainManifest.length) {
+                                resolve(true);
+                            }
+                        });
+                }
+            }
+        } else {
+            resolve(true);
+        }
+    });
+    loadManifests.then(resp => {
+        if (communityManifests.apps.length > 0) {
+            buildAppList();
+            startMetricsListener();
+        } else {
+            installComplete(resultStrings.inst_comp_text.errors.app_list_manifest_error, true);
+        }
+    });
+}
+
 function buildAppList(filterStr = undefined) {
     searchBtnAvail(true);
     let html = '';
-    let appData = findAppMatch(filterStr, appManifests);
+    let appData = findAppMatch(filterStr, communityManifests.apps);
     currentManifest = appData;
     html += '\n           <div id="searchFormDiv" class="d-flex flex-row justify-content-center align-items-center" style="display: none;">';
     html += '\n               <div class="d-flex w-100 flex-column m-2">';
@@ -1343,18 +1386,19 @@ function buildAppList(filterStr = undefined) {
         html += '\n               <tbody>';
 
         for (let i in appData) {
+            let appName = cleanIdName(appData[i].ideLabel);
             html += '\n   <tr style="border-bottom-style: hidden; border-top-style: hidden;">';
             html += '\n   <td class="py-1">';
-            html += '\n     <a href="#" id="' + appData[i].appName + '" class="list-group-item list-group-item-action flex-column align-items-start p-2" style="border-radius: 20px;">';
+            html += '\n     <a href="#" id="' + appName + '" class="list-group-item list-group-item-action flex-column align-items-start p-2" style="border-radius: 20px;">';
 
-            html += '\n         <div id="' + appData[i].appName + '_ribbon" class="ribbon" style="display: none;"><span id="' + appData[i].appName + '_ribbon_status"> </span></div>';
+            html += '\n         <div id="' + appName + '_ribbon" class="ribbon" style="display: none;"><span id="' + appName + '_ribbon_status"> </span></div>';
 
             html += '\n         <!-- APP NAME SECTION TOP (START)-->';
             html += '\n         <div class="d-flex w-100 justify-content-between align-items-center">';
             html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
             html += '\n                 <div class="d-flex flex-row">';
             html += '\n                     <div class="d-flex justify-content-start align-items-center">';
-            html += '\n                         <h6 class="h6-responsive"><img src="' + appData[i].iconUrl + '" height="40" class="d-inline-block align-middle" alt=""> ' + appData[i].name + '</h6>';
+            html += '\n                         <h6 class="h6-responsive"><img src="' + appData[i].smartApps.parent.iconUrl + '" height="40" class="d-inline-block align-middle" alt=""> ' + appData[i].smartApps.parent.name + '</h6>';
             html += '\n                     </div>';
             html += '\n                 </div>';
             html += '\n             </div>';
@@ -1375,7 +1419,7 @@ function buildAppList(filterStr = undefined) {
             html += '\n                     <small class="align-middle"><u><b>Views:</b></u></small>';
             html += '\n                 </div>';
             html += '\n                 <div class="d-flex flex-row">';
-            html += '\n                     <span id="' + appData[i].appName + '_view_cnt" class="badge badge-pill grey white-text align-middle">0</span>';
+            html += '\n                     <span id="' + appName + '_view_cnt" class="badge badge-pill grey white-text align-middle">0</span>';
             html += '\n                 </div>';
             html += '\n             </div>';
             html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
@@ -1383,8 +1427,8 @@ function buildAppList(filterStr = undefined) {
             html += '\n                     <small class="align-middle"><u><b>Ratings:</b></u></small>';
             html += '\n                 </div>';
             html += '\n                 <div class="d-flex flex-row">';
-            html += '\n                     <div class="mx-2"><small><span id="' + appData[i].appName + '_like_cnt" class="black-text"><i class="fa fa-thumbs-up fa-sm green-text"></i> 0</span></small></div>';
-            html += '\n                     <div class="mx-2"><small><span id="' + appData[i].appName + '_dislike_cnt" class="black-text"><i class="fa fa-thumbs-down fa-sm red-text"></i> 0</span></small></div>';
+            html += '\n                     <div class="mx-2"><small><span id="' + appName + '_like_cnt" class="black-text"><i class="fa fa-thumbs-up fa-sm green-text"></i> 0</span></small></div>';
+            html += '\n                     <div class="mx-2"><small><span id="' + appName + '_dislike_cnt" class="black-text"><i class="fa fa-thumbs-down fa-sm red-text"></i> 0</span></small></div>';
             html += '\n                 </div>';
             html += '\n             </div>';
             html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
@@ -1392,7 +1436,7 @@ function buildAppList(filterStr = undefined) {
             html += '\n                     <small class="align-middle"><u><b>Installs:</b></u></small>';
             html += '\n                 </div>';
             html += '\n                 <div class="d-flex flex-row">';
-            html += '\n                     <span id="' + appData[i].appName + '_install_cnt" class="badge badge-pill grey white-text align-middle">0</span>';
+            html += '\n                     <span id="' + appName + '_install_cnt" class="badge badge-pill grey white-text align-middle">0</span>';
             html += '\n                 </div>';
             html += '\n             </div>';
             html += '\n         </div>';
@@ -1435,6 +1479,15 @@ function buildAppList(filterStr = undefined) {
     scrollToTop();
     updSectTitle('Select an Item');
     $('#listContDiv').html('').html(html);
+    if (appData.length) {
+        for (const i in appData) {
+            let inpt = $('#' + cleanIdName(appData[i].smartApps.parent.name), '-');
+            if (inpt.length) {
+                inpt.data('manifest', appData[i]);
+            }
+        }
+    }
+
     searchBtnAvail(true);
     $('#loaderDiv').css({ display: 'none' });
     $('#actResultsDiv').css({ display: 'none' });
@@ -1502,377 +1555,297 @@ function homeBtnAvail(show = true) {
     }
 }
 
-function createAppDevTable(items, areDevices = false, type) {
-    let html = '';
-    if (items.length) {
-        // html += '\n   <div class="col-xs-12 ' + (areDevices ? 'col-md-6' : 'col-sm-12') + ' mb-2 p-0">';
-        html += '\n   <div class="col mb-2 p-0">';
-        html += '\n       <h6 class="h6-responsive white-text"><u>' + (type === 'app' ? 'SmartApps' : 'Devices') + '</u></h6>';
-        html += '\n       <div class="d-flex justify-content-center">';
-        html += '\n           <div class="d-flex w-100 justify-content-center align-items-center mx-4">';
-        html += '\n               <table class="table table-sm table-bordered">';
-        html += '\n                   <thead>';
-        html += '\n                       <tr>';
-        html += '\n                           <th style="border: 1px solid grey;"><div class="text-center"><small class="align-middle">Name:</small></div></th>';
-        html += '\n                           <th style="border: 1px solid grey;"><div class="text-center"><small class="align-middle">Version:</small></div></th>';
-        html += '\n                           <th style="border: 1px solid grey;"><div class="text-center"><small class="align-middle">IDE Options:</small></div></th>';
-        html += '\n                       </tr>';
-        html += '\n                   </thead>';
-        html += '\n                   <tbody>';
-
-        let cnt = 0;
-        for (const item in items) {
-            var appPub = type === 'device' || items[item].published === true;
-            var appOauth = items[item].oAuth === true;
-            var appOptional = items[item].optional !== false;
-            var parent = items[item].isParent === true;
-            var child = items[item].isChild === true;
-            var disabled = parent || !appOptional ? ' disabled' : '';
-            var checked = parent || !appOptional ? ' checked' : '';
-            var itemId = type === 'device' ? 'device' + cnt : 'smartapp' + cnt;
-            html += '\n                       <tr>';
-            html += '\n                           <td class="align-middle py-0" style="border: 1px solid grey;">';
-            html += '\n                               <div class="d-flex flex-column ml-2">';
-            html += '\n                                   <div class="d-flex flex-column justify-content-start my-1 form-check' + disabled + '">';
-            html += '\n                                       <div class="flex-column justify-content-start">';
-            html += '\n                                           <div class="d-flex flex-row">';
-            html += '\n                                               <input class="form-check-input align-middle" type="checkbox" value="" id="' + itemId + '"' + checked + disabled + '>';
-            html += '\n                                               <label class="form-check-label align-middle" for="' + itemId + '"><small id="' + itemId + 'name" class="align-middle" style="font-size: 0.7em; white-space: nowrap;">' + items[item].name + '</small></label>';
-            html += '\n                                           </div>';
-            html += '\n                                       </div>';
-            html += '\n                                   </div>';
-            html += '\n                               </div>';
-            html += '\n                           </td>';
-            html += '\n                           <td class="align-middle" style="border: 1px solid grey;">';
-            html += '\n                               <div class="d-flex flex-column align-items-center">';
-            html += '\n                                   <small class="align-middle" style="margin: 2px auto;"><span class="badge grey white-text align-middle">v' + items[item].version + '</span></small>';
-            html += '\n                                   <small class="align-middle" style="margin: 2px auto;"><span id="' + cleanIdName(items[item].name) + '_appview_status_' + type + '" class="badge white-text align-middle"></span></small>';
-            html += '\n                               </div>';
-            html += '\n                           </td>';
-            html += '\n                           <td class="align-middle py-0" style="border: 1px solid grey;">';
-            html += '\n                               <div class="d-flex flex-column align-items-center">';
-            html += parent === true ? '\n                 <small style="margin: 2px auto;"><span class="badge blue white-text">Parent App</span></small>' : '';
-            html += child === true ? '\n                  <small style="margin: 2px auto;"><span class="badge purple white-text">Child App</span></small>' : '';
-            html += appPub === true ? '\n                 <small style="margin: 2px auto;"><span class="badge green white-text">Publishing</span></small>' : '';
-            html += appOauth === true ? '\n               <small style="margin: 2px auto;"><span class="badge orange white-text">Enable OAuth</span></small>' : '';
-            html += '\n                               </div>';
-            html += '\n                           </td>';
-            html += '\n                      </tr>';
-            cnt++;
-        }
-        html += '\n                </tbody>';
-        html += '\n            </table>';
-        html += '\n       </div>';
-        html += '\n   </div>';
-        html += '\n</div>';
-    }
-    return html;
-}
-
 function renderAppView(appName) {
     let html = '';
-    var manifest;
-    if (appManifests.length > 0) {
-        let appItem = appManifests.filter(app => app.appName === appName);
+    if (manifest !== undefined && Object.keys(manifest).length) {
+        // let appItem = mainManifest.filter(app => app.appName === appName);
         let appInpt = $('#' + appName);
         let isInstalled = appInpt.length > 0 && appInpt.data('installed') !== undefined && appInpt.data('installed') === true;
-        // console.log(appItem);
-        for (let i in appItem) {
-            getProjectManifest(appItem[0].manifestUrl)
+        // console.log('manifest: ', manifest);
+        if (manifest !== undefined && Object.keys(manifest).length) {
+            if (isInstalled !== true && isDevMode !== true) {
+                incrementAppView(appName);
+            }
+            appCloseBtnAvail(true);
+            $('#appNameListItem').text('Tap On (' + appName + ')');
+            html += '\n    <div id="appViewCard" class="p-0 mb-0" style="background-color: transparent;">';
+            updSectTitle('', true);
+            let cnt = 1;
+            html += '\n     <!--App Description Panel-->';
+            html += '\n     <div class="card card-body card-outline p-1 mb-2" style="background-color: transparent;">';
+            html += '\n       <div class="flex-row align-center mt-0 mb-1">';
+            if (manifest.bannerUrl && manifest.bannerUrl.length > 0 && manifest.bannerUrl !== '') {
+                html += '\n           <img class="align-center" src="' + manifest.bannerUrl + '" style="height: auto; max-height: 75px;">';
+            } else {
+                html += '\n           <img class="align-center" src="' + manifest.smartApps.parent.iconUrl + '" style="height: auto; max-height: 75px;">';
+            }
+            html += '\n       </div>';
+            html += '\n       <div class="flex-row align-center m-3">';
+            html += '\n           <small class="white-text"><b>Author:</b> ' + manifest.author + '</small>';
+            html += '\n           <div class="flex-column align-items-center">';
+            html += '\n               <div class="d-flex w-100 justify-content-center align-items-center">';
+            html += '\n                   <p class="card-text">' + manifest.description + '</p>';
+            html += '\n               </div>';
+            html += '\n           </div>';
+            html += '\n       </div>';
+            html += '\n     </div>';
+            html += '\n     <!--/.App Description Panel-->';
+            if (manifest.forumUrl || manifest.docUrl) {
+                html += '\n     <!--Community Description Panel-->';
+                html += '\n     <div class="card card-body card-outline px-1 py-3 mb-2" style="background-color: transparent;">';
+                html += '\n         <div class="d-flex justify-content-center align-items-center mx-auto">';
+                html += '\n             <div class="d-flex flex-column justify-content-center align-items-center mx-2">';
+                html += '\n                 <div class="btn-group" role="group" aria-label="Basic example">';
+                if (manifest.forumUrl) {
+                    html += '\n                 <div class="d-flex flex-row">';
+                    html += '\n                     <a class="btn btn-sm mx-2" href="' + manifest.forumUrl + '"><small-medium class="orange-text">Project Link</small-medium></a>';
+                    html += '\n                 </div>';
+                }
+                if (manifest.docUrl) {
+                    html += '\n                 <div class="d-flex flex-row">';
+                    html += '\n                     <a class="btn btn-sm mx-2" href="' + manifest.docUrl + '"><small-medium class="orange-text">Documentation</small-medium></a>';
+                    html += '\n                 </div>';
+                }
+                html += '\n                 </div>';
+                html += '\n             </div>';
+                html += '\n         </div>';
+                html += '\n     </div>';
+                html += '\n     <!--/.Community Description Panel-->';
+            }
+            if (manifest.repoName && manifest.repoBranch && manifest.repoOwner) {
+                html += '\n     <!--Repo Description Panel-->';
+                html += '\n     <div class="card card-body card-outline px-1 py-0 mb-2" style="background-color: transparent;">';
+
+                html += '\n           <!--Accordion wrapper-->';
+                html += '\n           <div class="accordion" id="repoAccordionEx" role="tablist" aria-multiselectable="true">';
+
+                html += '\n               <!-- Accordion card -->';
+                html += '\n               <div class="card mb-0" style="background-color: transparent; border-bottom: none;">';
+
+                html += '\n                   <!-- Card header -->';
+                html += '\n                   <div class="card-header my-0" role="tab" id="repoCardCollapseHeading">';
+                html += '\n                       <a data-toggle="collapse" data-parent="#repoAccordionEx" href="#repoCardCollapse" aria-expanded="true" aria-controls="repoCardCollapse">';
+                html += '\n                           <h6 class="white-text mb-0"><u>GitHub Details</u> <i class="fa fa-angle-down rotate-icon"></i></h6>';
+                html += '\n                       </a>';
+                html += '\n                   </div>';
+
+                html += '\n                   <!-- Card body -->';
+                html += '\n                   <div id="repoCardCollapse" class="collapse" role="tabpanel" aria-labelledby="repoCardCollapseHeading">';
+                html += '\n                       <div class="card-body white-text py-0">';
+                html += '\n                         <div class="d-flex justify-content-center align-items-center mx-auto mb-2">';
+                html += '\n                             <div class="d-flex flex-column justify-content-center align-items-center mx-2">';
+                html += '\n                                 <div class="d-flex flex-row">';
+                html += '\n                                     <small class="align-middle"><b>Repo Name</b></small>';
+                html += '\n                                 </div>';
+                html += '\n                                 <div class="d-flex flex-row">';
+                html += '\n                                     <small class="align-middle mx-2"><em>' + manifest.repoName + '</em></small>';
+                html += '\n                                 </div>';
+                html += '\n                             </div>';
+                html += '\n                             <div class="d-flex flex-column justify-content-center align-items-center mx-2">';
+                html += '\n                                 <div class="d-flex flex-row">';
+                html += '\n                                     <small class="align-middle"><b>Branch</b></small>';
+                html += '\n                                 </div>';
+                html += '\n                                 <div class="d-flex flex-row">';
+                html += '\n                                     <small class="align-middle mx-2"><em>' + manifest.repoBranch + '</em></small>';
+                html += '\n                                 </div>';
+                html += '\n                             </div>';
+                html += '\n                             <div class="d-flex flex-column justify-content-center align-items-center mx-2">';
+                html += '\n                                 <div class="d-flex flex-row">';
+                html += '\n                                     <small class="align-middle"><b>Owner</b></small>';
+                html += '\n                                 </div>';
+                html += '\n                                 <div class="d-flex flex-row">';
+                html += '\n                                     <small class="align-middle mx-2"><em>' + manifest.repoOwner + '</em></small>';
+                html += '\n                                 </div>';
+                html += '\n                             </div>';
+                html += '\n                         </div>';
+                html += '\n                       </div>';
+                html += '\n                   </div>';
+                html += '\n               </div>';
+                html += '\n               <!-- Accordion card -->';
+                html += '\n           </div>';
+                html += '\n           <!--/.Accordion wrapper-->';
+
+                html += '\n     </div>';
+                html += '\n     <!--/.Repo Description Panel-->';
+            }
+            if (manifest.notes) {
+                html += '\n     <!--Notes Block Panel-->';
+                html += '\n     <div class="card card-body card-outline px-1 py-0 mb-2" style="background-color: transparent;">';
+
+                html += '\n           <!--Accordion wrapper-->';
+                html += '\n           <div class="accordion" id="notesAccordionEx" role="tablist" aria-multiselectable="true">';
+
+                html += '\n               <!-- Accordion card -->';
+                html += '\n               <div class="card mb-0" style="background-color: transparent; border-bottom: none;">';
+
+                html += '\n                   <!-- Card header -->';
+                html += '\n                   <div class="card-header my-0" role="tab" id="notesCardCollapseHeading">';
+                html += '\n                       <a data-toggle="collapse" data-parent="#notesAccordionEx" href="#notesCardCollapse" aria-expanded="false" aria-controls="notesCardCollapse">';
+                html += '\n                           <h6 class="white-text mb-0"><u>Notes</u> <i class="fa fa-angle-down rotate-icon"></i></h6>';
+                html += '\n                       </a>';
+                html += '\n                   </div>';
+
+                html += '\n                   <!-- Card body -->';
+                html += '\n                   <div id="notesCardCollapse" class="collapse show" role="tabpanel" aria-labelledby="notesCardCollapseHeading">';
+                html += '\n                       <div class="card-body white-text py-0">';
+                html += '\n                         <div class="d-flex justify-content-center align-items-center mx-auto mb-2">';
+                html += '\n                             <div class="d-flex flex-column justify-content-center align-items-center mx-2">';
+                html += '\n                                 <div>';
+                html += '\n                                     ' + manifest.notes;
+                html += '\n                                 </div>';
+                html += '\n                             </div>';
+                html += '\n                         </div>';
+                html += '\n                       </div>';
+                html += '\n                   </div>';
+                html += '\n               </div>';
+                html += '\n               <!-- Accordion card -->';
+                html += '\n           </div>';
+                html += '\n           <!--/.Accordion wrapper-->';
+
+                html += '\n     </div>';
+                html += '\n     <!--/.Notes Block Panel-->';
+            }
+
+            if (isInstalled) {
+                html += '\n     <!--Rating Block Panel-->';
+                html += '\n     <div class="card card-body card-outline px-1 py-0 mb-2" style="background-color: transparent;">';
+                html += '\n       <h6 class="h6-responsive white-text"><u>Rate the Software</u></h6>';
+                html += '\n       <div class="flex-row align-right mr-1 my-2">';
+                html += '\n           <div class="d-flex flex-column justify-content-center align-items-center">';
+                html += '\n               <div class="btn-group">';
+                html += '\n                   <button id="likeAppBtn" type="button" class="btn mx-2" style="background: transparent;"><span><i class="fa fa-thumbs-up green-text"></i></span></button>';
+                html += '\n                   <button id="dislikeAppBtn" type="button" class="btn mx-2" style="background: transparent;"><span><i class="fa fa-thumbs-down red-text"></i></span></button>';
+                html += '\n               </div>';
+                html += '\n           </div>';
+                html += '\n       </div>';
+
+                html += '\n     </div>';
+                html += '\n     <!--/.Ratings Block Panel-->';
+            }
+            html += '\n     <!--App Options Panel-->';
+            html += '\n     <div class="card card-body card-outline px-1 py-3 mb-2" style="background-color: transparent;">';
+            html += '\n         <div class="row">';
+            // Start Here
+
+            let apps = [];
+            manifest.smartApps.parent['isParent'] = true;
+            apps.push(manifest.smartApps.parent);
+            if (manifest.smartApps && manifest.smartApps.children && manifest.smartApps.children.length) {
+                for (const sa in manifest.smartApps.children) {
+                    manifest.smartApps.children[sa]['isChild'] = true;
+                    apps.push(manifest.smartApps.children[sa]);
+                }
+                html += createAppDevTable(apps, manifest.deviceHandlers && manifest.deviceHandlers.length, 'app');
+            }
+
+            let devs = [];
+            if (manifest.deviceHandlers && manifest.deviceHandlers.length) {
+                for (const dh in manifest.deviceHandlers) {
+                    devs.push(manifest.deviceHandlers[dh]);
+                }
+                html += createAppDevTable(devs, true, 'device');
+            }
+            html += '\n      </div>';
+            html += '\n  </div>';
+            // Stop Here
+            html += '\n  <div class="p-1 my-2" style="background-color: transparent;">';
+            html += '\n       <div class="flex-row align-right mr-1 my-2">';
+            html += '\n           <div class="d-flex flex-column justify-content- align-items-center">';
+            html += '\n               <div class="btn-group">';
+            if (allowInstalls === true) {
+                html += '\n                   <button id="installBtn" type="button" class="btn btn-success mx-2 p-0" style="border-radius: 20px;height: 40px;width: 100px;"><span><i class="fa fa-plus white-text"></i> Install</span></button>';
+            }
+            if (allowRemoval === true) {
+                html += '\n                   <button id="removeBtn" type="button" class="btn btn-danger mx-2" style="border-radius: 20px;height: 30px;">Remove</button>';
+            }
+            if (allowUpdates === true) {
+                html += '\n                   <button id="updateBtn" type="button" class="btn btn-warning mx-2 p-0" style="border-radius: 20px;height: 40px;width: 100px; display: none;"><span><i class="fa fa-arrow-up white-text"></i> Update</span></button>';
+            }
+            html += '\n               </div>';
+            html += '\n           </div>';
+            html += '\n       </div>';
+            html += '\n  </div>';
+            html += '\n</div>';
+            html += '\n<div class="clearfix"></div>';
+        }
+        $('#appViewDiv').append(html);
+        // AppCloseButton Event
+        $('#appCloseBtn').click(function() {
+            // console.log('appCloseBtn');
+            updSectTitle('Select an Item');
+            $('#appViewDiv').html('');
+            $('#appViewDiv').css({ display: 'none' });
+            $('#listContDiv').css({ display: 'block' });
+            appCloseBtnAvail(false);
+            searchBtnAvail(true);
+        });
+        $('#dislikeAppBtn').click(function() {
+            incrementLikeDislike(appName, 'dislike');
+            $(this).addClass('disabled');
+            $('#likeAppBtn').removeClass('disabled');
+        });
+        $('#likeAppBtn').click(function() {
+            incrementLikeDislike(appName, 'like');
+            $(this).addClass('disabled');
+            $('#dislikeAppBtn').removeClass('disabled');
+        });
+        $('#installBtn').click(function() {
+            let selectedItems = getSelectedCodeItems();
+            // console.log('checked: ', selectedItems);
+            updSectTitle('Install Progress');
+            $('#appViewDiv').html('');
+            $('#appViewDiv').css({ display: 'none' });
+            $('#listContDiv').css({ display: 'none' });
+            $('#loaderDiv').css({ display: 'block' });
+            $('#actResultsDiv').css({ display: 'block' });
+            homeBtnAvail(false);
+            scrollToTop();
+            if (!isInstalled && !isDevMode === true) {
+                incrementAppInstall(appName);
+            }
+            processIntall(manifest, selectedItems);
+        });
+        $('#removeBtn').click(function() {
+            let selectedItems = getSelectedCodeItems();
+            updSectTitle('Removal Progress');
+            $('#appViewDiv').html('');
+            $('#appViewDiv').css({ display: 'none' });
+            $('#listContDiv').css({ display: 'none' });
+            $('#loaderDiv').css({ display: 'block' });
+            $('#actResultsDiv').css({ display: 'block' });
+            scrollToTop();
+            removeAppsFromIde(manifest, selectedItems);
+        });
+        $('#updateBtn').click(function() {
+            let devUpds = getUpdateItemsByType('device');
+            let appUpds = getUpdateItemsByType('app');
+            let updData = {};
+            updData['apps'] = appUpds;
+            updData['devs'] = devUpds;
+            updSectTitle('Update Progress');
+            $('#appViewDiv').html('');
+            $('#appViewDiv').css({ display: 'none' });
+            $('#listContDiv').css({ display: 'none' });
+            $('#loaderDiv').css({ display: 'block' });
+            $('#actResultsDiv').css({ display: 'block' });
+            homeBtnAvail(false);
+            scrollToTop();
+            getRepoId(manifest.repoName, manifest.repoBranch)
                 .catch(function(err) {
-                    $('#actResultsDiv').css({ display: 'block' });
-                    installComplete(resultStrings.inst_comp_text.errors.smartapp_manifest_error + ' (' + appName + ')<br/><br/>' + err, true, true);
+                    // console.log(err);
                 })
                 .then(function(resp) {
-                    // console.log(resp);
-                    manifest = resp;
-                    // console.log('manifest: ', manifest);
-                    if (manifest !== undefined && Object.keys(manifest).length) {
-                        if (isInstalled !== true && isDevMode !== true) {
-                            incrementAppView(appName);
-                        }
-                        appCloseBtnAvail(true);
-                        $('#appNameListItem').text('Tap On (' + appName + ')');
-                        html += '\n    <div id="appViewCard" class="p-0 mb-0" style="background-color: transparent;">';
-                        updSectTitle('', true);
-                        let cnt = 1;
-                        html += '\n     <!--App Description Panel-->';
-                        html += '\n     <div class="card card-body card-outline p-1 mb-2" style="background-color: transparent;">';
-                        html += '\n       <div class="flex-row align-center mt-0 mb-1">';
-                        if (manifest.bannerUrl && manifest.bannerUrl.length > 0 && manifest.bannerUrl !== '') {
-                            html += '\n           <img class="align-center" src="' + manifest.bannerUrl + '" style="height: auto; max-height: 75px;">';
-                        } else {
-                            html += '\n           <img class="align-center" src="' + manifest.smartApps.parent.iconUrl + '" style="height: auto; max-height: 75px;">';
-                        }
-                        html += '\n       </div>';
-                        html += '\n       <div class="flex-row align-center m-3">';
-                        html += '\n           <small class="white-text"><b>Author:</b> ' + manifest.author + '</small>';
-                        html += '\n           <div class="flex-column align-items-center">';
-                        html += '\n               <div class="d-flex w-100 justify-content-center align-items-center">';
-                        html += '\n                   <p class="card-text">' + manifest.description + '</p>';
-                        html += '\n               </div>';
-                        html += '\n           </div>';
-                        html += '\n       </div>';
-                        html += '\n     </div>';
-                        html += '\n     <!--/.App Description Panel-->';
-                        if (manifest.forumUrl || manifest.docUrl) {
-                            html += '\n     <!--Community Description Panel-->';
-                            html += '\n     <div class="card card-body card-outline px-1 py-3 mb-2" style="background-color: transparent;">';
-                            html += '\n         <div class="d-flex justify-content-center align-items-center mx-auto">';
-                            html += '\n             <div class="d-flex flex-column justify-content-center align-items-center mx-2">';
-                            html += '\n                 <div class="btn-group" role="group" aria-label="Basic example">';
-                            if (manifest.forumUrl) {
-                                html += '\n                 <div class="d-flex flex-row">';
-                                html += '\n                     <a class="btn btn-sm mx-2" href="' + manifest.forumUrl + '"><small-medium class="orange-text">Project Link</small-medium></a>';
-                                html += '\n                 </div>';
-                            }
-                            if (manifest.docUrl) {
-                                html += '\n                 <div class="d-flex flex-row">';
-                                html += '\n                     <a class="btn btn-sm mx-2" href="' + manifest.docUrl + '"><small-medium class="orange-text">Documentation</small-medium></a>';
-                                html += '\n                 </div>';
-                            }
-                            html += '\n                 </div>';
-                            html += '\n             </div>';
-                            html += '\n         </div>';
-                            html += '\n     </div>';
-                            html += '\n     <!--/.Community Description Panel-->';
-                        }
-                        if (manifest.repoName && manifest.repoBranch && manifest.repoOwner) {
-                            html += '\n     <!--Repo Description Panel-->';
-                            html += '\n     <div class="card card-body card-outline px-1 py-0 mb-2" style="background-color: transparent;">';
-
-                            html += '\n           <!--Accordion wrapper-->';
-                            html += '\n           <div class="accordion" id="repoAccordionEx" role="tablist" aria-multiselectable="true">';
-
-                            html += '\n               <!-- Accordion card -->';
-                            html += '\n               <div class="card mb-0" style="background-color: transparent; border-bottom: none;">';
-
-                            html += '\n                   <!-- Card header -->';
-                            html += '\n                   <div class="card-header my-0" role="tab" id="repoCardCollapseHeading">';
-                            html += '\n                       <a data-toggle="collapse" data-parent="#repoAccordionEx" href="#repoCardCollapse" aria-expanded="true" aria-controls="repoCardCollapse">';
-                            html += '\n                           <h6 class="white-text mb-0"><u>GitHub Details</u> <i class="fa fa-angle-down rotate-icon"></i></h6>';
-                            html += '\n                       </a>';
-                            html += '\n                   </div>';
-
-                            html += '\n                   <!-- Card body -->';
-                            html += '\n                   <div id="repoCardCollapse" class="collapse" role="tabpanel" aria-labelledby="repoCardCollapseHeading">';
-                            html += '\n                       <div class="card-body white-text py-0">';
-                            html += '\n                         <div class="d-flex justify-content-center align-items-center mx-auto mb-2">';
-                            html += '\n                             <div class="d-flex flex-column justify-content-center align-items-center mx-2">';
-                            html += '\n                                 <div class="d-flex flex-row">';
-                            html += '\n                                     <small class="align-middle"><b>Repo Name</b></small>';
-                            html += '\n                                 </div>';
-                            html += '\n                                 <div class="d-flex flex-row">';
-                            html += '\n                                     <small class="align-middle mx-2"><em>' + manifest.repoName + '</em></small>';
-                            html += '\n                                 </div>';
-                            html += '\n                             </div>';
-                            html += '\n                             <div class="d-flex flex-column justify-content-center align-items-center mx-2">';
-                            html += '\n                                 <div class="d-flex flex-row">';
-                            html += '\n                                     <small class="align-middle"><b>Branch</b></small>';
-                            html += '\n                                 </div>';
-                            html += '\n                                 <div class="d-flex flex-row">';
-                            html += '\n                                     <small class="align-middle mx-2"><em>' + manifest.repoBranch + '</em></small>';
-                            html += '\n                                 </div>';
-                            html += '\n                             </div>';
-                            html += '\n                             <div class="d-flex flex-column justify-content-center align-items-center mx-2">';
-                            html += '\n                                 <div class="d-flex flex-row">';
-                            html += '\n                                     <small class="align-middle"><b>Owner</b></small>';
-                            html += '\n                                 </div>';
-                            html += '\n                                 <div class="d-flex flex-row">';
-                            html += '\n                                     <small class="align-middle mx-2"><em>' + manifest.repoOwner + '</em></small>';
-                            html += '\n                                 </div>';
-                            html += '\n                             </div>';
-                            html += '\n                         </div>';
-                            html += '\n                       </div>';
-                            html += '\n                   </div>';
-                            html += '\n               </div>';
-                            html += '\n               <!-- Accordion card -->';
-                            html += '\n           </div>';
-                            html += '\n           <!--/.Accordion wrapper-->';
-
-                            html += '\n     </div>';
-                            html += '\n     <!--/.Repo Description Panel-->';
-                        }
-                        if (manifest.notes) {
-                            html += '\n     <!--Notes Block Panel-->';
-                            html += '\n     <div class="card card-body card-outline px-1 py-0 mb-2" style="background-color: transparent;">';
-
-                            html += '\n           <!--Accordion wrapper-->';
-                            html += '\n           <div class="accordion" id="notesAccordionEx" role="tablist" aria-multiselectable="true">';
-
-                            html += '\n               <!-- Accordion card -->';
-                            html += '\n               <div class="card mb-0" style="background-color: transparent; border-bottom: none;">';
-
-                            html += '\n                   <!-- Card header -->';
-                            html += '\n                   <div class="card-header my-0" role="tab" id="notesCardCollapseHeading">';
-                            html += '\n                       <a data-toggle="collapse" data-parent="#notesAccordionEx" href="#notesCardCollapse" aria-expanded="false" aria-controls="notesCardCollapse">';
-                            html += '\n                           <h6 class="white-text mb-0"><u>Notes</u> <i class="fa fa-angle-down rotate-icon"></i></h6>';
-                            html += '\n                       </a>';
-                            html += '\n                   </div>';
-
-                            html += '\n                   <!-- Card body -->';
-                            html += '\n                   <div id="notesCardCollapse" class="collapse show" role="tabpanel" aria-labelledby="notesCardCollapseHeading">';
-                            html += '\n                       <div class="card-body white-text py-0">';
-                            html += '\n                         <div class="d-flex justify-content-center align-items-center mx-auto mb-2">';
-                            html += '\n                             <div class="d-flex flex-column justify-content-center align-items-center mx-2">';
-                            html += '\n                                 <div>';
-                            html += '\n                                     ' + manifest.notes;
-                            html += '\n                                 </div>';
-                            html += '\n                             </div>';
-                            html += '\n                         </div>';
-                            html += '\n                       </div>';
-                            html += '\n                   </div>';
-                            html += '\n               </div>';
-                            html += '\n               <!-- Accordion card -->';
-                            html += '\n           </div>';
-                            html += '\n           <!--/.Accordion wrapper-->';
-
-                            html += '\n     </div>';
-                            html += '\n     <!--/.Notes Block Panel-->';
-                        }
-
-                        if (isInstalled) {
-                            html += '\n     <!--Rating Block Panel-->';
-                            html += '\n     <div class="card card-body card-outline px-1 py-0 mb-2" style="background-color: transparent;">';
-                            html += '\n       <h6 class="h6-responsive white-text"><u>Rate the Software</u></h6>';
-                            html += '\n       <div class="flex-row align-right mr-1 my-2">';
-                            html += '\n           <div class="d-flex flex-column justify-content-center align-items-center">';
-                            html += '\n               <div class="btn-group">';
-                            html += '\n                   <button id="likeAppBtn" type="button" class="btn mx-2" style="background: transparent;"><span><i class="fa fa-thumbs-up green-text"></i></span></button>';
-                            html += '\n                   <button id="dislikeAppBtn" type="button" class="btn mx-2" style="background: transparent;"><span><i class="fa fa-thumbs-down red-text"></i></span></button>';
-                            html += '\n               </div>';
-                            html += '\n           </div>';
-                            html += '\n       </div>';
-
-                            html += '\n     </div>';
-                            html += '\n     <!--/.Ratings Block Panel-->';
-                        }
-                        html += '\n     <!--App Options Panel-->';
-                        html += '\n     <div class="card card-body card-outline px-1 py-3 mb-2" style="background-color: transparent;">';
-                        html += '\n         <div class="row">';
-                        // Start Here
-
-                        let apps = [];
-                        manifest.smartApps.parent['isParent'] = true;
-                        apps.push(manifest.smartApps.parent);
-                        if (manifest.smartApps && manifest.smartApps.children && manifest.smartApps.children.length) {
-                            for (const sa in manifest.smartApps.children) {
-                                manifest.smartApps.children[sa]['isChild'] = true;
-                                apps.push(manifest.smartApps.children[sa]);
-                            }
-                            html += createAppDevTable(apps, manifest.deviceHandlers && manifest.deviceHandlers.length, 'app');
-                        }
-
-                        let devs = [];
-                        if (manifest.deviceHandlers && manifest.deviceHandlers.length) {
-                            for (const dh in manifest.deviceHandlers) {
-                                devs.push(manifest.deviceHandlers[dh]);
-                            }
-                            html += createAppDevTable(devs, true, 'device');
-                        }
-                        html += '\n      </div>';
-                        html += '\n  </div>';
-                        // Stop Here
-                        html += '\n  <div class="p-1 my-2" style="background-color: transparent;">';
-                        html += '\n       <div class="flex-row align-right mr-1 my-2">';
-                        html += '\n           <div class="d-flex flex-column justify-content- align-items-center">';
-                        html += '\n               <div class="btn-group">';
-                        if (allowInstalls === true) {
-                            html += '\n                   <button id="installBtn" type="button" class="btn btn-success mx-2 p-0" style="border-radius: 20px;height: 40px;width: 100px;"><span><i class="fa fa-plus white-text"></i> Install</span></button>';
-                        }
-                        if (allowRemoval === true) {
-                            html += '\n                   <button id="removeBtn" type="button" class="btn btn-danger mx-2" style="border-radius: 20px;height: 30px;">Remove</button>';
-                        }
-                        if (allowUpdates === true) {
-                            html += '\n                   <button id="updateBtn" type="button" class="btn btn-warning mx-2 p-0" style="border-radius: 20px;height: 40px;width: 100px; display: none;"><span><i class="fa fa-arrow-up white-text"></i> Update</span></button>';
-                        }
-                        html += '\n               </div>';
-                        html += '\n           </div>';
-                        html += '\n       </div>';
-                        html += '\n  </div>';
-                        html += '\n</div>';
-                        html += '\n<div class="clearfix"></div>';
-                    }
-                    $('#appViewDiv').append(html);
-                    // AppCloseButton Event
-                    $('#appCloseBtn').click(function() {
-                        // console.log('appCloseBtn');
-                        updSectTitle('Select an Item');
-                        $('#appViewDiv').html('');
-                        $('#appViewDiv').css({ display: 'none' });
-                        $('#listContDiv').css({ display: 'block' });
-                        appCloseBtnAvail(false);
-                        searchBtnAvail(true);
-                    });
-                    $('#dislikeAppBtn').click(function() {
-                        incrementLikeDislike(appName, 'dislike');
-                        $(this).addClass('disabled');
-                        $('#likeAppBtn').removeClass('disabled');
-                    });
-                    $('#likeAppBtn').click(function() {
-                        incrementLikeDislike(appName, 'like');
-                        $(this).addClass('disabled');
-                        $('#dislikeAppBtn').removeClass('disabled');
-                    });
-                    $('#installBtn').click(function() {
-                        let selectedItems = getSelectedCodeItems();
-                        // console.log('checked: ', selectedItems);
-                        updSectTitle('Install Progress');
-                        $('#appViewDiv').html('');
-                        $('#appViewDiv').css({ display: 'none' });
-                        $('#listContDiv').css({ display: 'none' });
-                        $('#loaderDiv').css({ display: 'block' });
-                        $('#actResultsDiv').css({ display: 'block' });
-                        homeBtnAvail(false);
-                        scrollToTop();
-                        if (!isInstalled && !isDevMode === true) {
-                            incrementAppInstall(appName);
-                        }
-                        processIntall(manifest, selectedItems);
-                    });
-                    $('#removeBtn').click(function() {
-                        let selectedItems = getSelectedCodeItems();
-                        updSectTitle('Removal Progress');
-                        $('#appViewDiv').html('');
-                        $('#appViewDiv').css({ display: 'none' });
-                        $('#listContDiv').css({ display: 'none' });
-                        $('#loaderDiv').css({ display: 'block' });
-                        $('#actResultsDiv').css({ display: 'block' });
-                        scrollToTop();
-                        removeAppsFromIde(manifest, selectedItems);
-                    });
-                    $('#updateBtn').click(function() {
-                        let devUpds = getUpdateItemsByType('device');
-                        let appUpds = getUpdateItemsByType('app');
-                        let updData = {};
-                        updData['apps'] = appUpds;
-                        updData['devs'] = devUpds;
-                        updSectTitle('Update Progress');
-                        $('#appViewDiv').html('');
-                        $('#appViewDiv').css({ display: 'none' });
-                        $('#listContDiv').css({ display: 'none' });
-                        $('#loaderDiv').css({ display: 'block' });
-                        $('#actResultsDiv').css({ display: 'block' });
-                        homeBtnAvail(false);
-                        scrollToTop();
-                        getRepoId(manifest.repoName, manifest.repoBranch)
-                            .catch(function(err) {
-                                // console.log(err);
-                            })
-                            .then(function(resp) {
-                                updateIdeItems(updData);
-                            });
-                    });
-                    $('#listContDiv').css({ display: 'none' });
-                    $('#loaderDiv').css({ display: 'none' });
-                    $('#actResultsDiv').css({ display: 'none' });
-                    $('#appViewDiv').css({ display: 'block' });
-                    searchBtnAvail(false);
-                    scrollToTop();
-                    processItemsStatuses(manifest, 'appView');
-                    new WOW().init();
+                    updateIdeItems(updData);
                 });
-        }
+        });
+        $('#listContDiv').css({ display: 'none' });
+        $('#loaderDiv').css({ display: 'none' });
+        $('#actResultsDiv').css({ display: 'none' });
+        $('#appViewDiv').css({ display: 'block' });
+        searchBtnAvail(false);
+        scrollToTop();
+        processItemsStatuses(manifest, 'appView');
+        new WOW().init();
     }
 }
 
@@ -1986,7 +1959,7 @@ function loaderFunc() {
         })
         .then(function(resp) {
             if (resp === true) {
-                getAppManifests()
+                getMainManifest()
                     .catch(function(err) {
                         installComplete(resultStrings.inst_comp_text.errors.app_list_manifest_error + err, true, true);
                     })
@@ -2001,7 +1974,9 @@ function loaderFunc() {
                             .then(function(resp) {
                                 scrollToTop();
                                 if (resp && resp.apps && Object.keys(resp).length) {
-                                    loadAppList();
+                                    if ((mainManifest !== undefined && mainManifest.length > 0) || (availableApps !== undefined && availableApps.length > 0)) {
+                                        loadAllManifests();
+                                    }
                                 }
                             });
                     });
@@ -2009,11 +1984,71 @@ function loaderFunc() {
         });
 }
 
-function loadAppList() {
-    if ((appManifests !== undefined && appManifests.length > 0) || (availableApps !== undefined && availableApps.length > 0)) {
-        buildAppList();
-        startMetricsListener();
+function createAppDevTable(items, areDevices = false, type) {
+    let html = '';
+    if (items.length) {
+        // html += '\n   <div class="col-xs-12 ' + (areDevices ? 'col-md-6' : 'col-sm-12') + ' mb-2 p-0">';
+        html += '\n   <div class="col mb-2 p-0">';
+        html += '\n       <h6 class="h6-responsive white-text"><u>' + (type === 'app' ? 'SmartApps' : 'Devices') + '</u></h6>';
+        html += '\n       <div class="d-flex justify-content-center">';
+        html += '\n           <div class="d-flex w-100 justify-content-center align-items-center mx-4">';
+        html += '\n               <table class="table table-sm table-bordered">';
+        html += '\n                   <thead>';
+        html += '\n                       <tr>';
+        html += '\n                           <th style="border: 1px solid grey;"><div class="text-center"><small class="align-middle">Name:</small></div></th>';
+        html += '\n                           <th style="border: 1px solid grey;"><div class="text-center"><small class="align-middle">Version:</small></div></th>';
+        html += '\n                           <th style="border: 1px solid grey;"><div class="text-center"><small class="align-middle">IDE Options:</small></div></th>';
+        html += '\n                       </tr>';
+        html += '\n                   </thead>';
+        html += '\n                   <tbody>';
+
+        let cnt = 0;
+        for (const item in items) {
+            var appPub = type === 'device' || items[item].published === true;
+            var appOauth = items[item].oAuth === true;
+            var appOptional = items[item].optional !== false;
+            var parent = items[item].isParent === true;
+            var child = items[item].isChild === true;
+            var disabled = parent || !appOptional ? ' disabled' : '';
+            var checked = parent || !appOptional ? ' checked' : '';
+            var itemId = type === 'device' ? 'device' + cnt : 'smartapp' + cnt;
+            html += '\n                       <tr>';
+            html += '\n                           <td class="align-middle py-0" style="border: 1px solid grey;">';
+            html += '\n                               <div class="d-flex flex-column ml-2">';
+            html += '\n                                   <div class="d-flex flex-column justify-content-start my-1 form-check' + disabled + '">';
+            html += '\n                                       <div class="flex-column justify-content-start">';
+            html += '\n                                           <div class="d-flex flex-row">';
+            html += '\n                                               <input class="form-check-input align-middle" type="checkbox" value="" id="' + itemId + '"' + checked + disabled + '>';
+            html += '\n                                               <label class="form-check-label align-middle" for="' + itemId + '"><small id="' + itemId + 'name" class="align-middle" style="font-size: 0.7em; white-space: nowrap;">' + items[item].name + '</small></label>';
+            html += '\n                                           </div>';
+            html += '\n                                       </div>';
+            html += '\n                                   </div>';
+            html += '\n                               </div>';
+            html += '\n                           </td>';
+            html += '\n                           <td class="align-middle" style="border: 1px solid grey;">';
+            html += '\n                               <div class="d-flex flex-column align-items-center">';
+            html += '\n                                   <small class="align-middle" style="margin: 2px auto;"><span class="badge grey white-text align-middle">v' + items[item].version + '</span></small>';
+            html += '\n                                   <small class="align-middle" style="margin: 2px auto;"><span id="' + cleanIdName(items[item].name) + '_appview_status_' + type + '" class="badge white-text align-middle"></span></small>';
+            html += '\n                               </div>';
+            html += '\n                           </td>';
+            html += '\n                           <td class="align-middle py-0" style="border: 1px solid grey;">';
+            html += '\n                               <div class="d-flex flex-column align-items-center">';
+            html += parent === true ? '\n                 <small style="margin: 2px auto;"><span class="badge blue white-text">Parent App</span></small>' : '';
+            html += child === true ? '\n                  <small style="margin: 2px auto;"><span class="badge purple white-text">Child App</span></small>' : '';
+            html += appPub === true ? '\n                 <small style="margin: 2px auto;"><span class="badge green white-text">Publishing</span></small>' : '';
+            html += appOauth === true ? '\n               <small style="margin: 2px auto;"><span class="badge orange white-text">Enable OAuth</span></small>' : '';
+            html += '\n                               </div>';
+            html += '\n                           </td>';
+            html += '\n                      </tr>';
+            cnt++;
+        }
+        html += '\n                </tbody>';
+        html += '\n            </table>';
+        html += '\n       </div>';
+        html += '\n   </div>';
+        html += '\n</div>';
     }
+    return html;
 }
 
 function buildCoreHtml() {
@@ -2278,6 +2313,32 @@ const resultStrings = {
         }
     }
 };
+
+function installerAppUpdAvail() {
+    if (appVersion !== latestSaVer) {
+        toastr.options = {
+            closeButton: true,
+            debug: false,
+            newestOnTop: true,
+            positionClass: 'toast-top-full-width',
+            preventDuplicates: true,
+            progressBar: true,
+            onclick: null,
+            showDuration: '300',
+            hideDuration: '1000',
+            timeOut: '8000',
+            extendedTimeOut: '1000',
+            showEasing: 'easeOutBounce',
+            hideEasing: 'linear',
+            showMethod: 'slideDown',
+            hideMethod: 'slideUp',
+            closeMethod: 'slideUp'
+        };
+        Command: toastr['info']('There is an update available to this installer SmartApp.<br/>Please visit the IDE to perform the Update. <br/><strong>Latest Version:</strong> v' + latestSaVer, '');
+        $('#toast-container').addClass('nopacity');
+    }
+    return false;
+}
 
 $.ajaxSetup({
     cache: true
