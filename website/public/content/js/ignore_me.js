@@ -1,4 +1,4 @@
-const scriptVersion = '1.0.0215a';
+const scriptVersion = '1.0.0215b';
 const scriptRelType = 'beta';
 const scriptVerDate = '2/15/2018';
 const latestSaVer = '1.0.0213a';
@@ -219,7 +219,7 @@ function installError(err, reload = true) {
 }
 
 function installComplete(text, red = false, noResults = false) {
-    $('#loaderDiv').css({ display: 'none' });
+    loaderVisible(false);
     $('#finishedImg').removeClass('fa-exclamation-circle').addClass('fa-check').css({ display: 'block' });
     if (red) {
         $('#finishedImg').removeClass('fa-check').addClass('fa-exclamation-circle').css({ color: 'red' });
@@ -242,7 +242,7 @@ function installComplete(text, red = false, noResults = false) {
 }
 
 function installCompleteLogin(text, red = false, noResults = false) {
-    $('#loaderDiv').css({ display: 'none' });
+    loaderVisible(false);
     $('#finishedImg').removeClass('fa-exclamation-circle').addClass('fa-check').css({ display: 'block' });
     if (red) {
         $('#finishedImg').removeClass('fa-check').addClass('fa-exclamation-circle').css({ color: 'red' });
@@ -1142,6 +1142,14 @@ function updateMetricsData() {
                 }
                 dItem.html('<i class="fa fa-thumbs-down fa-sm red-text"></i> ' + dislikeCnt);
                 lItem.html('<i class="fa fa-thumbs-up fa-sm green-text"></i> ' + likeCnt);
+                var dItemview = $('#' + i + '_dislike_cnt_appview');
+                if (dItemview.length) {
+                    dItemview.html('<i class="fa fa-thumbs-down red-text"></i> ' + dislikeCnt);
+                }
+                var lItemview = $('#' + i + '_like_cnt_appview');
+                if (lItemview.length) {
+                    lItemview.html('<i class="fa fa-thumbs-up green-text"></i> ' + likeCnt);
+                }
             }
         }
     }
@@ -1202,43 +1210,51 @@ function processItemsStatuses(data, viewType) {
     }
     if (items.length > 0) {
         for (let i in items) {
+            let hasUpdate = false;
+            let cnt = 0;
             if (items[i] && items[i].smartApps) {
-                let cnt = 1;
+
                 if (items[i].smartApps.parent) {
                     let mData = { published: items[i].smartApps.parent.published, namespace: items[i].namespace, author: items[i].author, appUrl: items[i].smartApps.parent.appUrl };
                     let res = updateAppDeviceItemStatus(items[i].name, items[i].smartApps.parent.name, 'app', viewType, mData);
-                    if (res === true) {
+                    if (res.installed === true) {
                         cnt++;
                         if (viewType === 'appView') {
                             installBtnAvail(cnt, items[i]);
                         }
                     }
+                    if (res.updates) { hasUpdates = true; }
                 }
 
                 if (items[i].smartApps.children && items[i].smartApps.children.length) {
                     for (const sa in items[i].smartApps.children) {
                         let mData = { published: items[i].smartApps.children[sa].published !== false, namespace: items[i].namespace, author: items[i].author, appUrl: items[i].smartApps.children[sa].appUrl };
                         let res = updateAppDeviceItemStatus(items[i].smartApps.children[sa].name, undefined, 'app', viewType, mData);
-                        if (res === true) {
+                        if (res.installed === true) {
                             cnt++;
                             if (viewType === 'appView') {
                                 installBtnAvail(cnt, items[i]);
                             }
                         }
+                        if (res.updates) { hasUpdates = true; }
                     }
                 }
-                if (items[i] && items[i].deviceHandlers && items[i].deviceHandlers.length) {
-                    for (const dh in items[i].deviceHandlers) {
-                        let mData = { published: true, namespace: items[i].namespace, author: items[i].author, appUrl: items[i].deviceHandlers[dh].appUrl };
-                        let res = updateAppDeviceItemStatus(items[i].deviceHandlers[dh].name, undefined, 'device', viewType, mData);
-                        if (res === true) {
-                            cnt++;
-                            if (viewType === 'appView') {
-                                installBtnAvail(cnt, items[i]);
-                            }
+            }
+            if (items[i] && items[i].deviceHandlers && items[i].deviceHandlers.length) {
+                for (const dh in items[i].deviceHandlers) {
+                    let mData = { published: true, namespace: items[i].namespace, author: items[i].author, appUrl: items[i].deviceHandlers[dh].appUrl };
+                    let res = updateAppDeviceItemStatus(items[i].deviceHandlers[dh].name, undefined, 'device', viewType, mData);
+                    if (res.installed === true) {
+                        cnt++;
+                        if (viewType === 'appView') {
+                            installBtnAvail(cnt, items[i]);
                         }
                     }
+                    if (res.updates) { hasUpdates = true; }
                 }
+            }
+            if (hasUpdate) {
+                updateRibbon(items[i].smartApps.parent.name, "Updates", 'ribbon-orange');
             }
         }
     }
@@ -1249,10 +1265,9 @@ function updateAppDeviceItemStatus(itemName, altName = undefined, type, viewType
         let installedItem = getIsAppOrDeviceInstalled(itemName, altName, type, manData);
         let appInstalled = installedItem.installed === true;
         let updateAvail = false;
-        let statusElementName = cleanIdName(itemName);
         if (installedItem && installedItem.data && installedItem.data[0] !== undefined) {
             if (viewType === 'appView' && itemStatusMap !== undefined && itemStatusMap[type] !== undefined && itemStatusMap[type][installedItem.data[0].id] !== undefined) {
-                itemStatusHandler(statusElementName, altName, type, viewType, manData, itemStatusMap[type][installedItem.data[0].id]);
+                itemStatusHandler(itemName, altName, type, viewType, manData, itemStatusMap[type][installedItem.data[0].id]);
             } else {
                 checkItemUpdateStatus(installedItem.data[0].id, type)
                     .catch(function(err) {
@@ -1267,11 +1282,11 @@ function updateAppDeviceItemStatus(itemName, altName = undefined, type, viewType
                             itemStatusMap[type] = {};
                         }
                         itemStatusMap[type][installedItem.data[0].id] = { id: installedItem.data[0].id, hasUpdate: updateAvail, isInstalled: appInstalled, data: installedItem.data[0] };
-                        itemStatusHandler(statusElementName, altName, type, viewType, manData, itemStatusMap[type][installedItem.data[0].id]);
+                        itemStatusHandler(itemName, altName, type, viewType, manData, itemStatusMap[type][installedItem.data[0].id]);
                     });
             }
         } else {
-            let items = [statusElementName];
+            let items = [cleanIdName(itemName)];
             if (altName) {
                 items.push(cleanIdName(altName));
             }
@@ -1281,11 +1296,12 @@ function updateAppDeviceItemStatus(itemName, altName = undefined, type, viewType
                     items[i] = items[i] + '_appview_status_' + type;
                     let elem = $('#' + items[i]);
                     if (elem.length) {
-                        elem.text("Not Installed");
+                        elem.text('Not Installed');
                     }
                 }
             }
         }
+        return { installed: appInstalled, updates: updateAvail };
     }
 }
 
@@ -1293,39 +1309,29 @@ function itemStatusHandler(itemName, altName, type, viewType, manData, statusMap
     if (statusMap.hasUpdate || statusMap.isInstalled) {
         let itemStatus;
         let color;
-        let items = [itemName];
+        let items = [cleanIdName(itemName)];
         if (altName) {
             items.push(cleanIdName(altName));
         }
         items = [...new Set(items)];
 
         for (const i in items) {
+            let idName = items[i];
             if (viewType === 'appView') {
-                items[i] = items[i] + '_appview_status_' + type;
+                idName = items[i] + '_appview_status_' + type;
             }
-            let elem = $('#' + items[i]);
+            let elem = $('#' + idName);
             if (elem.length) {
                 if (statusMap.hasUpdate) {
                     itemStatus = 'Updates';
                     color = viewType === 'appList' ? 'ribbon-orange' : 'orange';
-                    $('#updateBtn').show();
                 } else {
                     itemStatus = 'Installed';
                     color = viewType === 'appList' ? 'ribbon-blue' : 'blue';
                 }
                 if (viewType === 'appList') {
-                    if (items[i] && itemStatus) {
-                        let ribbon = $('#' + items[i] + '_ribbon');
-                        let ribbonStatus = $('#' + items[i] + '_ribbon_status');
-                        if (ribbon.length) {
-                            ribbon.css({ display: 'block' });
-                        }
-                        if (ribbonStatus.length) {
-                            ribbonStatus.text(itemStatus);
-                            if (color) {
-                                ribbonStatus.addClass(color);
-                            }
-                        }
+                    if (color && itemStatus) {
+                        updateRibbon(idName, itemStatus, color);
                     }
                     if (statusMap.isInstalled) {
                         elem.data('installed', true);
@@ -1338,9 +1344,12 @@ function itemStatusHandler(itemName, altName, type, viewType, manData, statusMap
                     }
                 } else {
                     if (statusMap.hasUpdate || statusMap.isInstalled) {
+                        $('#updateBtn').show();
                         elem.text(itemStatus).addClass(color);
                         elem.data('installed', true);
-                        if (statusMap.hasUpdate) { elem.data('hasUpdate', true); }
+                        if (statusMap.hasUpdate) {
+                            elem.data('hasUpdate', true);
+                        }
                         elem.data('published', manData.published);
                         elem.data('details', {
                             id: statusMap.id,
@@ -1351,8 +1360,28 @@ function itemStatusHandler(itemName, altName, type, viewType, manData, statusMap
                             namespace: manData.namespace,
                             author: manData.author
                         });
+                        var itemCheckElem = $('#' + items[i] + '_checkbox_' + type);
+                        if (itemCheckElem.length && itemCheckElem.prop('checked') === false) {
+                            itemCheckElem.prop('checked', 'checked');
+                        }
                     }
                 }
+            }
+        }
+    }
+}
+
+function updateRibbon(idName, status, color) {
+    if (color && status) {
+        let ribbon = $('#' + idName + '_ribbon');
+        let ribbonStatus = $('#' + idName + '_ribbon_status');
+        if (ribbon.length) {
+            ribbon.css({ display: 'block' });
+        }
+        if (ribbonStatus.length) {
+            ribbonStatus.text(status);
+            if (color) {
+                ribbonStatus.addClass(color);
             }
         }
     }
@@ -1534,7 +1563,7 @@ function buildAppList(filterStr = undefined) {
     }
 
     searchBtnAvail(true);
-    $('#loaderDiv').css({ display: 'none' });
+    loaderVisible(false);
     $('#actResultsDiv').css({ display: 'none' });
     $('#appViewDiv').css({ display: 'none' });
     $('#appSearchBox').keypress(function(e) {
@@ -1561,6 +1590,15 @@ function buildAppList(filterStr = undefined) {
     $('#listContDiv').css({ display: 'block' });
     new WOW().init();
     installerAppUpdAvail();
+}
+
+function loaderVisible(show = false) {
+    if (show) {
+        $('#loaderDiv').show();
+        scrollToTop();
+    } else {
+        $('#loaderDiv').hide();
+    }
 }
 
 function searchFormToggle() {
@@ -1596,6 +1634,75 @@ function homeBtnAvail(show = true) {
     } else {
         $('#homeNavBtn').hide();
     }
+}
+
+function createAppDevTable(items, areDevices = false, type) {
+    let html = '';
+    if (items.length) {
+        // html += '\n   <div class="col-xs-12 ' + (areDevices ? 'col-md-6' : 'col-sm-12') + ' mb-2 p-0">';
+        html += '\n   <div class="col mb-2 p-0">';
+        html += '\n       <h6 class="h6-responsive white-text"><u>' + (type === 'app' ? 'SmartApps' : 'Devices') + '</u></h6>';
+        html += '\n       <div class="d-flex justify-content-center">';
+        html += '\n           <div class="d-flex w-100 justify-content-center align-items-center mx-4">';
+        html += '\n               <table class="table table-sm table-bordered">';
+        html += '\n                   <thead>';
+        html += '\n                       <tr>';
+        html += '\n                           <th style="border: 1px solid grey;"><div class="text-center"><small class="align-middle">Name:</small></div></th>';
+        html += '\n                           <th style="border: 1px solid grey;"><div class="text-center"><small class="align-middle">Version:</small></div></th>';
+        html += '\n                           <th style="border: 1px solid grey;"><div class="text-center"><small class="align-middle">IDE Options:</small></div></th>';
+        html += '\n                       </tr>';
+        html += '\n                   </thead>';
+        html += '\n                   <tbody>';
+
+        let cnt = 0;
+        for (const item in items) {
+            var publish = type === 'device' || items[item].published === true;
+            var oauth = items[item].oAuth === true;
+            var optional = items[item].optional === true;
+            var parent = items[item].isParent === true;
+            var child = items[item].isChild === true;
+            var disabled = parent || !optional ? ' disabled' : '';
+            var checked = parent || !optional ? ' checked' : '';
+            var itemId = cleanIdName(items[item].name) + '_checkbox_' + type;
+
+            html += '\n                       <tr>';
+            html += '\n                           <td class="align-middle py-0" style="border: 1px solid grey;">';
+            html += '\n                               <div class="d-flex flex-column ml-2">';
+            html += '\n                                   <div class="d-flex flex-column justify-content-start my-1 form-check' + disabled + '">';
+            html += '\n                                       <div class="flex-column justify-content-start">';
+            html += '\n                                           <div class="d-flex flex-row">';
+            html += '\n                                               <input class="form-check-input align-middle" type="checkbox" value="" id="' + itemId + '"' + checked + disabled + '>';
+            html += '\n                                               <label class="form-check-label align-middle" for="' + itemId + '"><small id="' + itemId + '_label" class="align-middle" style="font-size: 0.7em; white-space: nowrap;">' + items[item].name + '</small></label>';
+            html += '\n                                           </div>';
+            html += '\n                                       </div>';
+            html += '\n                                   </div>';
+            html += '\n                               </div>';
+            html += '\n                           </td>';
+            html += '\n                           <td class="align-middle" style="border: 1px solid grey;">';
+            html += '\n                               <div class="d-flex flex-column align-items-center">';
+            html += '\n                                   <small class="align-middle" style="margin: 2px auto;"><span class="badge grey white-text align-middle">v' + items[item].version + '</span></small>';
+            html += '\n                                   <small class="align-middle" style="margin: 2px auto;"><span id="' + cleanIdName(items[item].name) + '_appview_status_' + type + '" class="badge white-text align-middle"></span></small>';
+            html += '\n                               </div>';
+            html += '\n                           </td>';
+            html += '\n                           <td class="align-middle py-0" style="border: 1px solid grey;">';
+            html += '\n                               <div class="d-flex flex-column align-items-center">';
+            html += parent ? '\n                            <small style="margin: 2px auto;"><span class="badge blue white-text">Parent App</span></small>' : '';
+            html += child ? '\n                             <small style="margin: 2px auto;"><span class="badge purple white-text">Child App</span></small>' : '';
+            html += publish ? '\n                           <small style="margin: 2px auto;"><span class="badge green white-text">Publishing</span></small>' : '';
+            html += oauth ? '\n                             <small style="margin: 2px auto;"><span class="badge orange white-text">Enable OAuth</span></small>' : '';
+            html += optional ? '\n                          <small style="margin: 2px auto;"><span class="badge grey white-text">Optional</span></small>' : '';
+            html += '\n                               </div>';
+            html += '\n                           </td>';
+            html += '\n                      </tr>';
+            cnt++;
+        }
+        html += '\n                </tbody>';
+        html += '\n            </table>';
+        html += '\n       </div>';
+        html += '\n   </div>';
+        html += '\n</div>';
+    }
+    return html;
 }
 
 function renderAppView(appName, manifest) {
@@ -1756,8 +1863,8 @@ function renderAppView(appName, manifest) {
                 html += '\n       <div class="flex-row align-right mr-1 my-2">';
                 html += '\n           <div class="d-flex flex-column justify-content-center align-items-center">';
                 html += '\n               <div class="btn-group">';
-                html += '\n                   <button id="likeAppBtn" type="button" class="btn mx-2" style="background: transparent;"><span><i class="fa fa-thumbs-up green-text"></i></span></button>';
-                html += '\n                   <button id="dislikeAppBtn" type="button" class="btn mx-2" style="background: transparent;"><span><i class="fa fa-thumbs-down red-text"></i></span></button>';
+                html += '\n                   <button id="likeAppBtn" type="button" class="btn mx-2" style="background: transparent;"><span id="' + appName + '_like_cnt_appview"><i class="fa fa-thumbs-up green-text"></i></span></button>';
+                html += '\n                   <button id="dislikeAppBtn" type="button" class="btn mx-2" style="background: transparent;"><span id="' + appName + '_dislike_cnt_appview"><i class="fa fa-thumbs-down red-text"></i></span></button>';
                 html += '\n               </div>';
                 html += '\n           </div>';
                 html += '\n       </div>';
@@ -1844,7 +1951,7 @@ function renderAppView(appName, manifest) {
             $('#appViewDiv').html('');
             $('#appViewDiv').css({ display: 'none' });
             $('#listContDiv').css({ display: 'none' });
-            $('#loaderDiv').css({ display: 'block' });
+            loaderVisible(true);
             $('#actResultsDiv').css({ display: 'block' });
             homeBtnAvail(false);
             scrollToTop();
@@ -1859,7 +1966,7 @@ function renderAppView(appName, manifest) {
             $('#appViewDiv').html('');
             $('#appViewDiv').css({ display: 'none' });
             $('#listContDiv').css({ display: 'none' });
-            $('#loaderDiv').css({ display: 'block' });
+            loaderVisible(true);
             $('#actResultsDiv').css({ display: 'block' });
             scrollToTop();
             removeAppsFromIde(manifest, selectedItems);
@@ -1874,7 +1981,7 @@ function renderAppView(appName, manifest) {
             $('#appViewDiv').html('');
             $('#appViewDiv').css({ display: 'none' });
             $('#listContDiv').css({ display: 'none' });
-            $('#loaderDiv').css({ display: 'block' });
+            loaderVisible(true);
             $('#actResultsDiv').css({ display: 'block' });
             homeBtnAvail(false);
             scrollToTop();
@@ -1887,12 +1994,13 @@ function renderAppView(appName, manifest) {
                 });
         });
         $('#listContDiv').css({ display: 'none' });
-        $('#loaderDiv').css({ display: 'none' });
+        loaderVisible(false);
         $('#actResultsDiv').css({ display: 'none' });
         $('#appViewDiv').css({ display: 'block' });
         searchBtnAvail(false);
         scrollToTop();
         processItemsStatuses(manifest, 'appView');
+        updateMetricsData();
         new WOW().init();
     }
 }
@@ -1935,9 +2043,9 @@ function scrollToTop() {
 }
 
 function installBtnAvail(cnt, data) {
-    let itemCnt = data.smartApps.children.length + data.deviceHandlers.length;
-    // console.log(itemCnt);
-    if (itemCnt + 1 === cnt) {
+    let itemCnt = parseInt(data.smartApps.children.length) + parseInt(data.deviceHandlers.length) + 1;
+    // console.log('installedItems: ' + cnt, 'TotalItems: ' + itemCnt);
+    if (itemCnt === cnt) {
         $('#installBtn').addClass('disabled');
     } else {
         $('#installBtn').removeClass('disabled');
@@ -1993,73 +2101,6 @@ function loaderFunc() {
                     });
             }
         });
-}
-
-function createAppDevTable(items, areDevices = false, type) {
-    let html = '';
-    if (items.length) {
-        // html += '\n   <div class="col-xs-12 ' + (areDevices ? 'col-md-6' : 'col-sm-12') + ' mb-2 p-0">';
-        html += '\n   <div class="col mb-2 p-0">';
-        html += '\n       <h6 class="h6-responsive white-text"><u>' + (type === 'app' ? 'SmartApps' : 'Devices') + '</u></h6>';
-        html += '\n       <div class="d-flex justify-content-center">';
-        html += '\n           <div class="d-flex w-100 justify-content-center align-items-center mx-4">';
-        html += '\n               <table class="table table-sm table-bordered">';
-        html += '\n                   <thead>';
-        html += '\n                       <tr>';
-        html += '\n                           <th style="border: 1px solid grey;"><div class="text-center"><small class="align-middle">Name:</small></div></th>';
-        html += '\n                           <th style="border: 1px solid grey;"><div class="text-center"><small class="align-middle">Version:</small></div></th>';
-        html += '\n                           <th style="border: 1px solid grey;"><div class="text-center"><small class="align-middle">IDE Options:</small></div></th>';
-        html += '\n                       </tr>';
-        html += '\n                   </thead>';
-        html += '\n                   <tbody>';
-
-        let cnt = 0;
-        for (const item in items) {
-            var appPub = type === 'device' || items[item].published === true;
-            var appOauth = items[item].oAuth === true;
-            var appOptional = items[item].optional !== false;
-            var parent = items[item].isParent === true;
-            var child = items[item].isChild === true;
-            var disabled = parent || !appOptional ? ' disabled' : '';
-            var checked = parent || !appOptional ? ' checked' : '';
-            var itemId = type === 'device' ? 'device' + cnt : 'smartapp' + cnt;
-            html += '\n                       <tr>';
-            html += '\n                           <td class="align-middle py-0" style="border: 1px solid grey;">';
-            html += '\n                               <div class="d-flex flex-column ml-2">';
-            html += '\n                                   <div class="d-flex flex-column justify-content-start my-1 form-check' + disabled + '">';
-            html += '\n                                       <div class="flex-column justify-content-start">';
-            html += '\n                                           <div class="d-flex flex-row">';
-            html += '\n                                               <input class="form-check-input align-middle" type="checkbox" value="" id="' + itemId + '"' + checked + disabled + '>';
-            html += '\n                                               <label class="form-check-label align-middle" for="' + itemId + '"><small id="' + itemId + 'name" class="align-middle" style="font-size: 0.7em; white-space: nowrap;">' + items[item].name + '</small></label>';
-            html += '\n                                           </div>';
-            html += '\n                                       </div>';
-            html += '\n                                   </div>';
-            html += '\n                               </div>';
-            html += '\n                           </td>';
-            html += '\n                           <td class="align-middle" style="border: 1px solid grey;">';
-            html += '\n                               <div class="d-flex flex-column align-items-center">';
-            html += '\n                                   <small class="align-middle" style="margin: 2px auto;"><span class="badge grey white-text align-middle">v' + items[item].version + '</span></small>';
-            html += '\n                                   <small class="align-middle" style="margin: 2px auto;"><span id="' + cleanIdName(items[item].name) + '_appview_status_' + type + '" class="badge white-text align-middle"></span></small>';
-            html += '\n                               </div>';
-            html += '\n                           </td>';
-            html += '\n                           <td class="align-middle py-0" style="border: 1px solid grey;">';
-            html += '\n                               <div class="d-flex flex-column align-items-center">';
-            html += parent === true ? '\n                 <small style="margin: 2px auto;"><span class="badge blue white-text">Parent App</span></small>' : '';
-            html += child === true ? '\n                  <small style="margin: 2px auto;"><span class="badge purple white-text">Child App</span></small>' : '';
-            html += appPub === true ? '\n                 <small style="margin: 2px auto;"><span class="badge green white-text">Publishing</span></small>' : '';
-            html += appOauth === true ? '\n               <small style="margin: 2px auto;"><span class="badge orange white-text">Enable OAuth</span></small>' : '';
-            html += '\n                               </div>';
-            html += '\n                           </td>';
-            html += '\n                      </tr>';
-            cnt++;
-        }
-        html += '\n                </tbody>';
-        html += '\n            </table>';
-        html += '\n       </div>';
-        html += '\n   </div>';
-        html += '\n</div>';
-    }
-    return html;
 }
 
 function buildCoreHtml() {
