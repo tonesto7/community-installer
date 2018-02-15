@@ -293,3 +293,7 @@ footer.page-footer .footer-copyright {
 #toast-container.nopacity>div {
     opacity: 1;
 }
+
+body.modal-open {
+    overflow: hidden;
+}
