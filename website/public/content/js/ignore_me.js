@@ -1,6 +1,6 @@
-const scriptVersion = '1.0.0214a';
+const scriptVersion = '1.0.0215a';
 const scriptRelType = 'beta';
-const scriptVerDate = '2/14/2018';
+const scriptVerDate = '2/15/2018';
 const latestSaVer = '1.0.0213a';
 const allowInstalls = true;
 const allowUpdates = true;
@@ -1156,10 +1156,15 @@ function updateMetricsData() {
     }
 }
 
-function deviceNameMatch(itemName, data) {
-    let srchGrp = [...new Set([cleanIdName(itemName).toString(), cleanIdName(itemName, '-').toString(), cleanString(itemName).toString(), itemName.toString(), cleanIdName(itemName).toString().toLowerCase(), cleanIdName(itemName, '-').toString().toLowerCase(), cleanString(itemName).toString().toLowerCase(), itemName.toString().toLowerCase()])];
+function itemNameMatch(itemName, altName = undefined, data) {
+    let searchItems = buildSrchGrpItem(itemName);
+    if (altName && altName !== itemName) {
+        let altItems = buildSrchGrpItem(altName);
+        for (const i in altItems) { searchItems.push(altItems[i]); }
+    }
+    let srchGrp = [...new Set(searchItems)];
     let instApp = data.filter(function(item) {
-        let g = [...new Set([item.name.toString(), item.name.toString().toLowerCase(), cleanString(item.name).toString(), cleanString(item.name).toString().toLowerCase(), cleanIdName(item.name).toString(), cleanIdName(item.name).toString().toLowerCase(), cleanIdName(item.name, '-').toString(), cleanIdName(item.name, '-').toString().toLowerCase()])];
+        let g = [...new Set(buildSrchGrpItem(item.name))];
         for (const i in g) {
             let t = g[i];
             if (srchGrp.includes(t)) {
@@ -1170,12 +1175,25 @@ function deviceNameMatch(itemName, data) {
     return instApp;
 }
 
-function getIsAppOrDeviceInstalled(itemName, type, manData) {
+function buildSrchGrpItem(item) {
+    return [cleanIdName(item).toString(),
+        cleanIdName(item, '-').toString(),
+        cleanString(item).toString(),
+        item.toString(),
+        cleanIdName(item).toString().toLowerCase(),
+        cleanIdName(item, '-').toString().toLowerCase(),
+        cleanString(item).toString().toLowerCase(),
+        item.toString().toLowerCase(),
+        cleanIdName(item, '').toString(),
+        cleanIdName(item, '').toString().toLowerCase(),
+    ];
+}
+
+function getIsAppOrDeviceInstalled(itemName, altName = undefined, type, manData) {
     let res = {};
     if (itemName && type) {
         let data = type === 'app' ? availableApps : availableDevs;
-        let srchGrp = [...new Set([cleanIdName(itemName).toString(), cleanIdName(itemName, '-').toString(), cleanString(itemName).toString(), itemName.toString(), cleanIdName(itemName).toString().toLowerCase(), cleanIdName(itemName, '-').toString().toLowerCase(), cleanString(itemName).toString().toLowerCase(), itemName.toString().toLowerCase()])];
-        let instApp = deviceNameMatch(itemName, data);
+        let instApp = itemNameMatch(itemName, altName, data);
         let appFnd;
         if (instApp.length > 0 && type === 'device') {
             appFnd = instApp.filter(item => item.namespace === undefined || item.namespace.toString() === manData.namespace.toString());
@@ -1206,7 +1224,7 @@ function processItemsStatuses(data, viewType) {
         if (data.length > 0) {
             for (let i in data) {
                 let mData = { published: true, namespace: data[i].namespace, author: data[i].author };
-                if (updateAppDeviceItemStatus(data[i].name, 'app', viewType, undefined, mData) === true) {
+                if (updateAppDeviceItemStatus(data[i].name, data[i].smartApps.parent.name, 'app', viewType, undefined, mData) === true) {
                     // cnt++;
                     // installBtnAvail(cnt, data);
                 }
@@ -1217,7 +1235,7 @@ function processItemsStatuses(data, viewType) {
             let cnt = 1;
             if (data.smartApps.parent) {
                 let mData = { published: data.smartApps.parent.published, namespace: data.namespace, author: data.author };
-                if (updateAppDeviceItemStatus(data.smartApps.parent.name, 'app', viewType, data.smartApps.parent.appUrl, mData) === true) {
+                if (updateAppDeviceItemStatus(data.smartApps.parent.name, undefined, 'app', viewType, data.smartApps.parent.appUrl, mData) === true) {
                     cnt++;
                     installBtnAvail(cnt, data);
                 }
@@ -1226,7 +1244,7 @@ function processItemsStatuses(data, viewType) {
             if (data.smartApps.children && data.smartApps.children.length) {
                 for (const sa in data.smartApps.children) {
                     let mData = { published: data.smartApps.children[sa].published !== false, namespace: data.namespace, author: data.author };
-                    if (updateAppDeviceItemStatus(data.smartApps.children[sa].name, 'app', viewType, data.smartApps.children[sa].appUrl, mData) === true) {
+                    if (updateAppDeviceItemStatus(data.smartApps.children[sa].name, undefined, 'app', viewType, data.smartApps.children[sa].appUrl, mData) === true) {
                         cnt++;
                         installBtnAvail(cnt, data);
                     }
@@ -1236,7 +1254,7 @@ function processItemsStatuses(data, viewType) {
         if (data && data.deviceHandlers && data.deviceHandlers.length) {
             for (const dh in data.deviceHandlers) {
                 let mData = { published: true, namespace: data.namespace, author: data.author };
-                if (updateAppDeviceItemStatus(data.deviceHandlers[dh].name, 'device', viewType, data.deviceHandlers[dh].appUrl, mData) === true) {
+                if (updateAppDeviceItemStatus(data.deviceHandlers[dh].name, undefined, 'device', viewType, data.deviceHandlers[dh].appUrl, mData) === true) {
                     cnt++;
                     installBtnAvail(cnt, data);
                 }
@@ -1245,9 +1263,9 @@ function processItemsStatuses(data, viewType) {
     }
 }
 
-function updateAppDeviceItemStatus(itemName, type, viewType, appUrl, manData) {
+function updateAppDeviceItemStatus(itemName, altName = undefined, type, viewType, appUrl, manData) {
     if (itemName) {
-        let installedItem = getIsAppOrDeviceInstalled(itemName, type, manData);
+        let installedItem = getIsAppOrDeviceInstalled(itemName, altName, type, manData);
         let appInstalled = installedItem.installed === true;
         let statusElementName = cleanIdName(itemName) + '_appview_status_' + type;
         if (installedItem && installedItem.data && installedItem.data[0] !== undefined) {
@@ -1263,43 +1281,50 @@ function updateAppDeviceItemStatus(itemName, type, viewType, appUrl, manData) {
                     if (appInstalled || updateAvail) {
                         let itemStatus;
                         let color;
-                        let elem = $('#' + statusElementName);
-                        if (updateAvail) {
-                            itemStatus = 'Updates';
-                            color = viewType === 'appList' ? 'ribbon-orange' : 'orange';
-                            $('#updateBtn').show();
-                        } else {
-                            itemStatus = 'Installed';
-                            color = viewType === 'appList' ? 'ribbon-blue' : 'blue';
-                        }
-                        if (viewType === 'appList') {
-                            updateAppListStatusRibbon(statusElementName, itemStatus, color);
-                            if (appInstalled) {
-                                elem.data('installed', true);
-                                elem.data('details', {
-                                    id: installedItem.data[0].id,
-                                    type: type,
-                                    name: installedItem.data[0].name,
-                                    appUrl: appUrl
-                                });
-                            }
-                        } else {
-                            elem.text(itemStatus).addClass(color);
-                            if (updateAvail) {
-                                elem.data('hasUpdate', true);
-                            }
-                            if (appInstalled) {
-                                elem.data('installed', true);
-                                elem.data('published', manData.published);
-                                elem.data('details', {
-                                    id: installedItem.data[0].id,
-                                    type: type,
-                                    name: installedItem.data[0].name,
-                                    appUrl: appUrl,
-                                    published: manData.published,
-                                    namespace: manData.namespace,
-                                    author: manData.author
-                                });
+                        let items = [statusElementName];
+                        if (altName) { items.push(cleanIdName(altName)); }
+                        items = [...new Set(items)];
+                        for (const i in items) {
+                            let elem = $('#' + items[i]);
+                            if (elem.length) {
+                                if (updateAvail) {
+                                    itemStatus = 'Updates';
+                                    color = viewType === 'appList' ? 'ribbon-orange' : 'orange';
+                                    $('#updateBtn').show();
+                                } else {
+                                    itemStatus = 'Installed';
+                                    color = viewType === 'appList' ? 'ribbon-blue' : 'blue';
+                                }
+                                if (viewType === 'appList') {
+                                    updateAppListStatusRibbon(items[i], itemStatus, color);
+                                    if (appInstalled) {
+                                        elem.data('installed', true);
+                                        elem.data('details', {
+                                            id: installedItem.data[0].id,
+                                            type: type,
+                                            name: installedItem.data[0].name,
+                                            appUrl: appUrl
+                                        });
+                                    }
+                                } else {
+                                    elem.text(itemStatus).addClass(color);
+                                    if (updateAvail) {
+                                        elem.data('hasUpdate', true);
+                                    }
+                                    if (appInstalled) {
+                                        elem.data('installed', true);
+                                        elem.data('published', manData.published);
+                                        elem.data('details', {
+                                            id: installedItem.data[0].id,
+                                            type: type,
+                                            name: installedItem.data[0].name,
+                                            appUrl: appUrl,
+                                            published: manData.published,
+                                            namespace: manData.namespace,
+                                            author: manData.author
+                                        });
+                                    }
+                                }
                             }
                         }
                     }
@@ -1316,11 +1341,11 @@ function updateAppListStatusRibbon(itemName, status, color = undefined) {
     if (itemName && status) {
         let ribbon = $('#' + itemName + '_ribbon');
         let ribbonStatus = $('#' + itemName + '_ribbon_status');
-        ribbon.css({ display: 'block' });
-        if (color) {
-            ribbonStatus.addClass(color);
+        if (ribbon.length) { ribbon.css({ display: 'block' }); }
+        if (ribbonStatus.length) {
+            ribbonStatus.text(status);
+            if (color) { ribbonStatus.addClass(color); }
         }
-        ribbonStatus.text(status);
     }
 }
 
@@ -1393,7 +1418,7 @@ function buildAppList(filterStr = undefined) {
         html += '\n               <tbody>';
 
         for (let i in appData) {
-            let appName = cleanIdName(appData[i].ideLabel);
+            let appName = cleanIdName(appData[i].smartApps.parent.name);
             html += '\n   <tr style="border-bottom-style: hidden; border-top-style: hidden;">';
             html += '\n   <td class="py-1">';
             html += '\n     <a href="#" id="' + appName + '" class="list-group-item list-group-item-action flex-column align-items-start p-2" style="border-radius: 20px;">';
@@ -1405,7 +1430,7 @@ function buildAppList(filterStr = undefined) {
             html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
             html += '\n                 <div class="d-flex flex-row">';
             html += '\n                     <div class="d-flex justify-content-start align-items-center">';
-            html += '\n                         <h6 class="h6-responsive"><img src="' + appData[i].smartApps.parent.iconUrl + '" height="40" class="d-inline-block align-middle" alt=""> ' + appData[i].smartApps.parent.name + '</h6>';
+            html += '\n                         <h6 class="h6-responsive"><img src="' + appData[i].smartApps.parent.iconUrl + '" height="40" class="d-inline-block align-middle" alt=""> ' + appData[i].name + '</h6>';
             html += '\n                     </div>';
             html += '\n                 </div>';
             html += '\n             </div>';
@@ -1488,7 +1513,7 @@ function buildAppList(filterStr = undefined) {
     $('#listContDiv').html('').html(html);
     if (appData.length) {
         for (const i in appData) {
-            let inpt = $('#' + cleanIdName(appData[i].ideLabel));
+            let inpt = $('#' + cleanIdName(appData[i].smartApps.parent.name));
             if (inpt.length) {
                 inpt.data('manifest', appData[i]);
             }
@@ -1735,12 +1760,17 @@ function renderAppView(appName, manifest) {
             // Start Here
 
             let apps = [];
-            manifest.smartApps.parent['isParent'] = true;
-            apps.push(manifest.smartApps.parent);
-            if (manifest.smartApps && manifest.smartApps.children && manifest.smartApps.children.length) {
-                for (const sa in manifest.smartApps.children) {
-                    manifest.smartApps.children[sa]['isChild'] = true;
-                    apps.push(manifest.smartApps.children[sa]);
+
+            if (manifest.smartApps) {
+                if (manifest.smartApps.parent) {
+                    manifest.smartApps.parent['isParent'] = true;
+                    apps.push(manifest.smartApps.parent);
+                }
+                if (manifest.smartApps.children && manifest.smartApps.children.length) {
+                    for (const sa in manifest.smartApps.children) {
+                        manifest.smartApps.children[sa]['isChild'] = true;
+                        apps.push(manifest.smartApps.children[sa]);
+                    }
                 }
                 html += createAppDevTable(apps, manifest.deviceHandlers && manifest.deviceHandlers.length, 'app');
             }
