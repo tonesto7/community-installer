@@ -1,6 +1,6 @@
-const scriptVersion = '1.0.0215b';
+const scriptVersion = '1.0.0216b';
 const scriptRelType = 'beta';
-const scriptVerDate = '2/15/2018';
+const scriptVerDate = '2/16/2018';
 const latestSaVer = '1.0.0213a';
 const allowInstalls = true;
 const allowUpdates = true;
@@ -23,7 +23,7 @@ var mainManifest;
 var appManifests;
 var itemStatusMap;
 
-const authUrl = generateStUrl('hub');
+const authUrl = generateStUrl('hub/list');
 const fetchReposUrl = generateStUrl('github/writeableRepos');
 const updRepoUrl = generateStUrl('githubAuth/updateRepos');
 const updFormUrl = generateStUrl('githubAuth/updateForm');
@@ -1194,7 +1194,7 @@ function getIsAppOrDeviceInstalled(itemName, altName = undefined, type, manData)
             appFnd = instApp;
         }
         if (appFnd[0] !== undefined && appFnd.length > 0) {
-            res['nameMatched'] = appFnd[0].name;
+            // res['name'] = appFnd[0].name;
             res['installed'] = true;
             res['data'] = appFnd;
         }
@@ -1211,108 +1211,131 @@ function processItemsStatuses(data, viewType) {
     }
     if (items.length > 0) {
         for (let i in items) {
-            let hasUpdate = false;
-            let parentName;
+            let parentName = items[i].smartApps.parent.name;
             let cnt = 0;
             if (items[i] && items[i].smartApps) {
                 if (items[i].smartApps.parent) {
                     let mData = { published: items[i].smartApps.parent.published, namespace: items[i].namespace, author: items[i].author, appUrl: items[i].smartApps.parent.appUrl };
-                    let res = updateAppDeviceItemStatus(items[i].name, items[i].smartApps.parent.name, true, 'app', viewType, mData);
-                    if (res.nameMatched) {
-                        parentName = res.nameMatched;
-                    }
-                    if (res.installed === true) {
-                        cnt++;
-                        if (viewType === 'appView') {
-                            installBtnAvail(cnt, items[i]);
-                        }
-                    }
-                    if (viewType === 'appList' && parentName && res.updates === true) {
-                        updateRibbon(cleanIdName(parentName), "Updates", 'ribbon-orange');
-                    }
+                    updateAppDeviceItemStatus(items[i].name, items[i].smartApps.parent.name, 'app', viewType, mData)
+                        .catch(function(err) {
+                            // console.log(err);
+                        }).then(function(resp) {
+                            if (resp.installed === true) {
+                                cnt++;
+                                if (viewType === 'appView') {
+                                    installBtnAvail(cnt, items[i]);
+                                }
+                                if (resp.updates === true) {
+                                    if (viewType === 'appList' && parentName) { updateRibbon(cleanIdName(parentName), 'Updates', 'ribbon-orange'); }
+                                    // console.log('UpdateAvail(' + items[i].smartApps.parent.name + ')');
+                                }
+                            }
+                        });
                 }
 
                 if (items[i].smartApps.children && items[i].smartApps.children.length) {
                     for (const sa in items[i].smartApps.children) {
                         let mData = { published: items[i].smartApps.children[sa].published !== false, namespace: items[i].namespace, author: items[i].author, appUrl: items[i].smartApps.children[sa].appUrl };
-                        let res = updateAppDeviceItemStatus(items[i].smartApps.children[sa].name, undefined, false, 'app', viewType, mData, true);
-                        if (res.installed === true) {
-                            cnt++;
-                            if (viewType === 'appView') {
-                                installBtnAvail(cnt, items[i]);
-                            }
-                        }
-                        if (viewType === 'appList' && parentName && res.updates === true) {
-                            updateRibbon(cleanIdName(parentName), "Updates", 'ribbon-orange');
-                        }
+                        updateAppDeviceItemStatus(items[i].smartApps.children[sa].name, undefined, 'app', viewType, mData, true)
+                            .catch(function(err) {
+                                // console.log(err);
+                            }).then(function(resp) {
+                                if (resp.installed === true) {
+                                    cnt++;
+                                    if (viewType === 'appView') {
+                                        installBtnAvail(cnt, items[i]);
+                                    }
+                                    if (resp.updates === true) {
+                                        if (viewType === 'appList' && parentName) { updateRibbon(cleanIdName(parentName), 'Updates', 'ribbon-orange'); }
+                                        // console.log('UpdateAvail(' + items[i].smartApps.children[sa].name + ')');
+                                    }
+                                }
+                            });
                     }
                 }
             }
             if (items[i] && items[i].deviceHandlers && items[i].deviceHandlers.length) {
                 for (const dh in items[i].deviceHandlers) {
                     let mData = { published: true, namespace: items[i].namespace, author: items[i].author, appUrl: items[i].deviceHandlers[dh].appUrl };
-                    let res = updateAppDeviceItemStatus(items[i].deviceHandlers[dh].name, undefined, false, 'device', viewType, mData);
-                    if (res.installed === true) {
-                        cnt++;
-                        if (viewType === 'appView') {
-                            installBtnAvail(cnt, items[i]);
-                        }
-                    }
-                    if (viewType === 'appList' && parentName && res.updates === true) {
-                        updateRibbon(cleanIdName(parentName), "Updates", 'ribbon-orange');
-                    }
+                    updateAppDeviceItemStatus(items[i].deviceHandlers[dh].name, undefined, 'device', viewType, mData)
+                        .catch(function(err) {
+                            // console.log(err);
+                        }).then(function(resp) {
+                            if (resp.installed === true) {
+                                cnt++;
+                                if (viewType === 'appView') {
+                                    installBtnAvail(cnt, items[i]);
+                                }
+                                if (resp.updates === true) {
+                                    if (viewType === 'appList' && parentName) { updateRibbon(cleanIdName(parentName), 'Updates', 'ribbon-orange'); }
+                                    // console.log('UpdateAvail(' + items[i].deviceHandlers[dh].name + ')');
+                                }
+                            }
+                        });
+
                 }
             }
         }
     }
 }
 
-function updateAppDeviceItemStatus(itemName, altName = undefined, isParentObj = false, type, viewType, manData) {
-    if (itemName) {
-        let installedItem = getIsAppOrDeviceInstalled(itemName, altName, type, manData);
-        let appInstalled = installedItem.installed === true;
-        let nameMatched;
-        let updateAvail = false;
-        if (installedItem && installedItem.data && installedItem.data[0] !== undefined) {
-            if (isParentObj && installedItem.nameMatched) { nameMatched = installedItem.nameMatched; }
-            if (viewType === 'appView' && itemStatusMap !== undefined && itemStatusMap[type] !== undefined && itemStatusMap[type][installedItem.data[0].id] !== undefined) {
-                itemStatusHandler(itemName, altName, type, viewType, manData, itemStatusMap[type][installedItem.data[0].id]);
-            } else {
-                checkItemUpdateStatus(installedItem.data[0].id, type)
-                    .catch(function(err) {
-                        // console.log(err);
-                    })
-                    .then(function(resp) {
-                        updateAvail = resp === true;
-                        if (itemStatusMap === undefined) {
-                            itemStatusMap = {};
-                        }
-                        if (itemStatusMap[type] === undefined) {
-                            itemStatusMap[type] = {};
-                        }
-                        itemStatusMap[type][installedItem.data[0].id] = { id: installedItem.data[0].id, hasUpdate: updateAvail, isInstalled: appInstalled, data: installedItem.data[0] };
-                        itemStatusHandler(itemName, altName, type, viewType, manData, itemStatusMap[type][installedItem.data[0].id]);
+function updateAppDeviceItemStatus(itemName, altName = undefined, type, viewType, manData) {
+    return new Promise(function(resolve, reject) {
+        if (itemName) {
+            let installedItem = getIsAppOrDeviceInstalled(itemName, altName, type, manData);
+            let appInstalled = installedItem.installed === true;
+            let updateAvail = false;
+            if (installedItem && installedItem.data && installedItem.data[0] !== undefined) {
+                if (viewType === 'appView' && itemStatusMap !== undefined && itemStatusMap[type] !== undefined && itemStatusMap[type][installedItem.data[0].id] !== undefined) {
+                    itemStatusHandler(itemName, altName, type, viewType, manData, itemStatusMap[type][installedItem.data[0].id]);
+                    updateAvail = itemStatusMap[type][installedItem.data[0].id].hasUpdate === true;
+                    resolve({
+                        installed: appInstalled,
+                        updates: updateAvail
                     });
-            }
-            return { installed: appInstalled, updates: updateAvail, nameMatched: nameMatched };
-        } else {
-            let items = [cleanIdName(itemName)];
-            if (altName) {
-                items.push(cleanIdName(altName));
-            }
-            items = [...new Set(items)];
-            for (const i in items) {
-                if (viewType === 'appView') {
-                    items[i] = items[i] + '_appview_status_' + type;
-                    let elem = $('#' + items[i]);
-                    if (elem.length) {
-                        elem.text('Not Installed');
+                } else {
+                    checkItemUpdateStatus(installedItem.data[0].id, type)
+                        .catch(function(err) {
+                            // console.log(err);
+                        })
+                        .then(function(resp) {
+                            updateAvail = resp === true;
+                            if (itemStatusMap === undefined) {
+                                itemStatusMap = {};
+                            }
+                            if (itemStatusMap[type] === undefined) {
+                                itemStatusMap[type] = {};
+                            }
+                            itemStatusMap[type][installedItem.data[0].id] = { id: installedItem.data[0].id, hasUpdate: updateAvail, isInstalled: appInstalled, data: installedItem.data[0] };
+                            itemStatusHandler(itemName, altName, type, viewType, manData, itemStatusMap[type][installedItem.data[0].id]);
+                            resolve({
+                                installed: appInstalled,
+                                updates: updateAvail
+                            });
+                        });
+                }
+            } else {
+                let items = [cleanIdName(itemName)];
+                if (altName) {
+                    items.push(cleanIdName(altName));
+                }
+                items = [...new Set(items)];
+                for (const i in items) {
+                    if (viewType === 'appView') {
+                        items[i] = items[i] + '_appview_status_' + type;
+                        let elem = $('#' + items[i]);
+                        if (elem.length) {
+                            elem.text('Not Installed');
+                        }
                     }
                 }
+                resolve({
+                    installed: appInstalled,
+                    updates: updateAvail
+                });
             }
-            return { installed: appInstalled, updates: updateAvail, nameMatched: nameMatched };
         }
-    }
+    });
 }
 
 function itemStatusHandler(itemName, altName, type, viewType, manData, statusMap) {
@@ -1340,9 +1363,7 @@ function itemStatusHandler(itemName, altName, type, viewType, manData, statusMap
                     color = viewType === 'appList' ? 'ribbon-blue' : 'blue';
                 }
                 if (viewType === 'appList') {
-                    if (color && itemStatus) {
-                        updateRibbon(idName, itemStatus, color);
-                    }
+                    updateRibbon(idName, itemStatus, color);
                     if (statusMap.isInstalled) {
                         elem.data('installed', true);
                         elem.data('details', {
@@ -1389,6 +1410,9 @@ function updateRibbon(idName, status, color) {
             ribbon.css({ display: 'block' });
         }
         if (ribbonStatus.length) {
+            if (ribbonStatus.text() === 'Updates' && status === 'Installed') {
+                return;
+            }
             ribbonStatus.text(status);
             if (color) {
                 ribbonStatus.addClass(color);
