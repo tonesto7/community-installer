@@ -1,4 +1,4 @@
-const scriptVersion = '1.0.0216b';
+const scriptVersion = '1.0.0216d';
 const scriptRelType = 'beta';
 const scriptVerDate = '2/16/2018';
 const latestSaVer = '1.0.0213a';
@@ -6,7 +6,7 @@ const allowInstalls = true;
 const allowUpdates = true;
 const allowRemoval = false;
 const isDevMode = false;
-const manifestCache = true;
+const manifestCache = false;
 
 var repoId = '';
 var writableRepos = [];
@@ -1062,6 +1062,7 @@ function incrementLikeDislike(appName, type) {
 }
 
 function findAppMatch(srchStr, data) {
+    if (data === undefined || data.length < 1) { return []; }
     if (srchStr === undefined || srchStr.length < 3) {
         return data.sort(dynamicSort('name'));
     } else {
@@ -1469,123 +1470,152 @@ function loadAllManifests() {
     });
 }
 
-function buildAppList(filterStr = undefined) {
-    searchBtnAvail(true);
+function buildAppList(filterStr = undefined, listType = 'apps') {
+    let appData = [];
     let html = '';
-    let appData = findAppMatch(filterStr, appManifests.apps);
-    currentManifest = appData;
-    html += '\n           <div id="searchFormDiv" class="d-flex flex-row justify-content-center align-items-center" style="display: none;">';
-    html += '\n               <div class="d-flex w-100 flex-column m-2">';
-    html += '\n                <form id="searchForm"  style="display: none;">';
-    html += '\n                   <div class="input-group md-form form-sm form-2 mb-0">';
-    html += '\n                       <input id="appSearchBox" class="form-control grey-border white-text" type="text" placeholder="Search" aria-label="Search">';
-    html += '\n                       <span class="input-group-addon waves-effect grey lighten-3" id="searchBtn"><a><i class="fa fa-search text-grey" aria-hidden="true"></i></a></span>';
-    html += '\n                   </div>';
-    html += '\n                </form>';
-    html += '\n               </div>';
-    html += '\n           </div>';
-    if (appData.length > 0) {
-        html += '\n<div id=listDiv class="clearfix">';
-        html += '\n   <div class="listGroup">';
+    html += '\n<div id=listDiv class="clearfix">';
+    html += '\n   <div class="btn-group mb-0 mx-3" role="group" data-toggle="button" aria-label="Basic example">';
+    html += '\n       <button id="appListAppsTabBtn" type="button" class="btn btn-md btn-rounded waves-effect p-2" style="width: 105px;"><small-medium class="white-text">SmartApps</small-medium></button>';
+    html += '\n       <button id="appListDevsTabBtn" type="button" class="btn btn-md btn-rounded waves-effect p-2" style="width: 105px;"><small-medium class="white-text">Devices</small-medium></button>';
+    html += '\n       <button id="appListNewsTabBtn" type="button" class="btn btn-md btn-rounded waves-effect p-2" style="width: 105px;"><small-medium class="white-text">News</small-medium></button>';
+    html += '\n   </div>';
+    if (listType === 'apps' || listType === 'devs') {
+        html += '\n           <div id="searchFormDiv" class="d-flex flex-row justify-content-center align-items-center" style="display: none;">';
+        html += '\n               <div class="d-flex w-100 flex-column m-2">';
+        html += '\n                <form id="searchForm"  style="display: none;">';
+        html += '\n                   <div class="input-group md-form form-sm form-2 mb-0">';
+        html += '\n                       <input id="appSearchBox" class="form-control grey-border white-text" type="text" placeholder="Search" aria-label="Search">';
+        html += '\n                       <span class="input-group-addon waves-effect grey lighten-3" id="searchBtn"><a><i class="fa fa-search text-grey" aria-hidden="true"></i></a></span>';
+        html += '\n                   </div>';
+        html += '\n                </form>';
+        html += '\n               </div>';
+        html += '\n           </div>';
+        searchBtnAvail(true);
+        updSectTitle(listType === 'devs' ? 'Select a Device' : 'Select an App');
+        appData = findAppMatch(filterStr, appManifests[listType]);
+        currentManifest = appData;
+        html += '\n   <div id="objsGroupDiv" class="listGroup">';
         html += '\n       <div class="p-2 mb-0" style="background-color: transparent;">';
-        html += '\n           <table id="appListTable" class="table table-sm mb-0">';
-        html += '\n               <tbody>';
+        if (appData && appData.length > 0) {
+            html += '\n           <table id="appListTable" class="table table-sm mb-0">';
+            html += '\n               <tbody>';
+            for (let i in appData) {
+                let appName = cleanIdName(appData[i].smartApps.parent.name);
 
-        for (let i in appData) {
-            let appName = cleanIdName(appData[i].smartApps.parent.name);
-            html += '\n   <tr style="border-bottom-style: hidden; border-top-style: hidden;">';
-            html += '\n   <td class="py-1">';
-            html += '\n     <a href="#" id="' + appName + '" class="list-group-item list-group-item-action flex-column align-items-start p-2" style="border-radius: 20px;">';
+                html += '\n   <tr style="border-bottom-style: hidden; border-top-style: hidden;">';
+                html += '\n   <td class="py-1">';
+                html += '\n     <a href="#" id="' + appName + '" class="list-group-item list-group-item-action flex-column align-items-start p-2" style="border-radius: 20px;">';
 
-            html += '\n         <div id="' + appName + '_ribbon" class="ribbon" style="display: none;"><span id="' + appName + '_ribbon_status"> </span></div>';
+                html += '\n         <div id="' + appName + '_ribbon" class="ribbon" style="display: none;"><span id="' + appName + '_ribbon_status"> </span></div>';
 
-            html += '\n         <!-- APP NAME SECTION TOP (START)-->';
-            html += '\n         <div class="d-flex w-100 justify-content-between align-items-center">';
-            html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
-            html += '\n                 <div class="d-flex flex-row">';
-            html += '\n                     <div class="d-flex justify-content-start align-items-center">';
-            html += '\n                         <h6 class="h6-responsive"><img src="' + appData[i].smartApps.parent.iconUrl + '" height="40" class="d-inline-block align-middle" alt=""> ' + appData[i].name + '</h6>';
-            html += '\n                     </div>';
-            html += '\n                 </div>';
-            html += '\n             </div>';
+                html += '\n         <!-- APP NAME SECTION TOP (START)-->';
+                html += '\n         <div class="d-flex w-100 justify-content-between align-items-center">';
+                html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
+                html += '\n                 <div class="d-flex flex-row">';
+                html += '\n                     <div class="d-flex justify-content-start align-items-center">';
+                html += '\n                         <h6 class="h6-responsive"><img src="' + appData[i].smartApps.parent.iconUrl + '" height="40" class="d-inline-block align-middle" alt=""> ' + appData[i].name + '</h6>';
+                html += '\n                     </div>';
+                html += '\n                 </div>';
+                html += '\n             </div>';
 
-            html += '\n         </div>';
-            html += '\n         <!-- APP NAME SECTION TOP (END)-->';
+                html += '\n         </div>';
+                html += '\n         <!-- APP NAME SECTION TOP (END)-->';
 
-            html += '\n         <!-- APP DESCRIPTION SECTION (START)-->';
-            html += '\n         <div class="d-flex justify-content-start align-items-center mt-1 mb-3" style="border-style: inset; border: 1px solid grey; border-radius: 5px;">';
-            html += '\n             <p class="d-flex m-2 justify-content-center"><small class="align-middle">' + appData[i].description + '</small></p>';
-            html += '\n         </div>';
-            html += '\n         <!-- APP DESCRIPTION SECTION (END)-->';
+                html += '\n         <!-- APP DESCRIPTION SECTION (START)-->';
+                html += '\n         <div class="d-flex justify-content-start align-items-center mt-1 mb-3" style="border-style: inset; border: 1px solid grey; border-radius: 5px;">';
+                html += '\n             <p class="d-flex m-2 justify-content-center"><small class="align-middle">' + appData[i].description + '</small></p>';
+                html += '\n         </div>';
+                html += '\n         <!-- APP DESCRIPTION SECTION (END)-->';
 
-            html += '\n         <!-- APP METRICS SECTION (START)-->';
-            html += '\n         <div class="d-flex w-100 justify-content-between align-items-center mb-3">';
-            html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
-            html += '\n                 <div class="d-flex flex-row">';
-            html += '\n                     <small class="align-middle"><u><b>Views:</b></u></small>';
-            html += '\n                 </div>';
-            html += '\n                 <div class="d-flex flex-row">';
-            html += '\n                     <span id="' + appName + '_view_cnt" class="badge badge-pill grey white-text align-middle">0</span>';
-            html += '\n                 </div>';
-            html += '\n             </div>';
-            html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
-            html += '\n                 <div class="d-flex flex-row">';
-            html += '\n                     <small class="align-middle"><u><b>Ratings:</b></u></small>';
-            html += '\n                 </div>';
-            html += '\n                 <div class="d-flex flex-row">';
-            html += '\n                     <div class="mx-2"><small><span id="' + appName + '_like_cnt" class="black-text"><i class="fa fa-thumbs-up fa-sm green-text"></i> 0</span></small></div>';
-            html += '\n                     <div class="mx-2"><small><span id="' + appName + '_dislike_cnt" class="black-text"><i class="fa fa-thumbs-down fa-sm red-text"></i> 0</span></small></div>';
-            html += '\n                 </div>';
-            html += '\n             </div>';
-            html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
-            html += '\n                 <div class="d-flex flex-row">';
-            html += '\n                     <small class="align-middle"><u><b>Installs:</b></u></small>';
-            html += '\n                 </div>';
-            html += '\n                 <div class="d-flex flex-row">';
-            html += '\n                     <span id="' + appName + '_install_cnt" class="badge badge-pill grey white-text align-middle">0</span>';
-            html += '\n                 </div>';
-            html += '\n             </div>';
-            html += '\n         </div>';
-            html += '\n         <!-- APP METRICS SECTION (END)-->';
+                html += '\n         <!-- APP METRICS SECTION (START)-->';
+                html += '\n         <div class="d-flex w-100 justify-content-between align-items-center mb-3">';
+                html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
+                html += '\n                 <div class="d-flex flex-row">';
+                html += '\n                     <small class="align-middle"><u><b>Views:</b></u></small>';
+                html += '\n                 </div>';
+                html += '\n                 <div class="d-flex flex-row">';
+                html += '\n                     <span id="' + appName + '_view_cnt" class="badge badge-pill grey white-text align-middle">0</span>';
+                html += '\n                 </div>';
+                html += '\n             </div>';
+                html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
+                html += '\n                 <div class="d-flex flex-row">';
+                html += '\n                     <small class="align-middle"><u><b>Ratings:</b></u></small>';
+                html += '\n                 </div>';
+                html += '\n                 <div class="d-flex flex-row">';
+                html += '\n                     <div class="mx-2"><small><span id="' + appName + '_like_cnt" class="black-text"><i class="fa fa-thumbs-up fa-sm green-text"></i> 0</span></small></div>';
+                html += '\n                     <div class="mx-2"><small><span id="' + appName + '_dislike_cnt" class="black-text"><i class="fa fa-thumbs-down fa-sm red-text"></i> 0</span></small></div>';
+                html += '\n                 </div>';
+                html += '\n             </div>';
+                html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
+                html += '\n                 <div class="d-flex flex-row">';
+                html += '\n                     <small class="align-middle"><u><b>Installs:</b></u></small>';
+                html += '\n                 </div>';
+                html += '\n                 <div class="d-flex flex-row">';
+                html += '\n                     <span id="' + appName + '_install_cnt" class="badge badge-pill grey white-text align-middle">0</span>';
+                html += '\n                 </div>';
+                html += '\n             </div>';
+                html += '\n         </div>';
+                html += '\n         <!-- APP METRICS SECTION (END)-->';
 
-            html += '\n         <!-- APP STATUS SECTION TOP (START)-->';
-            html += '\n         <div class="d-flex w-100 justify-content-between align-items-center">';
-            html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
-            html += '\n                 <div class="d-flex flex-row">';
-            html += '\n                     <small class="align-middle"><u><b>Author:</b></u></small>';
-            html += '\n                 </div>';
-            html += '\n                 <div class="d-flex flex-row">';
-            html += '\n                     <small class="align-middle" style="font-size: 12px;"><em>' + appData[i].author + '</em></small>';
-            html += '\n                 </div>';
-            html += '\n             </div>';
+                html += '\n         <!-- APP STATUS SECTION TOP (START)-->';
+                html += '\n         <div class="d-flex w-100 justify-content-between align-items-center">';
+                html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
+                html += '\n                 <div class="d-flex flex-row">';
+                html += '\n                     <small class="align-middle"><u><b>Author:</b></u></small>';
+                html += '\n                 </div>';
+                html += '\n                 <div class="d-flex flex-row">';
+                html += '\n                     <small class="align-middle" style="font-size: 12px;"><em>' + appData[i].author + '</em></small>';
+                html += '\n                 </div>';
+                html += '\n             </div>';
 
-            html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
-            html += '\n                 <div class="d-flex flex-row">';
-            html += '\n                     <small class="align-middle"><u><b>Category:</b></u></small>';
-            html += '\n                 </div>';
-            html += '\n                 <div class="d-flex flex-row">';
-            html += '\n                     <small class="align-middle"><em>' + appData[i].category + '</em></small>';
-            html += '\n                 </div>';
-            html += '\n             </div>';
-            html += '\n         </div>';
-            html += '\n         <!-- APP STATUS SECTION TOP (END)-->';
-            html += '\n     </a>';
-            html += '\n   </td>';
-            html += '\n   </tr>';
+                html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
+                html += '\n                 <div class="d-flex flex-row">';
+                html += '\n                     <small class="align-middle"><u><b>Category:</b></u></small>';
+                html += '\n                 </div>';
+                html += '\n                 <div class="d-flex flex-row">';
+                html += '\n                     <small class="align-middle"><em>' + appData[i].category + '</em></small>';
+                html += '\n                 </div>';
+                html += '\n             </div>';
+                html += '\n         </div>';
+                html += '\n         <!-- APP STATUS SECTION TOP (END)-->';
+                html += '\n     </a>';
+                html += '\n   </td>';
+                html += '\n   </tr>';
+            }
+            html += '\n            </table>';
+            html += '\n         </tbody>';
+        } else {
+            html += '\n  <div class="py-4" style="background-color: transparent;">';
+            if (listType === 'devs') {
+                html += '\n     <h6>Device-Only Projects are Not Yet Supported!</h6>';
+            } else {
+                html += '\n     <h6>No Items Found</h6>';
+                html += '\n     <button id="clearSearchBtn" type="button" class="btn btn-md btn-outline-secondary mx-2" style="background: transparent;border: 2px solid white; color: white !important;"><span><i class="fa fa-times white-text"></i> Clear Search</span></button>';
+            }
+            html += '\n  </div>';
         }
-        html += '\n            </table>';
-        html += '\n         </tbody>';
         html += '\n      </div>';
         html += '\n   </div>';
-        html += '\n</div>';
-    } else {
-        html += '\n  <h6>No Items Found</h6>';
-        html += '\n  <button id="clearSearchBtn" type="button" class="btn btn-md btn-outline-secondary mx-2" style="background: transparent;border: 2px solid white; color: white !important;"><span><i class="fa fa-times white-text"></i> Clear Search</span></button>';
+
     }
+    if (listType === 'news') {
+        updSectTitle('Latest News');
+        html += '\n   <div id="newsGroupDiv" class="listGroup pt-4">';
+        html += '\n     <!--New Card Panel-->';
+        html += '\n     <div class="card card-body card-outline px-1 py-0 mb-2" style="background-color: transparent;">';
+        html += '\n       <div class="py-4" style="background-color: transparent;">';
+        html += '\n           <h6>Sorry!<br/> I don\'t have any News to share (Yet!)</h6>';
+        html += '\n       </div>';
+        html += '\n     </div>';
+        html += '\n   </div>';
+    }
+    html += '\n</div>';
+
     scrollToTop();
-    updSectTitle('Select an Item');
+
     $('#listContDiv').html('').html(html);
-    if (appData.length) {
+
+    if (appData && appData.length) {
         for (const i in appData) {
             let inpt = $('#' + cleanIdName(appData[i].smartApps.parent.name));
             if (inpt.length) {
@@ -1596,10 +1626,9 @@ function buildAppList(filterStr = undefined) {
         processItemsStatuses(appData, 'appList');
     }
 
-    searchBtnAvail(true);
     loaderVisible(false);
-    $('#actResultsDiv').css({ display: 'none' });
-    $('#appViewDiv').css({ display: 'none' });
+    $('#actResultsDiv').hide();
+    $('#appViewDiv').hide();
     $('#appSearchBox').keypress(function(e) {
         if (e.which === 13) {
             searchForApp('KeyPress');
@@ -1621,7 +1650,29 @@ function buildAppList(filterStr = undefined) {
             renderAppView(this.id, $(this).data('manifest'));
         }
     });
-    $('#listContDiv').css({ display: 'block' });
+    $('#listContDiv').show();
+
+    $('#appList' + capitalize(listType) + 'TabBtn').addClass('active');
+    $('#appListAppsTabBtn').click(function() {
+        $('#appListNewsTabBtn').removeClass('active');
+        $('#appListDevsTabBtn').removeClass('active');
+        $('#appListAppsTabBtn').addClass('active');
+        buildAppList(undefined, 'apps');
+    });
+    $('#appListDevsTabBtn').click(function() {
+        $('#appListDevsTabBtn').addClass('active');
+        $('#appListNewsTabBtn').removeClass('active');
+        $('#appListAppsTabBtn').removeClass('active');
+        buildAppList(undefined, 'devs');
+    });
+    $('#appListNewsTabBtn').click(function() {
+        $('#appListNewsTabBtn').addClass('active');
+        $('#appListAppsTabBtn').removeClass('active');
+        $('#appListDevsTabBtn').removeClass('active');
+        // $('#objsGroupDiv').hide();
+        // $('#newsGroupDiv').show();
+        buildAppList(undefined, 'news');
+    });
     new WOW().init();
     installerAppUpdAvail();
 }
@@ -2147,8 +2198,6 @@ function buildCoreHtml() {
     head += '\n                 <meta name="apple-mobile-web-app-capable" content="yes">';
     head += '\n                 <link rel="shortcut icon" type="image/x-icon" href="https://cdn.rawgit.com/tonesto7/st-community-installer/master/images/app_logo.ico" />';
     head += '\n                 <title>Community Installer</title>';
-    // head += '\n                 <link rel="stylesheet" type="text/css" href="' + baseAppUrl + '/content/css/main_mdb.min.css" />';
-    // head += '\n                 <link rel="stylesheet" type="text/css" href="' + baseAppUrl + '/content/css/mdb.min.css" />';
     head += '\n                 <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto" />';
     head += '\n                 <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" />';
     head += '\n                 <script src="https://use.fontawesome.com/a81eef09c0.js" async></script>';
@@ -2156,8 +2205,7 @@ function buildCoreHtml() {
     head += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js" async></script>';
     head += '\n                 <script src="https://static.firebase.com/v0/firebase.js" async></script>';
     head += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js" async></script>';
-    // head += '\n                 <link rel="stylesheet" type="text/css" href="' + baseAppUrl + '/content/css/main_web.min.css" />';
-    // head += '\n                 <!-- Global site tag (gtag.js) - Google Analytics --> <script async src="https://www.googletagmanager.com/gtag/js?id=UA-113463133-1"></script><script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag("js", new Date()); gtag("config", "UA-113463133-1");</script>';
+    // head += '\n                 <script src="https://cdn.jsdelivr.net/npm/vue"></script>';
     $('head').append(head);
 
     let html = '';
@@ -2387,7 +2435,7 @@ const resultStrings = {
         errors: {
             generic_error: 'Application Error:<br/><br/>',
             add_repo_error: 'Add Repo to IDE Error:<br/>Please Try Again Later<br/><br/>',
-            auth_expired: 'Your Auth Session Expired.<br/>Press the Login Button to Login again',
+            auth_expired: 'Your Login Session Expired.<br/>Press the Login button to proceed',
             auth_issue: 'Authentication Issue!<br/>Make Sure you Signed In!',
             app_list_manifest_error: 'App Manifest Error:<br/>Unable to Retrieve App List<br/>',
             smartapp_manifest_error: 'SmartApp Manifest Error:<br/>App could not retrieve the file for:',

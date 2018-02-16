@@ -297,3 +297,27 @@ footer.page-footer .footer-copyright {
 body.modal-open {
     overflow: hidden;
 }
+
+button#appListAppsTabBtn {
+    background: transparent;
+}
+
+button#appListDevsTabBtn {
+    background: transparent;
+}
+
+button#appListNewsTabBtn {
+    background: transparent;
+}
+
+button#appListAppsTabBtn.active {
+    background: #007bff;
+}
+
+button#appListDevsTabBtn.active {
+    background: #00c851;
+}
+
+button#appListNewsTabBtn.active {
+    background: #ff3547;
+}
