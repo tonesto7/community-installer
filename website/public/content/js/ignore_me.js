@@ -1,6 +1,6 @@
-const scriptVersion = '1.0.0216d';
+const scriptVersion = '1.0.0217a';
 const scriptRelType = 'beta';
-const scriptVerDate = '2/16/2018';
+const scriptVerDate = '2/17/2018';
 const latestSaVer = '1.0.0213a';
 const allowInstalls = true;
 const allowUpdates = true;
@@ -1473,7 +1473,7 @@ function loadAllManifests() {
 function buildAppList(filterStr = undefined, listType = 'apps') {
     let appData = [];
     let html = '';
-    html += '\n<div id=listDiv class="clearfix">';
+    html += '\n<div id=listDiv class="w-100 clearfix">';
     html += '\n   <div class="btn-group mb-0 mx-3" role="group" data-toggle="button" aria-label="Basic example">';
     html += '\n       <button id="appListAppsTabBtn" type="button" class="btn btn-md btn-rounded waves-effect p-2" style="width: 105px;"><small-medium class="white-text">SmartApps</small-medium></button>';
     html += '\n       <button id="appListDevsTabBtn" type="button" class="btn btn-md btn-rounded waves-effect p-2" style="width: 105px;"><small-medium class="white-text">Devices</small-medium></button>';
