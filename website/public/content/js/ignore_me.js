@@ -1,6 +1,6 @@
-const scriptVersion = '1.0.0217a';
+const scriptVersion = '1.0.0219a';
 const scriptRelType = 'beta';
-const scriptVerDate = '2/17/2018';
+const scriptVerDate = '2/19/2018';
 const latestSaVer = '1.0.0213a';
 const allowInstalls = true;
 const allowUpdates = true;
@@ -14,7 +14,10 @@ var availableApps;
 var availableDevs;
 var currentManifest;
 
+var currentListType;
+
 var metricsData;
+var newsData;
 var retryCnt = 0;
 var refreshCount;
 var uCsrf;
@@ -23,7 +26,7 @@ var mainManifest;
 var appManifests;
 var itemStatusMap;
 
-const authUrl = generateStUrl('hub/list');
+const authUrl = generateStUrl('hub');
 const fetchReposUrl = generateStUrl('github/writeableRepos');
 const updRepoUrl = generateStUrl('githubAuth/updateRepos');
 const updFormUrl = generateStUrl('githubAuth/updateForm');
@@ -181,7 +184,10 @@ function addResult(str, good, type = '', str2 = '') {
             break;
         case 'repo':
             $('#repoResultsTitle').css({ display: 'block' });
-            $('#repoResultUl').css({ display: 'block' }).append(s);
+            //   $('#repoResultUl').css({display: 'block'}).append(s);
+            if (!checkListForDuplicate('#repoResultUl li', str)) {
+                $('#repoResultUl').css({ display: 'block' }).append(s);
+            }
             break;
         default:
             s = "<li><p><span style='color: " + (good !== false ? '#25c225' : '#FF0000') + ";'>";
@@ -201,6 +207,27 @@ function checkListForDuplicate(element, str) {
         items.push($(this).text().trim());
     });
     return items.includes(str);
+}
+
+function timeSince(timeStamp) {
+    let now = new Date();
+    let ts = new Date(timeStamp);
+    let secPass = now.getTime() - ts.getTime();
+    if (secPass < 60) {
+        return parseInt(secPass).toString() + secPass > 1 ? ' secs ago' : ' sec ago';
+    }
+    if (secPass < 3600) {
+        return parseInt(secPass / 60).toString() + secPass > 120 ? ' mins ago' : ' min ago';
+    }
+    if (secPass <= 86400) {
+        return parseInt(secPass / 3600).toString() + secPass > 7200 ? ' hours ago' : ' hour ago';
+    }
+    if (secPass > 86400) {
+        day = ts.getDate();
+        month = ts.toDateString().match(/ [a-zA-Z]*/)[0].replace(' ', '') + ' ';
+        year = ts.getFullYear() === now.getFullYear() ? '' : ', ' + ts.getFullYear();
+        return month + day + year;
+    }
 }
 
 /***********************************************************************/
@@ -1062,7 +1089,9 @@ function incrementLikeDislike(appName, type) {
 }
 
 function findAppMatch(srchStr, data) {
-    if (data === undefined || data.length < 1) { return []; }
+    if (data === undefined || data.length < 1) {
+        return [];
+    }
     if (srchStr === undefined || srchStr.length < 3) {
         return data.sort(dynamicSort('name'));
     } else {
@@ -1082,16 +1111,16 @@ function dynamicSort(property) {
     };
 }
 
-function searchForApp(evtSender) {
+function searchForApp(evtSender, listType) {
     let srchVal = $('#appSearchBox').val();
     // console.log('AppSearch Event (' + evtSender + '): ' + srchVal);
     if (evtSender === 'clear') {
         srchVal = '';
     }
-    buildAppList(srchVal);
+    buildMainPage(srchVal, listType);
 }
 
-function startMetricsListener() {
+function startFirebaseListener() {
     var fb = new Firebase('https://community-installer-34dac.firebaseio.com/metrics/');
     fb.on('value', function(snap) {
         var v = snap.val();
@@ -1099,6 +1128,102 @@ function startMetricsListener() {
         metricsData = v;
         updateMetricsData();
     });
+    var fb = new Firebase('https://community-installer-34dac.firebaseio.com/news/');
+    fb.on('value', function(snap) {
+        var v = snap.val();
+        // console.log('v: ', v);
+        newsData = v;
+        updateNewsData();
+    });
+}
+
+function updateNewsData() {
+    let html = '';
+    if (Object.keys(newsData).length) {
+        let cnt = 0;
+        for (const i in newsData) {
+            html += '\n<!--New Card Panel-->';
+            html += '\n<div class="card card-body" style="background-color: transparent;">';
+            html += '\n    <h6 class="card-title h6-responsive white-text text-left">' + newsData[i].title + '<small id="news_feed_item_' + cnt + '" class="timeago text-muted text-left pl-2" style="font-size: 55%;" datetime="' + newsData[i].dt + '"></small></h6>';
+            html += '\n    <p class="card-text text-left">';
+            html += '\n       ' + newsData[i].body;
+            html += '\n    </p>';
+            html += '\n</div>';
+            cnt++;
+        }
+    } else {
+        html += '\n     <!--New Card Panel-->';
+        html += '\n     <div class="card card-body card-outline px-1 py-0 mb-2" style="background-color: transparent;">';
+        html += '\n       <div class="py-4" style="background-color: transparent;">';
+        html += "\n           <h6>Sorry!<br/> I don't have any News to share (Yet!)</h6>";
+        html += '\n       </div>';
+        html += '\n     </div>';
+    }
+    $('#newsGroupDiv').html('').html(html);
+    timeAgo('');
+}
+
+function timeAgo(selector) {
+    var templates = {
+        prefix: '',
+        suffix: ' ago',
+        seconds: 'less than a minute',
+        minute: 'about a minute',
+        minutes: '%d minutes',
+        hour: 'about an hour',
+        hours: 'about %d hours',
+        day: 'a day',
+        days: '%d days',
+        month: 'about a month',
+        months: '%d months',
+        year: 'about a year',
+        years: '%d years'
+    };
+    var template = function(t, n) {
+        return templates[t] && templates[t].replace(/%d/i, Math.abs(Math.round(n)));
+    };
+
+    var timer = function(time) {
+        if (!time) return;
+        time = time.replace(/\.\d+/, ''); // remove milliseconds
+        time = time.replace(/-/, '/').replace(/-/, '/');
+        time = time.replace(/T/, ' ').replace(/Z/, ' UTC');
+        time = time.replace(/([\+\-]\d\d)\:?(\d\d)/, ' $1$2'); // -04:00 -> -0400
+        time = new Date(time * 1000 || time);
+
+        var now = new Date();
+        var seconds = ((now.getTime() - time) * 0.001) >> 0;
+        var minutes = seconds / 60;
+        var hours = minutes / 60;
+        var days = hours / 24;
+        var years = days / 365;
+
+        return (
+            templates.prefix +
+            ((seconds < 45 && template('seconds', seconds)) ||
+                (seconds < 90 && template('minute', 1)) ||
+                (minutes < 45 && template('minutes', minutes)) ||
+                (minutes < 90 && template('hour', 1)) ||
+                (hours < 24 && template('hours', hours)) ||
+                (hours < 42 && template('day', 1)) ||
+                (days < 30 && template('days', days)) ||
+                (days < 45 && template('month', 1)) ||
+                (days < 365 && template('months', days / 30)) ||
+                (years < 1.5 && template('year', 1)) ||
+                template('years', years)) +
+            templates.suffix
+        );
+    };
+
+    var elements = document.getElementsByClassName('timeago');
+    for (var i in elements) {
+        var $this = elements[i];
+        if (typeof $this === 'object') {
+            $this.innerHTML = timer($this.getAttribute('datetime'));
+        }
+    }
+    // update time every minute
+    setTimeout(timeAgo, 60000);
 }
 
 function updateMetricsData() {
@@ -1220,14 +1345,17 @@ function processItemsStatuses(data, viewType) {
                     updateAppDeviceItemStatus(items[i].name, items[i].smartApps.parent.name, 'app', viewType, mData)
                         .catch(function(err) {
                             // console.log(err);
-                        }).then(function(resp) {
+                        })
+                        .then(function(resp) {
                             if (resp.installed === true) {
                                 cnt++;
                                 if (viewType === 'appView') {
                                     installBtnAvail(cnt, items[i]);
                                 }
                                 if (resp.updates === true) {
-                                    if (viewType === 'appList' && parentName) { updateRibbon(cleanIdName(parentName), 'Updates', 'ribbon-orange'); }
+                                    if (viewType === 'appList' && parentName) {
+                                        updateRibbon(cleanIdName(parentName), 'Updates', 'ribbon-orange');
+                                    }
                                     // console.log('UpdateAvail(' + items[i].smartApps.parent.name + ')');
                                 }
                             }
@@ -1240,14 +1368,17 @@ function processItemsStatuses(data, viewType) {
                         updateAppDeviceItemStatus(items[i].smartApps.children[sa].name, undefined, 'app', viewType, mData, true)
                             .catch(function(err) {
                                 // console.log(err);
-                            }).then(function(resp) {
+                            })
+                            .then(function(resp) {
                                 if (resp.installed === true) {
                                     cnt++;
                                     if (viewType === 'appView') {
                                         installBtnAvail(cnt, items[i]);
                                     }
                                     if (resp.updates === true) {
-                                        if (viewType === 'appList' && parentName) { updateRibbon(cleanIdName(parentName), 'Updates', 'ribbon-orange'); }
+                                        if (viewType === 'appList' && parentName) {
+                                            updateRibbon(cleanIdName(parentName), 'Updates', 'ribbon-orange');
+                                        }
                                         // console.log('UpdateAvail(' + items[i].smartApps.children[sa].name + ')');
                                     }
                                 }
@@ -1261,19 +1392,21 @@ function processItemsStatuses(data, viewType) {
                     updateAppDeviceItemStatus(items[i].deviceHandlers[dh].name, undefined, 'device', viewType, mData)
                         .catch(function(err) {
                             // console.log(err);
-                        }).then(function(resp) {
+                        })
+                        .then(function(resp) {
                             if (resp.installed === true) {
                                 cnt++;
                                 if (viewType === 'appView') {
                                     installBtnAvail(cnt, items[i]);
                                 }
                                 if (resp.updates === true) {
-                                    if (viewType === 'appList' && parentName) { updateRibbon(cleanIdName(parentName), 'Updates', 'ribbon-orange'); }
+                                    if (viewType === 'appList' && parentName) {
+                                        updateRibbon(cleanIdName(parentName), 'Updates', 'ribbon-orange');
+                                    }
                                     // console.log('UpdateAvail(' + items[i].deviceHandlers[dh].name + ')');
                                 }
                             }
                         });
-
                 }
             }
         }
@@ -1462,22 +1595,22 @@ function loadAllManifests() {
     });
     loadManifests.then(resp => {
         if (appManifests.apps.length > 0) {
-            buildAppList();
-            startMetricsListener();
+            buildMainPage();
+            startFirebaseListener();
         } else {
             installComplete(resultStrings.inst_comp_text.errors.app_list_manifest_error, true);
         }
     });
 }
 
-function buildAppList(filterStr = undefined, listType = 'apps') {
+function buildMainPage(filterStr = undefined, listType = 'apps') {
     let appData = [];
     let html = '';
     html += '\n<div id=listDiv class="w-100 clearfix">';
     html += '\n   <div class="btn-group mb-0 mx-3" role="group" data-toggle="button" aria-label="Basic example">';
+    html += '\n       <button id="appListNewsTabBtn" type="button" class="btn btn-md btn-rounded waves-effect p-2" style="width: 105px;"><small-medium class="white-text">News</small-medium></button>';
     html += '\n       <button id="appListAppsTabBtn" type="button" class="btn btn-md btn-rounded waves-effect p-2" style="width: 105px;"><small-medium class="white-text">SmartApps</small-medium></button>';
     html += '\n       <button id="appListDevsTabBtn" type="button" class="btn btn-md btn-rounded waves-effect p-2" style="width: 105px;"><small-medium class="white-text">Devices</small-medium></button>';
-    html += '\n       <button id="appListNewsTabBtn" type="button" class="btn btn-md btn-rounded waves-effect p-2" style="width: 105px;"><small-medium class="white-text">News</small-medium></button>';
     html += '\n   </div>';
     if (listType === 'apps' || listType === 'devs') {
         html += '\n           <div id="searchFormDiv" class="d-flex flex-row justify-content-center align-items-center" style="display: none;">';
@@ -1596,25 +1729,19 @@ function buildAppList(filterStr = undefined, listType = 'apps') {
         }
         html += '\n      </div>';
         html += '\n   </div>';
-
     }
     if (listType === 'news') {
         updSectTitle('Latest News');
-        html += '\n   <div id="newsGroupDiv" class="listGroup pt-4">';
-        html += '\n     <!--New Card Panel-->';
-        html += '\n     <div class="card card-body card-outline px-1 py-0 mb-2" style="background-color: transparent;">';
-        html += '\n       <div class="py-4" style="background-color: transparent;">';
-        html += '\n           <h6>Sorry!<br/> I don\'t have any News to share (Yet!)</h6>';
-        html += '\n       </div>';
-        html += '\n     </div>';
-        html += '\n   </div>';
+        html += '\n   <div id="newsGroupDiv" class="listGroup pt-4"></div>';
     }
     html += '\n</div>';
 
     scrollToTop();
 
     $('#listContDiv').html('').html(html);
-
+    if (listType === 'news') {
+        updateNewsData();
+    }
     if (appData && appData.length) {
         for (const i in appData) {
             let inpt = $('#' + cleanIdName(appData[i].smartApps.parent.name));
@@ -1631,18 +1758,18 @@ function buildAppList(filterStr = undefined, listType = 'apps') {
     $('#appViewDiv').hide();
     $('#appSearchBox').keypress(function(e) {
         if (e.which === 13) {
-            searchForApp('KeyPress');
+            searchForApp('KeyPress', listType);
             return false;
         }
     });
     $('#searchBtn').click(function() {
-        searchForApp('Clicked');
+        searchForApp('Clicked', listType);
     });
     $('#showSearchBtn').click(function() {
         searchFormToggle();
     });
     $('#clearSearchBtn').click(function() {
-        searchForApp('clear');
+        searchForApp('clear', listType);
     });
     $('#appListTable').on('click', 'td a', function() {
         // console.log('App Item Clicked: (' + this.id + ')');
@@ -1657,13 +1784,13 @@ function buildAppList(filterStr = undefined, listType = 'apps') {
         $('#appListNewsTabBtn').removeClass('active');
         $('#appListDevsTabBtn').removeClass('active');
         $('#appListAppsTabBtn').addClass('active');
-        buildAppList(undefined, 'apps');
+        buildMainPage(undefined, 'apps');
     });
     $('#appListDevsTabBtn').click(function() {
         $('#appListDevsTabBtn').addClass('active');
         $('#appListNewsTabBtn').removeClass('active');
         $('#appListAppsTabBtn').removeClass('active');
-        buildAppList(undefined, 'devs');
+        buildMainPage(undefined, 'devs');
     });
     $('#appListNewsTabBtn').click(function() {
         $('#appListNewsTabBtn').addClass('active');
@@ -1671,7 +1798,7 @@ function buildAppList(filterStr = undefined, listType = 'apps') {
         $('#appListDevsTabBtn').removeClass('active');
         // $('#objsGroupDiv').hide();
         // $('#newsGroupDiv').show();
-        buildAppList(undefined, 'news');
+        buildMainPage(undefined, 'news');
     });
     new WOW().init();
     installerAppUpdAvail();
@@ -1832,13 +1959,47 @@ function renderAppView(appName, manifest) {
                 html += '\n             <div class="d-flex flex-column justify-content-center align-items-center mx-2">';
                 html += '\n                 <div class="btn-group" role="group" aria-label="Basic example">';
                 if (manifest.forumUrl) {
+                    html += '\n                   <div class="modal fade" id="appForumModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">';
+                    html += '\n                       <div class="modal-dialog modal-lg" role="document">';
+                    html += '\n                           <div class="modal-content">';
+                    html += '\n                               <div class="modal-body mb-0 p-0">';
+                    html += '\n                                   <div class="embed-responsive z-depth-1-half">';
+                    html += '\n                                       <iframe class="embed-responsive-item" src="' + manifest.forumUrl + '" allowfullscreen></iframe>';
+                    html += '\n                                   </div>';
+                    html += '\n                               </div>';
+
+                    html += '\n                               <!--Footer-->';
+                    html += '\n                               <div class="modal-footer justify-content-center">';
+                    html += '\n                                   <span class="mr-4">Spread the word!</span>';
+                    html += '\n                                   <button type="button" class="btn btn-outline-primary btn-rounded btn-md ml-4" data-dismiss="modal">Close</button>';
+                    html += '\n                               </div>';
+                    html += '\n                           </div>';
+                    html += '\n                        </div>';
+                    html += '\n                   </div>';
                     html += '\n                 <div class="d-flex flex-row">';
-                    html += '\n                     <a class="btn btn-sm mx-2" href="' + manifest.forumUrl + '"><small-medium class="orange-text">Project Link</small-medium></a>';
+                    html += '\n                     <button type="button" class="btn btn-sm mx-2" data-toggle="modal" data-target="#appForumModal" style="background: transparent;"><small-medium class="orange-text">Project Link</small-medium></b>';
                     html += '\n                 </div>';
                 }
                 if (manifest.docUrl) {
+                    html += '\n                   <div class="modal fade" id="appDocModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">';
+                    html += '\n                       <div class="modal-dialog modal-lg" role="document">';
+                    html += '\n                           <div class="modal-content">';
+                    html += '\n                               <div class="modal-body mb-0 p-0">';
+                    html += '\n                                   <div class="embed-responsive z-depth-1-half">';
+                    html += '\n                                       <iframe class="embed-responsive-item" src="' + manifest.docUrl + '" allowfullscreen></iframe>';
+                    html += '\n                                   </div>';
+                    html += '\n                               </div>';
+
+                    html += '\n                               <!--Footer-->';
+                    html += '\n                               <div class="modal-footer justify-content-center">';
+                    html += '\n                                   <span class="mr-4">Spread the word!</span>';
+                    html += '\n                                   <button type="button" class="btn btn-outline-primary btn-rounded btn-md ml-4" data-dismiss="modal">Close</button>';
+                    html += '\n                               </div>';
+                    html += '\n                           </div>';
+                    html += '\n                        </div>';
+                    html += '\n                   </div>';
                     html += '\n                 <div class="d-flex flex-row">';
-                    html += '\n                     <a class="btn btn-sm mx-2" href="' + manifest.docUrl + '"><small-medium class="orange-text">Documentation</small-medium></a>';
+                    html += '\n                     <button type="button" class="btn btn-sm mx-2" data-toggle="modal" data-target="#appDocModal" style="background: transparent;"><small-medium class="orange-text">Project Link</small-medium></b>';
                     html += '\n                 </div>';
                 }
                 html += '\n                 </div>';
@@ -2481,6 +2642,7 @@ $.ajaxSetup({
 function loadScripts() {
     $.getScript('https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js');
     $.getScript('https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.4.5/js/mdb.min.js');
+    $.getScript('https://cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.6.1/jquery.timeago.min.js');
 }
 
 document.addEventListener('DOMContentLoaded', function() {

@@ -1,6 +1,12 @@
 {
     "rules": {
-        ".read": true,
-        ".write": true
+        "metrics": {
+            ".read": true,
+            ".write": true
+        },
+        "news": {
+            ".read": true,
+            ".write": true
+        }
     }
 }
