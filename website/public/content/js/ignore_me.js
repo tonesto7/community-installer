@@ -1,6 +1,6 @@
-const scriptVersion = '1.0.0219a';
+const scriptVersion = '1.0.0220a';
 const scriptRelType = 'beta';
-const scriptVerDate = '2/19/2018';
+const scriptVerDate = '2/20/2018';
 const latestSaVer = '1.0.0213a';
 const allowInstalls = true;
 const allowUpdates = true;
@@ -1603,6 +1603,8 @@ function loadAllManifests() {
     });
 }
 
+//https://graph.api.smartthings.com/api/locations/55d39046-ffe7-47a7-bdf0-7c70f7d9b05e/smartapps
+
 function buildMainPage(filterStr = undefined, listType = 'apps') {
     let appData = [];
     let html = '';
@@ -1720,6 +1722,7 @@ function buildMainPage(filterStr = undefined, listType = 'apps') {
         } else {
             html += '\n  <div class="py-4" style="background-color: transparent;">';
             if (listType === 'devs') {
+                searchBtnAvail(false);
                 html += '\n     <h6>Device-Only Projects are Not Yet Supported!</h6>';
             } else {
                 html += '\n     <h6>No Items Found</h6>';
@@ -1731,6 +1734,7 @@ function buildMainPage(filterStr = undefined, listType = 'apps') {
         html += '\n   </div>';
     }
     if (listType === 'news') {
+        searchBtnAvail(false);
         updSectTitle('Latest News');
         html += '\n   <div id="newsGroupDiv" class="listGroup pt-4"></div>';
     }
@@ -1959,47 +1963,49 @@ function renderAppView(appName, manifest) {
                 html += '\n             <div class="d-flex flex-column justify-content-center align-items-center mx-2">';
                 html += '\n                 <div class="btn-group" role="group" aria-label="Basic example">';
                 if (manifest.forumUrl) {
-                    html += '\n                   <div class="modal fade" id="appForumModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">';
-                    html += '\n                       <div class="modal-dialog modal-lg" role="document">';
-                    html += '\n                           <div class="modal-content">';
-                    html += '\n                               <div class="modal-body mb-0 p-0">';
-                    html += '\n                                   <div class="embed-responsive z-depth-1-half">';
-                    html += '\n                                       <iframe class="embed-responsive-item" src="' + manifest.forumUrl + '" allowfullscreen></iframe>';
-                    html += '\n                                   </div>';
-                    html += '\n                               </div>';
+                    // html += '\n                   <div class="modal fade" id="appForumModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">';
+                    // html += '\n                       <div class="modal-dialog modal-lg" role="document">';
+                    // html += '\n                           <div class="modal-content">';
+                    // html += '\n                               <div class="modal-body mb-0 p-0">';
+                    // html += '\n                                   <div class="embed-responsive z-depth-1-half">';
+                    // html += '\n                                       <iframe class="embed-responsive-item" src="' + manifest.forumUrl + '" allowfullscreen></iframe>';
+                    // html += '\n                                   </div>';
+                    // html += '\n                               </div>';
 
-                    html += '\n                               <!--Footer-->';
-                    html += '\n                               <div class="modal-footer justify-content-center">';
-                    html += '\n                                   <span class="mr-4">Spread the word!</span>';
-                    html += '\n                                   <button type="button" class="btn btn-outline-primary btn-rounded btn-md ml-4" data-dismiss="modal">Close</button>';
-                    html += '\n                               </div>';
-                    html += '\n                           </div>';
-                    html += '\n                        </div>';
-                    html += '\n                   </div>';
+                    // html += '\n                               <!--Footer-->';
+                    // html += '\n                               <div class="modal-footer justify-content-center">';
+                    // html += '\n                                   <span class="mr-4">Spread the word!</span>';
+                    // html += '\n                                   <button type="button" class="btn btn-outline-primary btn-rounded btn-md ml-4" data-dismiss="modal">Close</button>';
+                    // html += '\n                               </div>';
+                    // html += '\n                           </div>';
+                    // html += '\n                        </div>';
+                    // html += '\n                   </div>';
                     html += '\n                 <div class="d-flex flex-row">';
-                    html += '\n                     <button type="button" class="btn btn-sm mx-2" data-toggle="modal" data-target="#appForumModal" style="background: transparent;"><small-medium class="orange-text">Project Link</small-medium></b>';
+                    html += '\n                     <a class="btn btn-sm mx-2" href="' + manifest.forumUrl + '"><small-medium class="orange-text">Project Link</small-medium></a>';
+                    // html += '\n                     <button type="button" class="btn btn-sm mx-2" data-toggle="modal" data-target="#appForumModal" style="background: transparent;"><small-medium class="orange-text">Project Link</small-medium></b>';
                     html += '\n                 </div>';
                 }
                 if (manifest.docUrl) {
-                    html += '\n                   <div class="modal fade" id="appDocModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">';
-                    html += '\n                       <div class="modal-dialog modal-lg" role="document">';
-                    html += '\n                           <div class="modal-content">';
-                    html += '\n                               <div class="modal-body mb-0 p-0">';
-                    html += '\n                                   <div class="embed-responsive z-depth-1-half">';
-                    html += '\n                                       <iframe class="embed-responsive-item" src="' + manifest.docUrl + '" allowfullscreen></iframe>';
-                    html += '\n                                   </div>';
-                    html += '\n                               </div>';
+                    // html += '\n                   <div class="modal fade" id="appDocModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">';
+                    // html += '\n                       <div class="modal-dialog modal-lg" role="document">';
+                    // html += '\n                           <div class="modal-content">';
+                    // html += '\n                               <div class="modal-body mb-0 p-0">';
+                    // html += '\n                                   <div class="embed-responsive z-depth-1-half">';
+                    // html += '\n                                       <iframe class="embed-responsive-item" src="' + manifest.docUrl + '" allowfullscreen></iframe>';
+                    // html += '\n                                   </div>';
+                    // html += '\n                               </div>';
 
-                    html += '\n                               <!--Footer-->';
-                    html += '\n                               <div class="modal-footer justify-content-center">';
-                    html += '\n                                   <span class="mr-4">Spread the word!</span>';
-                    html += '\n                                   <button type="button" class="btn btn-outline-primary btn-rounded btn-md ml-4" data-dismiss="modal">Close</button>';
-                    html += '\n                               </div>';
-                    html += '\n                           </div>';
-                    html += '\n                        </div>';
-                    html += '\n                   </div>';
+                    // html += '\n                               <!--Footer-->';
+                    // html += '\n                               <div class="modal-footer justify-content-center">';
+                    // html += '\n                                   <span class="mr-4">Spread the word!</span>';
+                    // html += '\n                                   <button type="button" class="btn btn-outline-primary btn-rounded btn-md ml-4" data-dismiss="modal">Close</button>';
+                    // html += '\n                               </div>';
+                    // html += '\n                           </div>';
+                    // html += '\n                        </div>';
+                    // html += '\n                   </div>';
                     html += '\n                 <div class="d-flex flex-row">';
-                    html += '\n                     <button type="button" class="btn btn-sm mx-2" data-toggle="modal" data-target="#appDocModal" style="background: transparent;"><small-medium class="orange-text">Project Link</small-medium></b>';
+                    html += '\n                     <a class="btn btn-sm mx-2" href="' + manifest.docUrl + '"><small-medium class="orange-text">Documentation</small-medium></a>';
+                    //html += '\n                     <button type="button" class="btn btn-sm mx-2" data-toggle="modal" data-target="#appDocModal" style="background: transparent;"><small-medium class="orange-text">Project Link</small-medium></b>';
                     html += '\n                 </div>';
                 }
                 html += '\n                 </div>';
@@ -2121,10 +2127,9 @@ function renderAppView(appName, manifest) {
             html += '\n     <!--App Options Panel-->';
             html += '\n     <div class="card card-body card-outline px-1 py-3 mb-2" style="background-color: transparent;">';
             html += '\n         <div class="row">';
+
             // Start Here
-
             let apps = [];
-
             if (manifest.smartApps) {
                 if (manifest.smartApps.parent) {
                     manifest.smartApps.parent['isParent'] = true;
@@ -2178,7 +2183,6 @@ function renderAppView(appName, manifest) {
             $('#appViewDiv').css({ display: 'none' });
             $('#listContDiv').css({ display: 'block' });
             appCloseBtnAvail(false);
-            searchBtnAvail(true);
         });
         $('#dislikeAppBtn').click(function() {
             incrementLikeDislike(appName, 'dislike');
