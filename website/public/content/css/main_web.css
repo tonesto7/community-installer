@@ -1,8 +1,8 @@
 body {
-    background: #2b3134;
-    color: #fff;
-    font-family: Roboto, "Swiss 721 W01 Thin", "Gill sans", sans-serif;
-    height: 100%;
+    background: #2b3134 !important;
+    color: #fff !important;
+    font-family: Roboto, sans-serif !important;
+    height: 100% !important;
 }
 
 .card.card-cascade .view.gradient-card-header {
@@ -300,197 +300,208 @@ body.modal-open {
 
 button#appListAppsTabBtn {
     background: transparent;
+    font-weight: 200;
 }
 
 button#appListDevsTabBtn {
     background: transparent;
+    font-weight: 200;
 }
 
 button#appListNewsTabBtn {
     background: transparent;
+    font-weight: 200;
 }
 
 button#appListAppsTabBtn.active {
     background: #007bff;
+    font-weight: 400;
 }
 
 button#appListDevsTabBtn.active {
     background: #00c851;
+    font-weight: 400;
 }
 
 button#appListNewsTabBtn.active {
     background: #ff3547;
+    font-weight: 400;
 }
 
 .sbx-custom {
-  display: inline-block;
-  position: relative;
-  width: 340px;
-  height: 45px;
-  white-space: nowrap;
-  box-sizing: border-box;
-  font-size: 13px;
+    display: inline-block;
+    position: relative;
+    width: 340px;
+    height: 45px;
+    white-space: nowrap;
+    box-sizing: border-box;
+    font-size: 13px;
 }
 
 .sbx-custom__wrapper {
-  width: 100%;
-  height: 100%;
+    width: 100%;
+    height: 100%;
 }
 
 .sbx-custom__input {
-  display: inline-block;
-  -webkit-transition: box-shadow .4s ease, background .4s ease;
-  transition: box-shadow .4s ease, background .4s ease;
-  border: 0;
-  border-radius: 25px;
-  box-shadow: inset 0 0 0 2px #969696;
-  background: #2B3134;
-  padding: 0;
-  padding-right: 36px;
-  padding-left: 45px;
-  width: 100%;
-  height: 100%;
-  vertical-align: middle;
-  white-space: normal;
-  font-size: inherit;
-  -webkit-appearance: none;
-     -moz-appearance: none;
-          /* appearance: none; */
+    display: inline-block;
+    -webkit-transition: box-shadow .4s ease, background .4s ease;
+    transition: box-shadow .4s ease, background .4s ease;
+    border: 0;
+    border-radius: 25px;
+    box-shadow: inset 0 0 0 2px #969696;
+    background: #2B3134;
+    padding: 0;
+    padding-right: 36px;
+    padding-left: 45px;
+    width: 100%;
+    height: 100%;
+    vertical-align: middle;
+    white-space: normal;
+    font-size: inherit;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    /* appearance: none; */
 }
 
-.sbx-custom__input::-webkit-search-decoration, .sbx-custom__input::-webkit-search-cancel-button, .sbx-custom__input::-webkit-search-results-button, .sbx-custom__input::-webkit-search-results-decoration {
-  display: none;
+.sbx-custom__input::-webkit-search-decoration,
+.sbx-custom__input::-webkit-search-cancel-button,
+.sbx-custom__input::-webkit-search-results-button,
+.sbx-custom__input::-webkit-search-results-decoration {
+    display: none;
 }
 
 .sbx-custom__input:hover {
-  box-shadow: inset 0 0 0 2px #7d7d7d;
+    box-shadow: inset 0 0 0 2px #7d7d7d;
 }
 
-.sbx-custom__input:focus, .sbx-custom__input:active {
-  outline: 0;
-  box-shadow: inset 0 0 0 2px #FFFFFF;
-  background: #2B3134;
+.sbx-custom__input:focus,
+.sbx-custom__input:active {
+    outline: 0;
+    box-shadow: inset 0 0 0 2px #FFFFFF;
+    background: #2B3134;
 }
 
 .sbx-custom__input::-webkit-input-placeholder {
-  color: #FFFFFF;
+    color: #FFFFFF;
 }
 
 .sbx-custom__input::-moz-placeholder {
-  color: #FFFFFF;
+    color: #FFFFFF;
 }
 
 .sbx-custom__input:-ms-input-placeholder {
-  color: #FFFFFF;
+    color: #FFFFFF;
 }
 
 .sbx-custom__input::placeholder {
-  color: #FFFFFF;
+    color: #FFFFFF;
 }
 
 .sbx-custom__submit {
-  position: absolute;
-  top: 0;
-  right: inherit;
-  left: 0;
-  margin: 0;
-  border: 0;
-  border-radius: 16px 0 0 16px;
-  background-color: rgba(255, 255, 255, 0);
-  padding: 0;
-  width: 45px;
-  height: 100%;
-  vertical-align: middle;
-  text-align: center;
-  font-size: inherit;
-  -webkit-user-select: none;
-     -moz-user-select: none;
-      -ms-user-select: none;
-          user-select: none;
+    position: absolute;
+    top: 0;
+    right: inherit;
+    left: 0;
+    margin: 0;
+    border: 0;
+    border-radius: 16px 0 0 16px;
+    background-color: rgba(255, 255, 255, 0);
+    padding: 0;
+    width: 45px;
+    height: 100%;
+    vertical-align: middle;
+    text-align: center;
+    font-size: inherit;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .sbx-custom__submit::before {
-  display: inline-block;
-  margin-right: -4px;
-  height: 100%;
-  vertical-align: middle;
-  content: '';
+    display: inline-block;
+    margin-right: -4px;
+    height: 100%;
+    vertical-align: middle;
+    content: '';
 }
 
-.sbx-custom__submit:hover, .sbx-custom__submit:active {
-  cursor: pointer;
+.sbx-custom__submit:hover,
+.sbx-custom__submit:active {
+    cursor: pointer;
 }
 
 .sbx-custom__submit:focus {
-  outline: 0;
+    outline: 0;
 }
 
 .sbx-custom__submit svg {
-  width: 17px;
-  height: 17px;
-  vertical-align: middle;
-  fill: #FFFFFF;
+    width: 17px;
+    height: 17px;
+    vertical-align: middle;
+    fill: #FFFFFF;
 }
 
 .sbx-custom__reset {
-  display: none;
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  margin: 0;
-  border: 0;
-  background: none;
-  cursor: pointer;
-  padding: 0;
-  font-size: inherit;
-  -webkit-user-select: none;
-     -moz-user-select: none;
-      -ms-user-select: none;
-          user-select: none;
-  fill: rgba(0, 0, 0, 0.5);
+    display: none;
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    margin: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    padding: 0;
+    font-size: inherit;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    fill: rgba(0, 0, 0, 0.5);
 }
 
 .sbx-custom__reset:focus {
-  outline: 0;
+    outline: 0;
 }
 
 .sbx-custom__reset svg {
-  display: block;
-  margin: 4px;
-  width: 9px;
-  height: 9px;
+    display: block;
+    margin: 4px;
+    width: 9px;
+    height: 9px;
 }
 
-.sbx-custom__input:valid ~ .sbx-custom__reset {
-  display: block;
-  -webkit-animation-name: sbx-reset-in;
-          animation-name: sbx-reset-in;
-  -webkit-animation-duration: .15s;
-          animation-duration: .15s;
+.sbx-custom__input:valid~.sbx-custom__reset {
+    display: block;
+    -webkit-animation-name: sbx-reset-in;
+    animation-name: sbx-reset-in;
+    -webkit-animation-duration: .15s;
+    animation-duration: .15s;
 }
 
 @-webkit-keyframes sbx-reset-in {
-  0% {
-    -webkit-transform: translate3d(-20%, 0, 0);
-            transform: translate3d(-20%, 0, 0);
-    opacity: 0;
-  }
-  100% {
-    -webkit-transform: none;
-            transform: none;
-    opacity: 1;
-  }
+    0% {
+        -webkit-transform: translate3d(-20%, 0, 0);
+        transform: translate3d(-20%, 0, 0);
+        opacity: 0;
+    }
+    100% {
+        -webkit-transform: none;
+        transform: none;
+        opacity: 1;
+    }
 }
 
 @keyframes sbx-reset-in {
-  0% {
-    -webkit-transform: translate3d(-20%, 0, 0);
-            transform: translate3d(-20%, 0, 0);
-    opacity: 0;
-  }
-  100% {
-    -webkit-transform: none;
-            transform: none;
-    opacity: 1;
-  }
+    0% {
+        -webkit-transform: translate3d(-20%, 0, 0);
+        transform: translate3d(-20%, 0, 0);
+        opacity: 0;
+    }
+    100% {
+        -webkit-transform: none;
+        transform: none;
+        opacity: 1;
+    }
 }

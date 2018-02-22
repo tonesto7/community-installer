@@ -15,6 +15,7 @@ var availableDevs;
 var currentManifest;
 
 var currentListType;
+var showSearchBtn = false;
 
 var metricsData;
 var newsData;
@@ -586,11 +587,13 @@ function checkItemUpdateStatus(objId, type) {
             })
             .then(function(resp) {
                 // console.log(resp);
-                let data = JSON.parse(resp);
-                if (data.hasDifference === true) {
-                    resolve(true);
-                }
-                resolve(false);
+                if (resp) {
+                    let data = JSON.parse(resp);
+                    if (data.hasDifference === true) {
+                        resolve(true);
+                    }
+                    resolve(false);
+                } else { resolve(false); }
             });
     });
 }
@@ -604,13 +607,15 @@ function getRepoId(repoName, repoBranch) {
             })
             .then(function(resp) {
                 // console.log(resp);
-                let respData = JSON.parse(resp);
-                if (respData.length) {
-                    writableRepos = respData;
-                    for (let i in respData) {
-                        if (respData[i].name === repoName && respData[i].branch === repoBranch) {
-                            repoId = respData[i].id;
-                            resolve(repoId);
+                if (resp) {
+                    let respData = JSON.parse(resp);
+                    if (respData.length) {
+                        writableRepos = respData;
+                        for (let i in respData) {
+                            if (respData[i].name === repoName && respData[i].branch === repoBranch) {
+                                repoId = respData[i].id;
+                                resolve(repoId);
+                            }
                         }
                     }
                 }
@@ -632,17 +637,19 @@ function checkIdeForRepo(rname, branch, secondPass = false) {
             .then(function(resp) {
                 // console.log(resp);
                 updLoaderText('Analyzing', 'Repos');
-                let respData = JSON.parse(resp);
-                writableRepos = respData;
-                if (respData.length) {
-                    for (let i in respData) {
-                        // console.log(respData[i]);
-                        if (respData[i].name === rname && respData[i].branch === branch) {
-                            if (!secondPass) {
-                                addResult('Repo (' + rname + ')', true, 'repo', 'Already Added');
+                if (resp) {
+                    let respData = JSON.parse(resp);
+                    writableRepos = respData;
+                    if (respData.length) {
+                        for (let i in respData) {
+                            // console.log(respData[i]);
+                            if (respData[i].name === rname && respData[i].branch === branch) {
+                                if (!secondPass) {
+                                    addResult('Repo (' + rname + ')', true, 'repo', 'Already Added');
+                                }
+                                repoId = respData[i].id;
+                                repoFound = true;
                             }
-                            repoId = respData[i].id;
-                            repoFound = true;
                         }
                     }
                 }
@@ -1509,10 +1516,10 @@ function itemStatusHandler(itemName, altName, type, viewType, manData, statusMap
                     }
                 } else {
                     if (statusMap.hasUpdate || statusMap.isInstalled) {
-                        $('#updateBtn').show();
                         elem.text(itemStatus).addClass(color);
                         elem.data('installed', true);
                         if (statusMap.hasUpdate) {
+                            $('#updateBtn').show();
                             elem.data('hasUpdate', true);
                         }
                         elem.data('published', manData.published);
@@ -1603,21 +1610,35 @@ function loadAllManifests() {
     });
 }
 
-//https://graph.api.smartthings.com/api/locations/55d39046-ffe7-47a7-bdf0-7c70f7d9b05e/smartapps
+// https://graph.api.smartthings.com/api/locations/55d39046-ffe7-47a7-bdf0-7c70f7d9b05e/smartapps
 
 function buildMainPage(filterStr = undefined, listType = 'apps') {
     let appData = [];
     let html = '';
+    currentListType = listType;
+    let sTitle = listType === 'devs' ? 'Select a Device' : listType === 'news' ? 'Latest News' : 'Select an App';
     html += '\n<div id=listDiv class="w-100 clearfix">';
     html += '\n   <div class="btn-group mb-0 mx-3" role="group" data-toggle="button" aria-label="Basic example">';
     html += '\n       <button id="appListNewsTabBtn" type="button" class="btn btn-md btn-rounded waves-effect p-2" style="width: 105px;"><small-medium class="white-text">News</small-medium></button>';
     html += '\n       <button id="appListAppsTabBtn" type="button" class="btn btn-md btn-rounded waves-effect p-2" style="width: 105px;"><small-medium class="white-text">SmartApps</small-medium></button>';
-    html += '\n       <button id="appListDevsTabBtn" type="button" class="btn btn-md btn-rounded waves-effect p-2" style="width: 105px;"><small-medium class="white-text">Devices</small-medium></button>';
+    // html += '\n       <button id="appListDevsTabBtn" type="button" class="btn btn-md btn-rounded waves-effect p-2" style="width: 105px;" disabled><small-medium class="white-text">Devices</small-medium></button>';
     html += '\n   </div>';
     if (listType === 'apps' || listType === 'devs') {
+        /*
+<div class="w-50">
+
+                    <!-- Material input -->
+                    <div class="md-form form-sm input-group" id="searchForm">
+    <input type="text" id="appSearchBox" class="form-control text-white">
+<span class="input-group-addon waves-effect" id="searchBtn"><a><i class="fa fa-search text-grey" aria-hidden="true"></i></a></span>
+<label for="appSearchBox" class="">Search</label></div>
+             </div>
+
+
+        */
         html += '\n           <div id="searchFormDiv" class="d-flex flex-row justify-content-center align-items-center" style="display: none;">';
         html += '\n               <div class="d-flex w-100 flex-column m-2">';
-        html += '\n                <form id="searchForm"  style="display: none;">';
+        html += '\n                <form id="searchForm" style="display: none;">';
         html += '\n                   <div class="input-group md-form form-sm form-2 mb-0">';
         html += '\n                       <input id="appSearchBox" class="form-control grey-border white-text" type="text" placeholder="Search" aria-label="Search">';
         html += '\n                       <span class="input-group-addon waves-effect grey lighten-3" id="searchBtn"><a><i class="fa fa-search text-grey" aria-hidden="true"></i></a></span>';
@@ -1653,11 +1674,15 @@ function buildMainPage(filterStr = undefined, listType = 'apps') {
         html += '\n               </div>';
         html += '\n           </div>';
         searchBtnAvail(true);
-        updSectTitle(listType === 'devs' ? 'Select a Device' : 'Select an App');
+        updSectTitle('', true);
         appData = findAppMatch(filterStr, appManifests[listType]);
         currentManifest = appData;
+
         html += '\n   <div id="objsGroupDiv" class="listGroup">';
-        html += '\n       <div class="p-2 mb-0" style="background-color: transparent;">';
+        html += '\n       <div class="w-100 text-center">';
+        html += '\n           <h6 id="" class="h6-responsive mb-0" style="font-weight: 100; font-style: italic;">' + sTitle + '</h6>';
+        html += '\n       </div>';
+        html += '\n       <div class="pb-2 px-2 mb-0" style="background-color: transparent;">';
         if (appData && appData.length > 0) {
             html += '\n           <table id="appListTable" class="table table-sm mb-0">';
             html += '\n               <tbody>';
@@ -1675,7 +1700,7 @@ function buildMainPage(filterStr = undefined, listType = 'apps') {
                 html += '\n             <div class="d-flex flex-column justify-content-center align-items-center">';
                 html += '\n                 <div class="d-flex flex-row">';
                 html += '\n                     <div class="d-flex justify-content-start align-items-center">';
-                html += '\n                         <h6 class="h6-responsive"><img src="' + appData[i].smartApps.parent.iconUrl + '" height="40" class="d-inline-block align-middle" alt=""> ' + appData[i].name + '</h6>';
+                html += '\n                         <h6 class="h6-responsive" style="font-weight: 400;"><img src="' + appData[i].smartApps.parent.iconUrl + '" height="40" class="d-inline-block align-middle" alt=""> ' + appData[i].name + '</h6>';
                 html += '\n                     </div>';
                 html += '\n                 </div>';
                 html += '\n             </div>';
@@ -1762,8 +1787,11 @@ function buildMainPage(filterStr = undefined, listType = 'apps') {
     }
     if (listType === 'news') {
         searchBtnAvail(false);
-        updSectTitle('Latest News');
-        html += '\n   <div id="newsGroupDiv" class="listGroup pt-4"></div>';
+        updSectTitle('', true);
+        html += '\n   <div class="w-100 text-center pt-3 mb-1">';
+        html += '\n       <h6 class="h6-responsive mb-0" style="font-weight: 100; font-style: italic;">' + sTitle + '</h6>';
+        html += '\n   </div>';
+        html += '\n   <div id="newsGroupDiv" class="listGroup"></div>';
     }
     html += '\n</div>';
 
@@ -2032,7 +2060,7 @@ function renderAppView(appName, manifest) {
                     // html += '\n                   </div>';
                     html += '\n                 <div class="d-flex flex-row">';
                     html += '\n                     <a class="btn btn-sm mx-2" href="' + manifest.docUrl + '"><small-medium class="orange-text">Documentation</small-medium></a>';
-                    //html += '\n                     <button type="button" class="btn btn-sm mx-2" data-toggle="modal" data-target="#appDocModal" style="background: transparent;"><small-medium class="orange-text">Project Link</small-medium></b>';
+                    // html += '\n                     <button type="button" class="btn btn-sm mx-2" data-toggle="modal" data-target="#appDocModal" style="background: transparent;"><small-medium class="orange-text">Project Link</small-medium></b>';
                     html += '\n                 </div>';
                 }
                 html += '\n                 </div>';
@@ -2205,11 +2233,12 @@ function renderAppView(appName, manifest) {
         // AppCloseButton Event
         $('#appCloseBtn').click(function() {
             // console.log('appCloseBtn');
-            updSectTitle('Select an Item');
+            updSectTitle('', true);
             $('#appViewDiv').html('');
             $('#appViewDiv').css({ display: 'none' });
             $('#listContDiv').css({ display: 'block' });
             appCloseBtnAvail(false);
+            if (currentListType === "apps") { searchBtnAvail(true); }
         });
         $('#dislikeAppBtn').click(function() {
             incrementLikeDislike(appName, 'dislike');
@@ -2390,10 +2419,12 @@ function buildCoreHtml() {
     head += '\n                 <meta name="apple-mobile-web-app-capable" content="yes">';
     head += '\n                 <link rel="shortcut icon" type="image/x-icon" href="https://cdn.rawgit.com/tonesto7/st-community-installer/master/images/app_logo.ico" />';
     head += '\n                 <title>Community Installer</title>';
-    head += '\n                 <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto" />';
+    head += '\n                 <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400,400i,500,700,700i&amp;subset=cyrillic-ext" />';
     head += '\n                 <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" />';
+
+    // head += '\n                 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />';
     head += '\n                 <script src="https://use.fontawesome.com/a81eef09c0.js" async></script>';
-    head += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous" async></script>';
+    head += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.13.0/umd/popper.min.js" async></script>';
     head += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js" async></script>';
     head += '\n                 <script src="https://static.firebase.com/v0/firebase.js" async></script>';
     head += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js" async></script>';
@@ -2419,6 +2450,13 @@ function buildCoreHtml() {
     html += '\n       </header>';
     html += '\n       <main class="mt-3">';
     html += '\n           <div id="mainDiv" class="container-fluid" style="min-width: 380px; max-width: 750px; height: auto; min-height: 100%;">';
+
+    /*  <div class="md-form form-sm">
+    <i class="fa fa-user prefix"></i>
+    <input type="text" id="inputIconEx2" class="form-control">
+    <label for="inputIconEx2">E-mail address</label>
+</div>
+*/
     html += '\n               <section class="px-3">';
     html += '\n                   <div class="w-100 text-center">';
 
@@ -2497,7 +2535,7 @@ function buildCoreHtml() {
     html += '\n           <div class="footer-copyright">';
     html += '\n               <div class="containter-fluid">';
     html += '\n                   <div class="d-flex flex-column justify-content-center align-items-center">';
-    html += '\n                       <button class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#aboutModal" style="background: transparent; border-color: white;"><span class="white-text"><i class="fa fa-info"></i> About</span></button>';
+    html += '\n                       <button class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#aboutModal" style="background: transparent; border-color: white !important;"><span class="white-text"><i class="fa fa-info"></i> About</span></button>';
     html += '\n                       <small class="align-middle"><u>v' + scriptVersion + ' (' + scriptRelType + ')</u></small>';
     html += '\n                   </div>';
     html += '\n               </div>';
@@ -2672,7 +2710,7 @@ $.ajaxSetup({
 
 function loadScripts() {
     $.getScript('https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js');
-    $.getScript('https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.4.5/js/mdb.min.js');
+    $.getScript('https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.5.0/js/mdb.min.js');
     $.getScript('https://cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.6.1/jquery.timeago.min.js');
 }
 
@@ -2680,4 +2718,8 @@ document.addEventListener('DOMContentLoaded', function() {
     buildCoreHtml();
     loadScripts();
     loaderFunc();
+});
+uildCoreHtml();
+loadScripts();
+loaderFunc();
 });
