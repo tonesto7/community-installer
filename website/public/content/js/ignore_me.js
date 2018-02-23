@@ -1638,6 +1638,11 @@ function buildMainPage(filterStr = undefined, listType = 'apps') {
         */
         html += '\n           <div id="searchFormDiv" class="d-flex flex-row justify-content-center align-items-center" style="display: none;">';
         html += '\n               <div class="d-flex w-100 flex-column m-2">';
+        html += '\n                   <div class="w-50 md-form form-sm" id="searchForm" style="display: none;">';
+        html += '\n                       <i class="fa fa-search prefix"></i>';
+        html += '\n                       <input type="text" id="inputIconEx1" class="form-control">';
+        html += '\n                       <label for="inputIconEx1" class="">Search</label>';
+        html += '\n                   </div>';
         html += '\n                <form id="searchForm" style="display: none;">';
         html += '\n                   <div class="input-group md-form form-sm form-2 mb-0">';
         html += '\n                       <input id="appSearchBox" class="form-control grey-border white-text" type="text" placeholder="Search" aria-label="Search">';
@@ -2450,13 +2455,34 @@ function buildCoreHtml() {
     html += '\n       </header>';
     html += '\n       <main class="mt-3">';
     html += '\n           <div id="mainDiv" class="container-fluid" style="min-width: 380px; max-width: 750px; height: auto; min-height: 100%;">';
+    html += '\n                <svg xmlns="http://www.w3.org/2000/svg" style="display:none">';
+    html += '\n                    <symbol xmlns="http://www.w3.org/2000/svg" id="sbx-icon-search-13" viewBox="0 0 40 40">';
+    html += '\n                        <path d="M26.804 29.01c-2.832 2.34-6.465 3.746-10.426 3.746C7.333 32.756 0 25.424 0 16.378 0 7.333 7.333 0 16.378 0c9.046 0 16.378 7.333 16.378 16.378 0 3.96-1.406 7.594-3.746 10.426l10.534 10.534c.607.607.61 1.59-.004 2.202-.61.61-1.597.61-2.202.004L26.804 29.01zm-10.426.627c7.323 0 13.26-5.936 13.26-13.26 0-7.32-5.937-13.257-13.26-13.257C9.056 3.12 3.12 9.056 3.12 16.378c0 7.323 5.936 13.26 13.258 13.26z" fill-rule="evenodd" />';
+    html += '\n                    </symbol>';
+    html += '\n                    <symbol xmlns="http://www.w3.org/2000/svg" id="sbx-icon-clear-2" viewBox="0 0 20 20">';
+    html += '\n                        <path d="M8.96 10L.52 1.562 0 1.042 1.04 0l.522.52L10 8.96 18.438.52l.52-.52L20 1.04l-.52.522L11.04 10l8.44 8.438.52.52L18.96 20l-.522-.52L10 11.04l-8.438 8.44-.52.52L0 18.96l.52-.522L8.96 10z" fill-rule="evenodd" />';
+    html += '\n                    </symbol>';
+    html += '\n                </svg>';
 
-    /*  <div class="md-form form-sm">
-    <i class="fa fa-user prefix"></i>
-    <input type="text" id="inputIconEx2" class="form-control">
-    <label for="inputIconEx2">E-mail address</label>
-</div>
-*/
+    html += '\n                <form id="searchForm" style="display: none;" novalidate="novalidate" onsubmit="return false;" class="searchbox sbx-custom">';
+    html += '\n                   <div role="search" class="sbx-medium__wrapper">';
+    html += '\n                       <input type="search" name="search" placeholder="Search your website" autocomplete="off" required="required" class="sbx-custom__input">';
+    html += '\n                       <button type="submit" title="Submit your search query." class="sbx-custom__submit">';
+    html += '\n                           <svg role="img" aria-label="Search">';
+    html += '\n                               <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#sbx-icon-search-13"></use>';
+    html += '\n                           </svg>';
+    html += '\n                       </button>';
+    html += '\n                       <button type="reset" title="Clear the search query." class="sbx-custom__reset">';
+    html += '\n                           <svg role="img" aria-label="Reset">';
+    html += '\n                               <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#sbx-icon-clear-2"></use>';
+    html += '\n                           </svg>';
+    html += '\n                       </button>';
+    html += '\n                   </div>';
+    html += '\n               </form>';
+    html += '\n               <script type="text/javascript">';
+    html += '\n                   document.querySelector(".searchbox [type="reset"]").addEventListener("click", function() {  this.parentNode.querySelector("input").focus();});';
+    html += '\n               </script>';
+
     html += '\n               <section class="px-3">';
     html += '\n                   <div class="w-100 text-center">';
 
@@ -2718,8 +2744,4 @@ document.addEventListener('DOMContentLoaded', function() {
     buildCoreHtml();
     loadScripts();
     loaderFunc();
-});
-uildCoreHtml();
-loadScripts();
-loaderFunc();
 });
