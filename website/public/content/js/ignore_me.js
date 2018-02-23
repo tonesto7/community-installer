@@ -1771,7 +1771,7 @@ function buildMainPage(filterStr = undefined, listType = 'apps') {
     $('#appListTable').on('click', 'td a', function() {
         // console.log('App Item Clicked: (' + this.id + ')');
         if (this.id) {
-            searchFormToggle();
+            searchFormToggle(false);
             renderAppView(this.id, $(this).data('manifest'));
         }
     });
@@ -1817,9 +1817,15 @@ function loaderVisible(show = false) {
     }
 }
 
-function searchFormToggle() {
+function searchFormToggle(show = undefined) {
     console.log('showSearchBtn clicked...');
-    $('#searchForm').toggle();
+    if (show === undefined) {
+        $('#searchForm').toggle();
+    } else {
+        if (show === true) {
+            $('#searchForm').show();
+        } else { $('#searchForm').hide(); }
+    }
 }
 
 function searchBtnAvail(show = true) {
@@ -1850,19 +1856,19 @@ function createAppDevTable(items, areDevices = false, type) {
     let html = '';
     if (items.length) {
         // html += '\n   <div class="col-xs-12 ' + (areDevices ? 'col-md-6' : 'col-sm-12') + ' mb-2 p-0">';
-        html += '\n   <div class="col mb-2 p-0">';
+        html += '\n   <div class="col mb-2 mx-2 py-0">';
         html += '\n       <h6 class="h6-responsive white-text"><u>' + (type === 'app' ? 'SmartApps' : 'Devices') + '</u></h6>';
-        html += '\n       <div class="d-flex justify-content-center">';
-        html += '\n           <div class="d-flex w-100 justify-content-center align-items-center mx-4">';
-        html += '\n               <table class="table table-sm table-bordered">';
-        html += '\n                   <thead>';
-        html += '\n                       <tr>';
-        html += '\n                           <th style="border: 1px solid grey;"><div class="text-center"><small class="align-middle">Name:</small></div></th>';
-        html += '\n                           <th style="border: 1px solid grey;"><div class="text-center"><small class="align-middle">Version:</small></div></th>';
-        html += '\n                           <th style="border: 1px solid grey;"><div class="text-center"><small class="align-middle">IDE Options:</small></div></th>';
-        html += '\n                       </tr>';
-        html += '\n                   </thead>';
-        html += '\n                   <tbody>';
+        html += '\n       <div class="d-flex justify-content-center align-items-center">';
+        html += '\n           <table class="table table-sm table-bordered">';
+        html += '\n               <thead>';
+        html += '\n                   <tr>';
+        html += '\n                       <th style="border: 1px solid grey;"><div class="text-center"><small class="align-middle"></small></div></th>';
+        html += '\n                       <th style="border: 1px solid grey;"><div class="text-center"><small class="align-middle">Name</small></div></th>';
+        html += '\n                       <th style="border: 1px solid grey;"><div class="text-center"><small class="align-middle">Version</small></div></th>';
+        html += '\n                       <th style="border: 1px solid grey;"><div class="text-center"><small class="align-middle">IDE Options</small></div></th>';
+        html += '\n                   </tr>';
+        html += '\n               </thead>';
+        html += '\n               <tbody>';
 
         let cnt = 0;
         for (const item in items) {
@@ -1876,18 +1882,33 @@ function createAppDevTable(items, areDevices = false, type) {
             var itemId = cleanIdName(items[item].name) + '_checkbox_' + type;
 
             html += '\n                       <tr>';
-            html += '\n                           <td class="align-middle py-0" style="border: 1px solid grey;">';
-            html += '\n                               <div class="d-flex flex-column ml-2">';
-            html += '\n                                   <div class="d-flex flex-column justify-content-start my-1 form-check' + disabled + '">';
-            html += '\n                                       <div class="flex-column justify-content-start">';
-            html += '\n                                           <div class="d-flex flex-row">';
-            html += '\n                                               <input class="form-check-input align-middle" type="checkbox" value="" id="' + itemId + '"' + checked + disabled + '>';
-            html += '\n                                               <label class="form-check-label align-middle" for="' + itemId + '"><small id="' + itemId + '_label" class="align-middle" style="font-size: 0.7em; white-space: nowrap;">' + items[item].name + '</small></label>';
-            html += '\n                                           </div>';
-            html += '\n                                       </div>';
+            html += '\n                           <td class="align-middle" style="border: 1px solid grey;">';
+            html += '\n                               <div class="d-flex m-0 form-check' + disabled + '">';
+            html += '\n                                   <div class="d-flex mx-auto">';
+            html += '\n                                       <input class="form-check-input align-middle" type="checkbox" value="" id="' + itemId + '"' + checked + disabled + '>';
+            html += '\n                                       <label class="form-check-label align-middle" for="' + itemId + '"></label>';
             html += '\n                                   </div>';
             html += '\n                               </div>';
             html += '\n                           </td>';
+            html += '\n                           <td class="align-middle" style="border: 1px solid grey;">';
+            html += '\n                               <div class="d-flex flex-column justify-content-start my-1 ml-1">';
+            html += '\n                                   <div class="d-flex flex-row">';
+            if (items[item].iconUrl !== undefined && items[item].iconUrl.length > 5) {
+                html += '\n                                       <span><img class="img-fluid float-left align-start mr-1" src="' + items[item].iconUrl + '" style="height: auto; max-height: 25px;"> <small id="' + itemId + '_label" class="align-middle" style="font-size: 0.7em;"' + disabled + '>' + items[item].name + '</small></span>';
+            } else {
+                html += '\n                                       <small id="' + itemId + '_label" class="align-middle" style="font-size: 0.7em;"' + disabled + '>' + items[item].name + '</small>';
+            }
+            html += '\n                                   </div>';
+            html += '\n                               </div>';
+            html += '\n                           </td>';
+            // html += '\n                           <td class="align-middle" style="border: 1px solid grey;">';
+            // html += '\n                               <div class="d-flex flex-column justify-content-start my-1 ml-1 form-check' + disabled + '">';
+            // html += '\n                                   <div class="d-flex flex-row">';
+            // html += '\n                                       <input class="form-check-input align-middle" type="checkbox" value="" id="' + itemId + '"' + checked + disabled + '>';
+            // html += '\n                                       <label class="form-check-label align-middle" for="' + itemId + '"><small id="' + itemId + '_label" class="align-middle" style="font-size: 0.7em; white-space: nowrap;">' + items[item].name + '</small></label>';
+            // html += '\n                                   </div>';
+            // html += '\n                               </div>';
+            // html += '\n                           </td>';
             html += '\n                           <td class="align-middle" style="border: 1px solid grey;">';
             html += '\n                               <div class="d-flex flex-column align-items-center">';
             html += '\n                                   <small class="align-middle" style="margin: 2px auto;"><span class="badge grey white-text align-middle">v' + items[item].version + '</span></small>';
@@ -1910,7 +1931,6 @@ function createAppDevTable(items, areDevices = false, type) {
         html += '\n            </table>';
         html += '\n       </div>';
         html += '\n   </div>';
-        html += '\n</div>';
     }
     return html;
 }
@@ -1924,7 +1944,7 @@ function renderAppView(appName, manifest) {
         // console.log('manifest: ', manifest);
         if (manifest !== undefined && Object.keys(manifest).length) {
             if (isInstalled !== true && isDevMode !== true) {
-                incrementAppView(appName);
+                // incrementAppView(appName);
             }
             appCloseBtnAvail(true);
             $('#appNameListItem').text('Tap On (' + appName + ')');
