@@ -1,6 +1,6 @@
-const scriptVersion = '1.0.0220a';
+const scriptVersion = '1.0.0223a';
 const scriptRelType = 'beta';
-const scriptVerDate = '2/20/2018';
+const scriptVerDate = '2/23/2018';
 const latestSaVer = '1.0.0213a';
 const allowInstalls = true;
 const allowUpdates = true;
@@ -264,7 +264,7 @@ function installComplete(text, red = false, noResults = false) {
     $('#resultsDoneHomeBtn').show();
     appCloseBtnAvail(false);
     updSectTitle('', true);
-    defineClickActions();
+    defineResultClickActions();
     localStorage.removeItem('refreshCount');
     scrollToTop();
 }
@@ -285,7 +285,7 @@ function installCompleteLogin(text, red = false, noResults = false) {
     $('#resultsDoneHomeBtn').hide();
     appCloseBtnAvail(false);
     updSectTitle('', true);
-    defineClickActions();
+    defineResultClickActions();
     localStorage.removeItem('refreshCount');
     scrollToTop();
 }
@@ -1610,8 +1610,6 @@ function loadAllManifests() {
     });
 }
 
-// https://graph.api.smartthings.com/api/locations/55d39046-ffe7-47a7-bdf0-7c70f7d9b05e/smartapps
-
 function buildMainPage(filterStr = undefined, listType = 'apps') {
     let appData = [];
     let html = '';
@@ -1624,67 +1622,12 @@ function buildMainPage(filterStr = undefined, listType = 'apps') {
     // html += '\n       <button id="appListDevsTabBtn" type="button" class="btn btn-md btn-rounded waves-effect p-2" style="width: 105px;" disabled><small-medium class="white-text">Devices</small-medium></button>';
     html += '\n   </div>';
     if (listType === 'apps' || listType === 'devs') {
-        /*
-<div class="w-50">
-
-                    <!-- Material input -->
-                    <div class="md-form form-sm input-group" id="searchForm">
-    <input type="text" id="appSearchBox" class="form-control text-white">
-<span class="input-group-addon waves-effect" id="searchBtn"><a><i class="fa fa-search text-grey" aria-hidden="true"></i></a></span>
-<label for="appSearchBox" class="">Search</label></div>
-             </div>
-
-
-        */
-        html += '\n           <div id="searchFormDiv" class="d-flex flex-row justify-content-center align-items-center" style="display: none;">';
-        html += '\n               <div class="d-flex w-100 flex-column m-2">';
-        html += '\n                   <div class="w-50 md-form form-sm" id="searchForm" style="display: none;">';
-        html += '\n                       <i class="fa fa-search prefix"></i>';
-        html += '\n                       <input type="text" id="inputIconEx1" class="form-control">';
-        html += '\n                       <label for="inputIconEx1" class="">Search</label>';
-        html += '\n                   </div>';
-        html += '\n                <form id="searchForm" style="display: none;">';
-        html += '\n                   <div class="input-group md-form form-sm form-2 mb-0">';
-        html += '\n                       <input id="appSearchBox" class="form-control grey-border white-text" type="text" placeholder="Search" aria-label="Search">';
-        html += '\n                       <span class="input-group-addon waves-effect grey lighten-3" id="searchBtn"><a><i class="fa fa-search text-grey" aria-hidden="true"></i></a></span>';
-        html += '\n                   </div>';
-        html += '\n                </form>';
-        // html += '\n                <svg xmlns="http://www.w3.org/2000/svg" style="display:none">';
-        // html += '\n                    <symbol xmlns="http://www.w3.org/2000/svg" id="sbx-icon-search-13" viewBox="0 0 40 40">';
-        // html += '\n                        <path d="M26.804 29.01c-2.832 2.34-6.465 3.746-10.426 3.746C7.333 32.756 0 25.424 0 16.378 0 7.333 7.333 0 16.378 0c9.046 0 16.378 7.333 16.378 16.378 0 3.96-1.406 7.594-3.746 10.426l10.534 10.534c.607.607.61 1.59-.004 2.202-.61.61-1.597.61-2.202.004L26.804 29.01zm-10.426.627c7.323 0 13.26-5.936 13.26-13.26 0-7.32-5.937-13.257-13.26-13.257C9.056 3.12 3.12 9.056 3.12 16.378c0 7.323 5.936 13.26 13.258 13.26z" fill-rule="evenodd" />';
-        // html += '\n                    </symbol>';
-        // html += '\n                    <symbol xmlns="http://www.w3.org/2000/svg" id="sbx-icon-clear-2" viewBox="0 0 20 20">';
-        // html += '\n                        <path d="M8.96 10L.52 1.562 0 1.042 1.04 0l.522.52L10 8.96 18.438.52l.52-.52L20 1.04l-.52.522L11.04 10l8.44 8.438.52.52L18.96 20l-.522-.52L10 11.04l-8.438 8.44-.52.52L0 18.96l.52-.522L8.96 10z" fill-rule="evenodd" />';
-        // html += '\n                    </symbol>';
-        // html += '\n                </svg>';
-
-        // html += '\n                <form id="searchForm" style="display: none;" novalidate="novalidate" onsubmit="return false;" class="searchbox sbx-custom">';
-        // html += '\n                   <div role="search" class="sbx-medium__wrapper">';
-        // html += '\n                       <input type="search" name="search" placeholder="Search your website" autocomplete="off" required="required" class="sbx-custom__input">';
-        // html += '\n                       <button type="submit" title="Submit your search query." class="sbx-custom__submit">';
-        // html += '\n                           <svg role="img" aria-label="Search">';
-        // html += '\n                               <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#sbx-icon-search-13"></use>';
-        // html += '\n                           </svg>';
-        // html += '\n                       </button>';
-        // html += '\n                       <button type="reset" title="Clear the search query." class="sbx-custom__reset">';
-        // html += '\n                           <svg role="img" aria-label="Reset">';
-        // html += '\n                               <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#sbx-icon-clear-2"></use>';
-        // html += '\n                           </svg>';
-        // html += '\n                       </button>';
-        // html += '\n                   </div>';
-        // html += '\n               </form>';
-        // html += '\n               <script type="text/javascript">'
-        // html += '\n                   document.querySelector(".searchbox [type="reset"]").addEventListener("click", function() {  this.parentNode.querySelector("input").focus();});'
-        // html += '\n               </script>'
-        html += '\n               </div>';
-        html += '\n           </div>';
         searchBtnAvail(true);
         updSectTitle('', true);
         appData = findAppMatch(filterStr, appManifests[listType]);
         currentManifest = appData;
-
         html += '\n   <div id="objsGroupDiv" class="listGroup">';
-        html += '\n       <div class="w-100 text-center">';
+        html += '\n       <div class="w-100 text-center pt-3 mb-1">';
         html += '\n           <h6 id="" class="h6-responsive mb-0" style="font-weight: 100; font-style: italic;">' + sTitle + '</h6>';
         html += '\n       </div>';
         html += '\n       <div class="pb-2 px-2 mb-0" style="background-color: transparent;">';
@@ -1820,24 +1763,15 @@ function buildMainPage(filterStr = undefined, listType = 'apps') {
     loaderVisible(false);
     $('#actResultsDiv').hide();
     $('#appViewDiv').hide();
-    $('#appSearchBox').keypress(function(e) {
-        if (e.which === 13) {
-            searchForApp('KeyPress', listType);
-            return false;
-        }
-    });
-    $('#searchBtn').click(function() {
-        searchForApp('Clicked', listType);
-    });
-    $('#showSearchBtn').click(function() {
-        searchFormToggle();
-    });
+
     $('#clearSearchBtn').click(function() {
         searchForApp('clear', listType);
     });
+
     $('#appListTable').on('click', 'td a', function() {
         // console.log('App Item Clicked: (' + this.id + ')');
         if (this.id) {
+            searchFormToggle();
             renderAppView(this.id, $(this).data('manifest'));
         }
     });
@@ -1860,13 +1794,19 @@ function buildMainPage(filterStr = undefined, listType = 'apps') {
         $('#appListNewsTabBtn').addClass('active');
         $('#appListAppsTabBtn').removeClass('active');
         $('#appListDevsTabBtn').removeClass('active');
-        // $('#objsGroupDiv').hide();
-        // $('#newsGroupDiv').show();
         buildMainPage(undefined, 'news');
     });
     new WOW().init();
     installerAppUpdAvail();
 }
+
+var keyupDelay = (function() {
+    var timer = 0;
+    return function(callback, ms) {
+        clearTimeout(timer);
+        timer = setTimeout(callback, ms);
+    };
+})();
 
 function loaderVisible(show = false) {
     if (show) {
@@ -1878,14 +1818,8 @@ function loaderVisible(show = false) {
 }
 
 function searchFormToggle() {
-    // console.log('showSearchBtn clicked...');
-    if ($('#searchForm').is(':visible')) {
-        $('#searchForm').hide();
-        $('#searchFormDiv').hide();
-    } else {
-        $('#searchForm').show();
-        $('#searchFormDiv').show();
-    }
+    console.log('showSearchBtn clicked...');
+    $('#searchForm').toggle();
 }
 
 function searchBtnAvail(show = true) {
@@ -2363,12 +2297,37 @@ function installBtnAvail(cnt, data) {
     }
 }
 
-function defineClickActions() {
+function defineResultClickActions() {
     $('#resultsDoneHomeBtn').click(function() {
         location.href = homeUrl;
     });
     $('#reloginBtn').click(function() {
         location.href = loginUrl;
+    });
+}
+
+function defineCoreClickActions() {
+    $('#searchBtn').click(function() {
+        searchForApp('Clicked', currentListType);
+    });
+    $('#appSearchBox').keypress(function(e) {
+        if (e.which === 13) {
+            searchForApp('KeyPress', currentListType);
+            return false;
+        }
+    });
+    $('#appSearchBox').keyup(function() {
+        let key = this;
+        keyupDelay(function() {
+            // console.log($(key).val());
+            if ($(key).val().length >= 2) {
+                searchForApp('KeyPress', currentListType);
+            }
+        }, 1000);
+    });
+
+    $('#showSearchBtn').click(function() {
+        searchFormToggle();
     });
 }
 
@@ -2426,8 +2385,6 @@ function buildCoreHtml() {
     head += '\n                 <title>Community Installer</title>';
     head += '\n                 <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400,400i,500,700,700i&amp;subset=cyrillic-ext" />';
     head += '\n                 <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" />';
-
-    // head += '\n                 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />';
     head += '\n                 <script src="https://use.fontawesome.com/a81eef09c0.js" async></script>';
     head += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.13.0/umd/popper.min.js" async></script>';
     head += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js" async></script>';
@@ -2455,37 +2412,14 @@ function buildCoreHtml() {
     html += '\n       </header>';
     html += '\n       <main class="mt-3">';
     html += '\n           <div id="mainDiv" class="container-fluid" style="min-width: 380px; max-width: 750px; height: auto; min-height: 100%;">';
-    html += '\n                <svg xmlns="http://www.w3.org/2000/svg" style="display:none">';
-    html += '\n                    <symbol xmlns="http://www.w3.org/2000/svg" id="sbx-icon-search-13" viewBox="0 0 40 40">';
-    html += '\n                        <path d="M26.804 29.01c-2.832 2.34-6.465 3.746-10.426 3.746C7.333 32.756 0 25.424 0 16.378 0 7.333 7.333 0 16.378 0c9.046 0 16.378 7.333 16.378 16.378 0 3.96-1.406 7.594-3.746 10.426l10.534 10.534c.607.607.61 1.59-.004 2.202-.61.61-1.597.61-2.202.004L26.804 29.01zm-10.426.627c7.323 0 13.26-5.936 13.26-13.26 0-7.32-5.937-13.257-13.26-13.257C9.056 3.12 3.12 9.056 3.12 16.378c0 7.323 5.936 13.26 13.258 13.26z" fill-rule="evenodd" />';
-    html += '\n                    </symbol>';
-    html += '\n                    <symbol xmlns="http://www.w3.org/2000/svg" id="sbx-icon-clear-2" viewBox="0 0 20 20">';
-    html += '\n                        <path d="M8.96 10L.52 1.562 0 1.042 1.04 0l.522.52L10 8.96 18.438.52l.52-.52L20 1.04l-.52.522L11.04 10l8.44 8.438.52.52L18.96 20l-.522-.52L10 11.04l-8.438 8.44-.52.52L0 18.96l.52-.522L8.96 10z" fill-rule="evenodd" />';
-    html += '\n                    </symbol>';
-    html += '\n                </svg>';
-
-    html += '\n                <form id="searchForm" style="display: none;" novalidate="novalidate" onsubmit="return false;" class="searchbox sbx-custom">';
-    html += '\n                   <div role="search" class="sbx-medium__wrapper">';
-    html += '\n                       <input type="search" name="search" placeholder="Search your website" autocomplete="off" required="required" class="sbx-custom__input">';
-    html += '\n                       <button type="submit" title="Submit your search query." class="sbx-custom__submit">';
-    html += '\n                           <svg role="img" aria-label="Search">';
-    html += '\n                               <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#sbx-icon-search-13"></use>';
-    html += '\n                           </svg>';
-    html += '\n                       </button>';
-    html += '\n                       <button type="reset" title="Clear the search query." class="sbx-custom__reset">';
-    html += '\n                           <svg role="img" aria-label="Reset">';
-    html += '\n                               <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#sbx-icon-clear-2"></use>';
-    html += '\n                           </svg>';
-    html += '\n                       </button>';
+    html += '\n               <div class="w-auto mx-4">';
+    html += '\n                   <div class="md-form form-sm input-group" id="searchForm" style="display: none;">';
+    html += '\n                       <input type="search" class="form-control text-white searchFlag" placeholder="Search..." id="appSearchBox" autocomplete="off">';
+    html += '\n                       <span class="input-group-btn"><button class="m-0 btn btn-sm grey px-1" type="button" id="searchBtn" style="border-top-right-radius: 10px;border-bottom-right-radius:  10px;"><i class="fa fa-search"></i> Search</button></span>';
     html += '\n                   </div>';
-    html += '\n               </form>';
-    html += '\n               <script type="text/javascript">';
-    html += '\n                   document.querySelector(".searchbox [type="reset"]").addEventListener("click", function() {  this.parentNode.querySelector("input").focus();});';
-    html += '\n               </script>';
-
+    html += '\n               </div>';
     html += '\n               <section class="px-3">';
     html += '\n                   <div class="w-100 text-center">';
-
     html += '\n                       <h5 id="sectTitle" class="h5-responsive" style="font-weight: 400;">Software Installer</h5>';
     html += '\n                       <div id="loaderDiv" class="flex-row fadeIn fadeOut">';
     html += '\n                           <div class="d-flex flex-column justify-content-center align-items-center" style="height: 200px;">';
@@ -2744,4 +2678,5 @@ document.addEventListener('DOMContentLoaded', function() {
     buildCoreHtml();
     loadScripts();
     loaderFunc();
+    defineCoreClickActions();
 });
