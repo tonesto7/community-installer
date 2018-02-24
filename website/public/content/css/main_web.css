@@ -347,3 +347,33 @@ button#appListNewsTabBtn.active {
 .md-form .prefix.active {
     color: orange;
 }
+
+#flex-container-main {
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+}
+
+.flex-container-child {
+    display: flex;
+    align-items: center;
+    min-height: 75%;
+    width: 75%;
+    margin: 1px;
+}
+
+figure {
+    margin: 0 5px 0 0;
+}
+
+.itemIconImg {
+    width: auto;
+    height: auto;
+    max-height: 35px;
+    vertical-align: bottom;
+}
+
+.form-check.m-auto {
+    height: 25px;
+    width: 25px;
+}

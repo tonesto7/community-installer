@@ -1818,7 +1818,7 @@ function loaderVisible(show = false) {
 }
 
 function searchFormToggle(show = undefined) {
-    console.log('showSearchBtn clicked...');
+    // console.log('showSearchBtn clicked...');
     if (show === undefined) {
         $('#searchForm').toggle();
     } else {
@@ -1883,45 +1883,42 @@ function createAppDevTable(items, areDevices = false, type) {
 
             html += '\n                       <tr>';
             html += '\n                           <td class="align-middle" style="border: 1px solid grey;">';
-            html += '\n                               <div class="d-flex m-0 form-check' + disabled + '">';
-            html += '\n                                   <div class="d-flex mx-auto">';
-            html += '\n                                       <input class="form-check-input align-middle" type="checkbox" value="" id="' + itemId + '"' + checked + disabled + '>';
-            html += '\n                                       <label class="form-check-label align-middle" for="' + itemId + '"></label>';
-            html += '\n                                   </div>';
+            html += '\n                               <div class="m-auto form-check' + disabled + '">';
+            html += '\n                                   <input class="form-check-input align-middle" type="checkbox" value="" id="' + itemId + '"' + checked + disabled + '>';
+            html += '\n                                   <label class="form-check-label align-middle" for="' + itemId + '"></label>';
             html += '\n                               </div>';
             html += '\n                           </td>';
             html += '\n                           <td class="align-middle" style="border: 1px solid grey;">';
-            html += '\n                               <div class="d-flex flex-column justify-content-start my-1 ml-1">';
-            html += '\n                                   <div class="d-flex flex-row">';
+            html += '\n                               <div class="d-flex flex-column justify-content-start">';
             if (items[item].iconUrl !== undefined && items[item].iconUrl.length > 5) {
-                html += '\n                                       <span><img class="img-fluid float-left align-start mr-1" src="' + items[item].iconUrl + '" style="height: auto; max-height: 25px;"> <small id="' + itemId + '_label" class="align-middle" style="font-size: 0.7em;"' + disabled + '>' + items[item].name + '</small></span>';
+                html += '                                     <div id="flex-container-main">';
+                html += '                                         <div class="flex-container-child ml-1">';
+                html += '                                             <figure>';
+                html += '                                                 <img class="itemIconImg align-start mr-1" src="' + items[item].iconUrl + '">';
+                html += '                                             </figure>';
+                html += '                                             <small id="' + itemId + '_label" class="align-middle" style="font-size: 0.7rem;"' + disabled + '>' + items[item].name + '</small>';
+                html += '                                         </div>';
+                html += '                                     </div>';
             } else {
-                html += '\n                                       <small id="' + itemId + '_label" class="align-middle" style="font-size: 0.7em;"' + disabled + '>' + items[item].name + '</small>';
+                html += '\n                                   <div class="d-flex flex-row">';
+                html += '\n                                       <small id="' + itemId + '_label" class="align-middle" style="font-size: 0.7rem;"' + disabled + '>' + items[item].name + '</small>';
+                html += '\n                                   </div>';
             }
-            html += '\n                                   </div>';
             html += '\n                               </div>';
             html += '\n                           </td>';
-            // html += '\n                           <td class="align-middle" style="border: 1px solid grey;">';
-            // html += '\n                               <div class="d-flex flex-column justify-content-start my-1 ml-1 form-check' + disabled + '">';
-            // html += '\n                                   <div class="d-flex flex-row">';
-            // html += '\n                                       <input class="form-check-input align-middle" type="checkbox" value="" id="' + itemId + '"' + checked + disabled + '>';
-            // html += '\n                                       <label class="form-check-label align-middle" for="' + itemId + '"><small id="' + itemId + '_label" class="align-middle" style="font-size: 0.7em; white-space: nowrap;">' + items[item].name + '</small></label>';
-            // html += '\n                                   </div>';
-            // html += '\n                               </div>';
-            // html += '\n                           </td>';
             html += '\n                           <td class="align-middle" style="border: 1px solid grey;">';
             html += '\n                               <div class="d-flex flex-column align-items-center">';
-            html += '\n                                   <small class="align-middle" style="margin: 2px auto;"><span class="badge grey white-text align-middle">v' + items[item].version + '</span></small>';
-            html += '\n                                   <small class="align-middle" style="margin: 2px auto;"><span id="' + cleanIdName(items[item].name) + '_appview_status_' + type + '" class="badge white-text align-middle"></span></small>';
+            html += '\n                                   <small class="align-middle" style="margin: 2px auto;"><span class="badge grey white-text align-middle pt-1">v' + items[item].version + '</span></small>';
+            html += '\n                                   <small class="align-middle" style="margin: 2px auto;"><span id="' + cleanIdName(items[item].name) + '_appview_status_' + type + '" class="badge white-text align-middle pt-1"></span></small>';
             html += '\n                               </div>';
             html += '\n                           </td>';
             html += '\n                           <td class="align-middle py-0" style="border: 1px solid grey;">';
             html += '\n                               <div class="d-flex flex-column align-items-center">';
-            html += parent ? '\n                            <small style="margin: 2px auto;"><span class="badge blue white-text">Parent App</span></small>' : '';
-            html += child ? '\n                             <small style="margin: 2px auto;"><span class="badge purple white-text">Child App</span></small>' : '';
-            html += publish ? '\n                           <small style="margin: 2px auto;"><span class="badge green white-text">Publishing</span></small>' : '';
-            html += oauth ? '\n                             <small style="margin: 2px auto;"><span class="badge orange white-text">Enable OAuth</span></small>' : '';
-            html += optional ? '\n                          <small style="margin: 2px auto;"><span class="badge grey white-text">Optional</span></small>' : '';
+            html += parent ? '\n                            <small style="margin: 2px auto;"><span class="badge blue white-text pt-1">Parent App</span></small>' : '';
+            html += child ? '\n                             <small style="margin: 2px auto;"><span class="badge purple white-text pt-1">Child App</span></small>' : '';
+            html += publish ? '\n                           <small style="margin: 2px auto;"><span class="badge green white-text pt-1">Publishing</span></small>' : '';
+            html += oauth ? '\n                             <small style="margin: 2px auto;"><span class="badge orange white-text pt-1">Enable OAuth</span></small>' : '';
+            html += optional ? '\n                          <small style="margin: 2px auto;"><span class="badge grey white-text pt-1">Optional</span></small>' : '';
             html += '\n                               </div>';
             html += '\n                           </td>';
             html += '\n                      </tr>';
@@ -2092,7 +2089,7 @@ function renderAppView(appName, manifest) {
                 html += '\n           <div class="accordion" id="notesAccordionEx" role="tablist" aria-multiselectable="true">';
 
                 html += '\n               <!-- Accordion card -->';
-                html += '\n               <div class="card mb-0" style="background-color: transparent; border-bottom: none;">';
+                html += '\n               <div class="card mb-2" style="background-color: transparent; border-bottom: none;">';
 
                 html += '\n                   <!-- Card header -->';
                 html += '\n                   <div class="card-header my-0" role="tab" id="notesCardCollapseHeading">';
@@ -2124,7 +2121,7 @@ function renderAppView(appName, manifest) {
 
             if (isInstalled) {
                 html += '\n     <!--Rating Block Panel-->';
-                html += '\n     <div class="card card-body card-outline px-1 py-0 mb-2" style="background-color: transparent;">';
+                html += '\n     <div class="card card-body card-outline px-1 py-3 mb-2" style="background-color: transparent;">';
                 html += '\n       <h6 class="h6-responsive white-text"><u>Rate the Software</u></h6>';
                 html += '\n       <div class="flex-row align-right mr-1 my-2">';
                 html += '\n           <div class="d-flex flex-column justify-content-center align-items-center">';
