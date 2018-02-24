@@ -1,6 +1,6 @@
-const scriptVersion = '1.0.0223a';
+const scriptVersion = '1.0.0224a';
 const scriptRelType = 'beta';
-const scriptVerDate = '2/23/2018';
+const scriptVerDate = '2/24/2018';
 const latestSaVer = '1.0.0213a';
 const allowInstalls = true;
 const allowUpdates = true;
@@ -1941,7 +1941,7 @@ function renderAppView(appName, manifest) {
         // console.log('manifest: ', manifest);
         if (manifest !== undefined && Object.keys(manifest).length) {
             if (isInstalled !== true && isDevMode !== true) {
-                // incrementAppView(appName);
+                incrementAppView(appName);
             }
             appCloseBtnAvail(true);
             $('#appNameListItem').text('Tap On (' + appName + ')');
