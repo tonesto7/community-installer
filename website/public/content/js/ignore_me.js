@@ -1,6 +1,6 @@
-const scriptVersion = '1.0.0224a';
+const scriptVersion = '1.0.0225a';
 const scriptRelType = 'beta';
-const scriptVerDate = '2/24/2018';
+const scriptVerDate = '2/25/2018';
 const latestSaVer = '1.0.0213a';
 const allowInstalls = true;
 const allowUpdates = true;
@@ -593,7 +593,9 @@ function checkItemUpdateStatus(objId, type) {
                         resolve(true);
                     }
                     resolve(false);
-                } else { resolve(false); }
+                } else {
+                    resolve(false);
+                }
             });
     });
 }
@@ -1106,7 +1108,7 @@ function findAppMatch(srchStr, data) {
     }
 }
 
-function dynamicSort(property) {
+function dynamicSort(property, order = 'asc') {
     var sortOrder = 1;
     if (property[0] === '-') {
         sortOrder = -1;
@@ -1148,12 +1150,18 @@ function updateNewsData() {
     let html = '';
     if (Object.keys(newsData).length) {
         let cnt = 0;
-        for (const i in newsData) {
+        let sortedList = Object.keys(newsData)
+            .map(function(key, index) {
+                return newsData[key];
+            })
+            .sort(dynamicSort('dt')).reverse();
+        console.log(sortedList);
+        for (const i in sortedList) {
             html += '\n<!--New Card Panel-->';
             html += '\n<div class="card card-body" style="background-color: transparent;">';
-            html += '\n    <h6 class="card-title h6-responsive white-text text-left">' + newsData[i].title + '<small id="news_feed_item_' + cnt + '" class="timeago text-muted text-left pl-2" style="font-size: 55%;" datetime="' + newsData[i].dt + '"></small></h6>';
+            html += '\n    <h6 class="card-title h6-responsive white-text text-left">' + sortedList[i].title + '<small id="news_feed_item_' + cnt + '" class="timeago text-muted text-left pl-2" style="font-size: 55%;" datetime="' + sortedList[i].dt + '"></small></h6>';
             html += '\n    <p class="card-text text-left">';
-            html += '\n       ' + newsData[i].body;
+            html += '\n       ' + sortedList[i].body;
             html += '\n    </p>';
             html += '\n</div>';
             cnt++;
@@ -1824,7 +1832,9 @@ function searchFormToggle(show = undefined) {
     } else {
         if (show === true) {
             $('#searchForm').show();
-        } else { $('#searchForm').hide(); }
+        } else {
+            $('#searchForm').hide();
+        }
     }
 }
 
@@ -2194,7 +2204,9 @@ function renderAppView(appName, manifest) {
             $('#appViewDiv').css({ display: 'none' });
             $('#listContDiv').css({ display: 'block' });
             appCloseBtnAvail(false);
-            if (currentListType === "apps") { searchBtnAvail(true); }
+            if (currentListType === 'apps') {
+                searchBtnAvail(true);
+            }
         });
         $('#dislikeAppBtn').click(function() {
             incrementLikeDislike(appName, 'dislike');
