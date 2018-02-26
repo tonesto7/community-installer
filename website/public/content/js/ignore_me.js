@@ -1155,7 +1155,7 @@ function updateNewsData() {
                 return newsData[key];
             })
             .sort(dynamicSort('dt')).reverse();
-        console.log(sortedList);
+        // console.log(sortedList);
         for (const i in sortedList) {
             html += '\n<!--New Card Panel-->';
             html += '\n<div class="card card-body" style="background-color: transparent;">';
@@ -2402,6 +2402,8 @@ function loaderFunc() {
         });
 }
 
+const repoUrl = 'https://cdn.rawgit.com/tonesto7/st-community-installer/master';
+
 function buildCoreHtml() {
     let head = '';
     head += '\n                 <meta charset="utf-8">';
@@ -2410,8 +2412,14 @@ function buildCoreHtml() {
     head += '\n                 <meta name="MobileOptimized" content="320">';
     head += '\n                 <meta name="HandheldFriendly" content="True">';
     head += '\n                 <meta name="apple-mobile-web-app-capable" content="yes">';
-    head += '\n                 <link rel="shortcut icon" type="image/x-icon" href="https://cdn.rawgit.com/tonesto7/st-community-installer/master/images/app_logo.ico" />';
+    head += '\n                 <link rel="shortcut icon" type="image/x-icon" href="' + repoUrl + '/images/app_logo.ico" />';
     head += '\n                 <title>Community Installer</title>';
+    head += '\n                 <meta name="apple-mobile-web-app-status-bar-style" content="black">';
+    head += '\n                 <link rel="icon" type="image/png" href="' + repoUrl + '/images/icons/favicon-16x16.png" sizes="16x16">';
+    head += '\n                 <link rel="icon" type="image/png" href="' + repoUrl + '/images/icons/favicon-32x32.png" sizes="32x32">';
+    head += '\n                 <link rel="icon" type="image/png" href="' + repoUrl + '/images/icons/android-192x192.png" sizes="192x192">';
+    head += '\n                 <link rel="apple-touch-icon" href="' + repoUrl + '/images/icons/apple-touch-icon-180x180.png" sizes="180x180">';
+    head += '\n                 <meta name="msapplication-config" content="' + repoUrl + '/images/icons/browserconfig.xml">';
     head += '\n                 <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400,400i,500,700,700i&amp;subset=cyrillic-ext" />';
     head += '\n                 <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" />';
     head += '\n                 <script src="https://use.fontawesome.com/a81eef09c0.js" async></script>';
@@ -2420,6 +2428,7 @@ function buildCoreHtml() {
     head += '\n                 <script src="https://static.firebase.com/v0/firebase.js" async></script>';
     head += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js" async></script>';
     // head += '\n                 <script src="https://cdn.jsdelivr.net/npm/vue"></script>';
+    head += '\n                 <link rel="manifest" href="' + repoUrl + '/webmanifest.json">';
     $('head').append(head);
 
     let html = '';
