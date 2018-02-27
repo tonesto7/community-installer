@@ -2402,7 +2402,7 @@ function loaderFunc() {
         });
 }
 
-const repoUrl = 'https://cdn.rawgit.com/tonesto7/st-community-installer/master';
+const repoUrl = 'https://rawgit.com/tonesto7/st-community-installer/master';
 
 function buildCoreHtml() {
     let head = '';
@@ -2428,7 +2428,7 @@ function buildCoreHtml() {
     head += '\n                 <script src="https://static.firebase.com/v0/firebase.js" async></script>';
     head += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js" async></script>';
     // head += '\n                 <script src="https://cdn.jsdelivr.net/npm/vue"></script>';
-    head += '\n                 <link rel="manifest" href="' + baseAppUrl + '/webmanifest.json">';
+    head += '\n                 <link rel="manifest" href="' + repoUrl + '/webmanifest.json">';
     $('head').append(head);
 
     let html = '';
@@ -2646,7 +2646,7 @@ function buildCoreHtml() {
     html += '\n               </div>';
     html += '\n           </div>';
     html += '\n       </div>';
-
+    html += '\n       <script src="' + baseAppUrl + '/sw.js"></script>';
     $('body').css({ 'overflow-x': 'hidden' });
     $('#bodyDiv').html(html);
 }
@@ -2707,7 +2707,6 @@ $.ajaxSetup({
 });
 
 function loadScripts() {
-    $.getScript(baseAppUrl + '/sw.js');
     $.getScript('https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js');
     $.getScript('https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.5.0/js/mdb.min.js');
     $.getScript('https://cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.6.1/jquery.timeago.min.js');

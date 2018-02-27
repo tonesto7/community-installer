@@ -1,9 +1,9 @@
 {
     "name": "Community Install",
     "short_name": "Community Installer",
-    "theme_color": "#2196f3",
-    "background_color": "#485158",
-    "display": "fullscreen",
+    "theme_color": "#2b3134",
+    "background_color": "#2b3134",
+    "display": "standalone",
     "Scope": "/",
     "start_url": "/?=utm_homescreen",
     "icons": [{
