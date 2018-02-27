@@ -30,9 +30,9 @@ self.addEventListener('install', function(e) {
     );
 });
 
-// when the browser fetches a URLâ€¦
+// when the browser fetches a URL…
 self.addEventListener('fetch', function(event) {
-    // â€¦ either respond with the cached object or go ahead and fetch the actual URL
+    // … either respond with the cached object or go ahead and fetch the actual URL
     event.respondWith(
         caches.match(event.request).then(function(response) {
             if (response) {

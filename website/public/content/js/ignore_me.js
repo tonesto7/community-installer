@@ -1,6 +1,6 @@
-const scriptVersion = '1.0.0225a';
+const scriptVersion = '1.0.0227a';
 const scriptRelType = 'beta';
-const scriptVerDate = '2/25/2018';
+const scriptVerDate = '2/27/2018';
 const latestSaVer = '1.0.0213a';
 const allowInstalls = true;
 const allowUpdates = true;
@@ -1154,7 +1154,8 @@ function updateNewsData() {
             .map(function(key, index) {
                 return newsData[key];
             })
-            .sort(dynamicSort('dt')).reverse();
+            .sort(dynamicSort('dt'))
+            .reverse();
         // console.log(sortedList);
         for (const i in sortedList) {
             html += '\n<!--New Card Panel-->';
@@ -1616,6 +1617,10 @@ function loadAllManifests() {
             installComplete(resultStrings.inst_comp_text.errors.app_list_manifest_error, true);
         }
     });
+}
+
+function isMobile() {
+    return (/iPhone|iPod|iPad|Android|BlackBerry/).test(navigator.userAgent);
 }
 
 function buildMainPage(filterStr = undefined, listType = 'apps') {
@@ -2330,12 +2335,21 @@ function defineResultClickActions() {
     $('#resultsDoneHomeBtn').click(function() {
         location.href = homeUrl;
     });
-    $('#reloginBtn').click(function() {
-        location.href = loginUrl;
+    $('#reloginBtn').on('click', function(e) {
+        if (('standalone' in window.navigator) && window.navigator.standalone) {
+            e.preventDefault();
+            location.href = $(e.target).attr('href');
+            // return false;
+        } else {
+            location.href = loginUrl;
+        }    
     });
 }
 
 function defineCoreClickActions() {
+    $('.btn, .a').on('touchend', function(e) {
+        navigator.vibrate(50);
+    });
     $('#searchBtn').click(function() {
         searchForApp('Clicked', currentListType);
     });
@@ -2358,6 +2372,26 @@ function defineCoreClickActions() {
     $('#showSearchBtn').click(function() {
         searchFormToggle();
     });
+            if(("standalone" in window.navigator) && window.navigator.standalone){
+
+        var noddy, remotes = false;
+
+        document.addEventListener('click', function(event) {
+
+        noddy = event.target;
+
+        while(noddy.nodeName !== "A" && noddy.nodeName !== "HTML") {
+        noddy = noddy.parentNode;
+        }
+
+        if('href' in noddy && noddy.href.indexOf('http') !== -1 && (noddy.href.indexOf(document.location.host) !== -1 || remotes))
+        {
+        event.preventDefault();
+        document.location.href = noddy.href;
+        }
+
+        },false);
+        }
 }
 
 function loaderFunc() {
@@ -2402,24 +2436,47 @@ function loaderFunc() {
         });
 }
 
-const repoUrl = 'https://rawgit.com/tonesto7/st-community-installer/master';
+const repoUrl = 'https://cdn.rawgit.com/tonesto7/st-community-installer/master';
+const repoImgUrl = 'https://raw.githubusercontent.com/tonesto7/st-community-installer/master';
 
 function buildCoreHtml() {
     let head = '';
     head += '\n                 <meta charset="utf-8">';
-    head += '\n                 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=0">';
+    // head += '\n                 <base href="' + repoUrl + '" target="_blank">';
+    head += '\n                 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=0, viewport-fit=cover">';
     head += '\n                 <meta http-equiv="cleartype" content="on">';
     head += '\n                 <meta name="MobileOptimized" content="320">';
     head += '\n                 <meta name="HandheldFriendly" content="True">';
-    head += '\n                 <meta name="apple-mobile-web-app-capable" content="yes">';
-    head += '\n                 <link rel="shortcut icon" type="image/x-icon" href="' + repoUrl + '/images/app_logo.ico" />';
+    head += '\n                 <meta name="description" content="Description">';
+    head += '\n                 <meta name="keywords" content="">';
     head += '\n                 <title>Community Installer</title>';
-    head += '\n                 <meta name="apple-mobile-web-app-status-bar-style" content="black">';
-    head += '\n                 <link rel="icon" type="image/png" href="' + repoUrl + '/images/icons/favicon-16x16.png" sizes="16x16">';
-    head += '\n                 <link rel="icon" type="image/png" href="' + repoUrl + '/images/icons/favicon-32x32.png" sizes="32x32">';
-    head += '\n                 <link rel="icon" type="image/png" href="' + repoUrl + '/images/icons/android-192x192.png" sizes="192x192">';
-    head += '\n                 <link rel="apple-touch-icon" href="' + repoUrl + '/images/icons/apple-touch-icon-180x180.png" sizes="180x180">';
-    head += '\n                 <meta name="msapplication-config" content="' + repoUrl + '/images/icons/browserconfig.xml">';
+
+    head += '\n                 <!-- Android  -->';
+    head += '\n                 <meta name="theme-color" content="#2b3134"/>';
+    head += '\n                 <meta name="mobile-web-app-capable" content="yes">';
+    head += '\n                 <link rel="icon" type="image/png" href="' + repoImgUrl + '/images/icons/android-192x192.png" sizes="192x192">';
+
+    head += '\n                 <!-- iOS -->';
+    head += '\n                 <meta name="apple-mobile-web-app-capable" content="yes">';
+    head += '\n                 <meta name="apple-mobile-web-app-title" content="Community Installer App">';
+    head += '\n                 <meta name="format-detection" content="telephone=no">';
+    head += '\n                 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">';
+    head += '\n                 <link rel="apple-touch-icon" href="' + repoImgUrl + '/images/icons/apple-touch-icon-180x180.png" sizes="180x180">';
+    head += '\n                 <link rel="apple-touch-startup-image" href="' + repoImgUrl + '/images/icons/ios_launch.png">';
+
+    head += '\n                 <link rel="shortcut icon" type="image/x-icon" href="' + repoImgUrl + '/images/app_logo.ico" />';
+
+    head += '\n                 <!-- Windows  -->';
+    head += '\n                 <meta http-equiv="x-ua-compatible" content="ie=edge">';
+    head += '\n                 <meta name="msapplication-navbutton-color" content="#2b3134">';
+    head += '\n                 <meta name="msapplication-TileColor" content="#2b3134">';
+    head += '\n                 <meta name="msapplication-TileImage" content="' + repoImgUrl + '/images/icons/ms-icon-144x144.png">';
+    head += '\n                 <meta name="msapplication-config" content="' + repoImgUrl + '/images/icons/browserconfig.xml">';
+
+    head += '\n                 <link rel="icon" type="image/png" href="' + repoImgUrl + '/images/icons/favicon-16x16.png" sizes="16x16">';
+    head += '\n                 <link rel="icon" type="image/png" href="' + repoImgUrl + '/images/icons/favicon-32x32.png" sizes="32x32">';
+    // head += '\n                 <link rel="icon" type="image/png" href="' + repoImgUrl + '/images/icons/favicon-48.png" sizes="48x48">';
+
     head += '\n                 <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400,400i,500,700,700i&amp;subset=cyrillic-ext" />';
     head += '\n                 <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" />';
     head += '\n                 <script src="https://use.fontawesome.com/a81eef09c0.js" async></script>';
@@ -2427,8 +2484,7 @@ function buildCoreHtml() {
     head += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js" async></script>';
     head += '\n                 <script src="https://static.firebase.com/v0/firebase.js" async></script>';
     head += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js" async></script>';
-    // head += '\n                 <script src="https://cdn.jsdelivr.net/npm/vue"></script>';
-    head += '\n                 <link rel="manifest" href="' + repoUrl + '/webmanifest.json">';
+    head += '\n                 <link href="' + repoUrl + '/manifest.json" rel="manifest">';
     $('head').append(head);
 
     let html = '';
@@ -2439,7 +2495,7 @@ function buildCoreHtml() {
     html += '\n                       <a id="homeNavBtn" class="nav-link white-text p-0" href="' + homeUrl + '" style="font-size: 30px;"><i id="homeBtn" class="fa fa-home"></i><span class="sr-only">(current)</span></a>';
     html += '\n                   </div>';
     html += '\n                   <div class="d-flex flex-column justify-content-center align-items-center">';
-    html += '\n                       <a class="navbar-brand"><span class="align-middle"><img src="https://cdn.rawgit.com/tonesto7/st-community-installer/master/images/app_logo.png" height="40" class="d-inline-block align-middle" alt=""> Installer</span></a>';
+    html += '\n                       <a class="navbar-brand"><span class="align-middle"><img src="https://raw.githubusercontent.com/tonesto7/st-community-installer/master/images/app_logo.png" height="40" class="d-inline-block align-middle" alt=""> Installer</span></a>';
     html += '\n                   </div>';
     html += '\n                   <div class="d-flex flex-column justify-content-center align-items-center">';
     html += '\n                       <a id="showSearchBtn" class="nav-link white-text p-0" style="font-size: 30px; display: none;"><i class="fa fa-search"></i><span class="sr-only">(current)</span></a>';
@@ -2452,7 +2508,7 @@ function buildCoreHtml() {
     html += '\n           <div id="mainDiv" class="container-fluid" style="min-width: 380px; max-width: 750px; height: auto; min-height: 100%;">';
     html += '\n               <div class="w-auto mx-4">';
     html += '\n                   <div class="md-form form-sm input-group" id="searchForm" style="display: none;">';
-    html += '\n                       <input type="search" class="form-control text-white searchFlag" placeholder="Search..." id="appSearchBox" autocomplete="off">';
+    html += '\n                       <input type="search" class="form-control text-white searchFlag" placeholder="Search..." id="appSearchBox" autocomplete="false">';
     html += '\n                       <span class="input-group-btn"><button class="m-0 btn btn-sm grey px-1" type="button" id="searchBtn" style="border-top-right-radius: 10px;border-bottom-right-radius:  10px;"><i class="fa fa-search"></i> Search</button></span>';
     html += '\n                   </div>';
     html += '\n               </div>';
@@ -2514,7 +2570,7 @@ function buildCoreHtml() {
     html += '\n                                               </div>';
     html += '\n                                               <div class="d-flex flex-column justify-content-center align-items-center">';
     html += '\n                                                 <div class="btn-group">';
-    html += '\n                                                   <button id="reloginBtn" type="button" class="btn blue mt-3 mx-2 px-2" style="display: none; border-radius: 20px; background: transparent; width: 130px;"><i id="loginBtn" class="fa fa-sign-in"></i> Login Again</button>';
+    html += '\n                                                   <a id="reloginBtn" href="'+ loginUrl + '" class="btn blue mt-3 mx-2 px-2" style="display: none; border-radius: 20px; background: transparent; width: 130px;"><i id="loginBtn" class="fa fa-sign-in"></i> Login Again</a>';
     html += '\n                                                   <button id="resultsDoneHomeBtn" type="button" class="btn white-text mt-3 mx-2 px-2" style="display: none; border-radius: 20px; background: transparent; width: 130px;"><i id="homeBtn" class="fa fa-home"></i> Go Home</button>';
     html += '\n                                                   <button id="whatNextBtn" type="button" class="btn waves-effect waves-light mt-3 mx-2 px-2 blue" style="border-radius: 20px; display: none; width: 130px;" data-toggle="modal" data-target="#doneModal"><span class="white-text"><i class="fa fa-chevron-circle-right"></i> What Next?</span></button>';
     html += '\n                                                 </div>';
@@ -2646,7 +2702,7 @@ function buildCoreHtml() {
     html += '\n               </div>';
     html += '\n           </div>';
     html += '\n       </div>';
-    html += '\n       <script src="' + baseAppUrl + '/sw.js"></script>';
+
     $('body').css({ 'overflow-x': 'hidden' });
     $('#bodyDiv').html(html);
 }

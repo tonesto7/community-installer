@@ -9,9 +9,10 @@
             "headers": [{
                     "key": "Access-Control-Allow-Origin",
                     "value": "*"
-                }, {
+                },
+                {
                     "key": "Content-Security-Policy",
-                    "value": "frame-ancestors 'self' github.com *.github.com thingsthataresmart.wiki *.thingsthataresmart.wiki rawgit.com *.rawgit.com"
+                    "value": "frame-ancestors 'self' '*'; frame-src 'self' '*';"
                 },
                 {
                     "key": "Cache-Control",

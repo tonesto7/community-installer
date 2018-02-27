@@ -344,6 +344,13 @@ button#appListNewsTabBtn.active {
     border-bottom: 1px solid orange;
 }
 
+.md-form.form-sm input {
+    padding-bottom: .1rem;
+    padding-top: .2rem;
+    font-size: .7rem;
+    line-height: .5;
+}
+
 .md-form .prefix.active {
     color: orange;
 }
