@@ -1,6 +1,6 @@
-const scriptVersion = '1.0.0227a';
-const scriptRelType = 'beta';
-const scriptVerDate = '2/27/2018';
+const scriptVersion = '1.0.0228c';
+const scriptRelType = 'beta2';
+const scriptVerDate = '2/28/2018';
 const latestSaVer = '1.0.0213a';
 const allowInstalls = true;
 const allowUpdates = true;
@@ -51,7 +51,7 @@ function generateStUrl(path) {
     return serverUrl + path;
 }
 
-function makeRequest(url, method, message, appId = null, appDesc = null, contentType = null, responseType = null, anyStatus = false) {
+function makeRequest(url, method, message, appId = null, appDesc = null, contentType = null, responseType = null, anyStatus = false, allowTO = true) {
     return new Promise(function(resolve, reject) {
         var xhr = new XMLHttpRequest();
         url += appId || '';
@@ -75,6 +75,10 @@ function makeRequest(url, method, message, appId = null, appDesc = null, content
                 }
             }
         };
+        xhr.ontimeout = function(e) {
+            // XMLHttpRequest timed out. Do something here.
+            resolve('timeout');
+        };
         xhr.onprogress = function() {
             // console.log('LOADING', xhr.readyState); // readyState will be 3
         };
@@ -90,6 +94,7 @@ function makeRequest(url, method, message, appId = null, appDesc = null, content
             }
         };
         xhr.open(method, url, true);
+        if (allowTO === false) { xhr.timeout = 8000; }
         if (contentType !== null && responseType !== null) {
             xhr.setRequestHeader('Content-Type', contentType);
             xhr.responseType = responseType;
@@ -1018,15 +1023,18 @@ function checkIfItemsInstalled(itemObj, type, secondPass = false) {
 
 function getProjectManifest(url) {
     return new Promise(function(resolve, reject) {
-        updLoaderText('Getting', 'Manifest');
+        updLoaderText('Getting', 'Manifests');
         url = manifestCache ? url : url + '?=' + getTimeStamp();
-        makeRequest(url, 'GET', null)
+        makeRequest(url, 'GET', null, null, null, null, null, null, null, false)
             .catch(function(err) {
                 installError(err, false);
                 reject(err);
             })
             .then(function(resp) {
                 // console.log(resp);
+                if (resp === 'timeout') {
+                    reject(undefined);
+                }
                 if (resp !== undefined) {
                     let mani = JSON.parse(resp);
                     if (mani.name !== undefined) {
@@ -2305,11 +2313,11 @@ function getSelectedCodeItems() {
     selected['devices'] = [];
     $('#appViewCard input:checked').each(function() {
         let itemName = $(this).attr('id');
-        if (itemName.startsWith('smartapp')) {
-            selected['smartapps'].push($('#' + $(this).attr('id') + 'name').text());
+        if (itemName.endsWith('_app')) {
+            selected['smartapps'].push($('#' + itemName + '_label').text());
         }
-        if (itemName.startsWith('device')) {
-            selected['devices'].push($('#' + $(this).attr('id') + 'name').text());
+        if (itemName.endsWith('_device')) {
+            selected['devices'].push($('#' + itemName + '_label').text());
         }
     });
     return selected;
@@ -2336,13 +2344,7 @@ function defineResultClickActions() {
         location.href = homeUrl;
     });
     $('#reloginBtn').on('click', function(e) {
-        if (('standalone' in window.navigator) && window.navigator.standalone) {
-            e.preventDefault();
-            location.href = $(e.target).attr('href');
-            // return false;
-        } else {
-            location.href = loginUrl;
-        }    
+        location.href = loginUrl;
     });
 }
 
@@ -2372,26 +2374,6 @@ function defineCoreClickActions() {
     $('#showSearchBtn').click(function() {
         searchFormToggle();
     });
-            if(("standalone" in window.navigator) && window.navigator.standalone){
-
-        var noddy, remotes = false;
-
-        document.addEventListener('click', function(event) {
-
-        noddy = event.target;
-
-        while(noddy.nodeName !== "A" && noddy.nodeName !== "HTML") {
-        noddy = noddy.parentNode;
-        }
-
-        if('href' in noddy && noddy.href.indexOf('http') !== -1 && (noddy.href.indexOf(document.location.host) !== -1 || remotes))
-        {
-        event.preventDefault();
-        document.location.href = noddy.href;
-        }
-
-        },false);
-        }
 }
 
 function loaderFunc() {
@@ -2460,7 +2442,7 @@ function buildCoreHtml() {
     head += '\n                 <meta name="apple-mobile-web-app-capable" content="yes">';
     head += '\n                 <meta name="apple-mobile-web-app-title" content="Community Installer App">';
     head += '\n                 <meta name="format-detection" content="telephone=no">';
-    head += '\n                 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">';
+    head += '\n                 <meta name="apple-mobile-web-app-status-bar-style" content="black">';
     head += '\n                 <link rel="apple-touch-icon" href="' + repoImgUrl + '/images/icons/apple-touch-icon-180x180.png" sizes="180x180">';
     head += '\n                 <link rel="apple-touch-startup-image" href="' + repoImgUrl + '/images/icons/ios_launch.png">';
 
@@ -2495,7 +2477,14 @@ function buildCoreHtml() {
     html += '\n                       <a id="homeNavBtn" class="nav-link white-text p-0" href="' + homeUrl + '" style="font-size: 30px;"><i id="homeBtn" class="fa fa-home"></i><span class="sr-only">(current)</span></a>';
     html += '\n                   </div>';
     html += '\n                   <div class="d-flex flex-column justify-content-center align-items-center">';
-    html += '\n                       <a class="navbar-brand"><span class="align-middle"><img src="https://raw.githubusercontent.com/tonesto7/st-community-installer/master/images/app_logo.png" height="40" class="d-inline-block align-middle" alt=""> Installer</span></a>';
+    html += '\n                       <div class="d-inline-flex" id="navbarLogoWrapper">';
+    html += '\n                           <img src="https://raw.githubusercontent.com/tonesto7/st-community-installer/master/images/app_logo.png" height="40" alt="" id="navbarLogoImg">';
+    html += '\n                           <div id="navbarLogoText" class="m-0">';
+    html += '\n                               <p class="d-flex py-0 my-0">Community</p>';
+    html += '\n                               <p class="d-flex py-0 my-0">Installer</p>';
+    html += '\n                           </div>';
+    html += '\n                       </div>';
+    // html += '\n                       <a class="navbar-brand"><span class="align-middle"><img src="https://raw.githubusercontent.com/tonesto7/st-community-installer/master/images/app_logo.png" height="40" class="d-inline-block align-middle" alt=""> Installer</span></a>';
     html += '\n                   </div>';
     html += '\n                   <div class="d-flex flex-column justify-content-center align-items-center">';
     html += '\n                       <a id="showSearchBtn" class="nav-link white-text p-0" style="font-size: 30px; display: none;"><i class="fa fa-search"></i><span class="sr-only">(current)</span></a>';
@@ -2570,7 +2559,7 @@ function buildCoreHtml() {
     html += '\n                                               </div>';
     html += '\n                                               <div class="d-flex flex-column justify-content-center align-items-center">';
     html += '\n                                                 <div class="btn-group">';
-    html += '\n                                                   <a id="reloginBtn" href="'+ loginUrl + '" class="btn blue mt-3 mx-2 px-2" style="display: none; border-radius: 20px; background: transparent; width: 130px;"><i id="loginBtn" class="fa fa-sign-in"></i> Login Again</a>';
+    html += '\n                                                   <a id="reloginBtn" href="' + loginUrl + '" class="btn blue mt-3 mx-2 px-2" style="display: none; border-radius: 20px; background: transparent; width: 130px;"><i id="loginBtn" class="fa fa-sign-in"></i> Login Again</a>';
     html += '\n                                                   <button id="resultsDoneHomeBtn" type="button" class="btn white-text mt-3 mx-2 px-2" style="display: none; border-radius: 20px; background: transparent; width: 130px;"><i id="homeBtn" class="fa fa-home"></i> Go Home</button>';
     html += '\n                                                   <button id="whatNextBtn" type="button" class="btn waves-effect waves-light mt-3 mx-2 px-2 blue" style="border-radius: 20px; display: none; width: 130px;" data-toggle="modal" data-target="#doneModal"><span class="white-text"><i class="fa fa-chevron-circle-right"></i> What Next?</span></button>';
     html += '\n                                                 </div>';

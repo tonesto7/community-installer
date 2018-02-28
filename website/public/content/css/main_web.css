@@ -384,3 +384,20 @@ figure {
     height: 25px;
     width: 25px;
 }
+
+#navbarLogoWrapper {
+    display: table-row;
+}
+
+#navbarLogoImg {
+    display: table-cell;
+    vertical-align: middle;
+    margin-right: 1px;
+    width: auto;
+}
+
+#navbarLogoText {
+    line-height: 1.4;
+    display: table-cell;
+    vertical-align: middle;
+}
