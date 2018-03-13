@@ -1,6 +1,6 @@
-const scriptVersion = '1.0.0228c';
-const scriptRelType = 'beta2';
-const scriptVerDate = '2/28/2018';
+const scriptVersion = '1.0.0313a';
+const scriptRelType = 'beta3';
+const scriptVerDate = '3/13/2018';
 const latestSaVer = '1.0.0213a';
 const allowInstalls = true;
 const allowUpdates = true;
@@ -69,7 +69,11 @@ function makeRequest(url, method, message, appId = null, appDesc = null, content
                         resolve(xhr.response);
                     }
                 } else if ((xhr.status === 500 || xhr.status === 302) && anyStatus === true) {
+                    // if (xhr.status === 500 && anyStatus === false) {
+                    //     reject(Error(xhr.statusText));
+                    // } else {
                     resolve(xhr.response);
+                    // }
                 } else {
                     reject(Error(xhr.statusText));
                 }
@@ -95,16 +99,16 @@ function makeRequest(url, method, message, appId = null, appDesc = null, content
         };
         xhr.open(method, url, true);
         if (allowTO === false) { xhr.timeout = 8000; }
-        if (contentType !== null && responseType !== null) {
+        if (contentType !== null) {
             xhr.setRequestHeader('Content-Type', contentType);
+        }
+        if (responseType !== null) {
             xhr.responseType = responseType;
-            if (message) {
-                xhr.send(message);
-            } else {
-                xhr.send();
-            }
-        } else {
+        }
+        if (message) {
             xhr.send(message);
+        } else {
+            xhr.send();
         }
     });
 }
@@ -126,6 +130,49 @@ function getStAuth() {
                 reject('Unauthorized');
             });
     });
+}
+
+function getRandomItem(items) {
+    return items[Math.floor(Math.random() * items.length)];
+}
+
+function getStServerName() {
+    let result = 'Unknown: (' + serverUrl + ')';
+    // const servers = [
+    //     'https://graph-na04-useast2.api.smartthings.com',
+    //     'https://graph.api.smartthings.com',
+    //     'https://graph-na02-useast1.api.smartthings.com',
+    //     'https://graph-ap02-apnortheast2.api.smartthings.com',
+    //     'https://graph-eu01-euwest1.api.smartthings.com'
+    // ];
+    if (serverUrl) {
+        let items = serverUrl.split('//')[1].toString().split('.');
+        // console.log('items: ', items);
+        if (items[0] === 'graph') {
+            result = "NA01 (US Main)";
+        } else if (items[0] !== undefined) {
+            let d = items[0].split('-');
+            // console.log('d: ', d);
+            if (d[1] !== undefined) {
+                switch (d[1]) {
+                    case 'na04':
+                        result = 'NA04 (US East 2)';
+                        break;
+                    case 'na02':
+                        result = 'NA02 (US East 1)';
+                        break;
+                    case 'eu01':
+                        result = 'EU01 (Europe West 1)';
+                        break;
+                    case 'ap02':
+                        result = 'AP02 (Asia Pacific NorthEast 2)';
+                        break;
+                }
+            }
+        }
+    }
+    // console.log(result);
+    return result;
 }
 
 /***********************************************************************/
@@ -342,6 +389,7 @@ function buildInstallParams(repoid, items, type, method, publish = true) {
         objs.push('publishUpdates=true');
     }
     objs.push('execute=Execute+Update');
+    // console.log('installParams: ', objs);
     return objs.join('&');
 }
 
@@ -927,20 +975,29 @@ function parseDomForDevices(domData) {
     const parser = new DOMParser();
     const respDoc = parser.parseFromString(domData.toString(), 'text/html');
     const appTable = respDoc.getElementById('devicetype-table');
-    const theBody = appTable.getElementsByTagName('tbody');
-    const theApps = theBody[0].getElementsByTagName('tr');
+
+    let theBody;
+    let theDevs;
+    if (appTable) {
+        theBody = appTable.getElementsByTagName('tbody');
+        if (theBody) {
+            theDevs = theBody[0].getElementsByTagName('tr');
+        }
+    }
     const fndDTH = [];
-    for (var i = 0; i < theApps.length; i++) {
-        let devName = theApps[i].getElementsByClassName('namespace-name')[0].getElementsByTagName('a')[0].innerText.replace(/\n/g, '').trim().split(':');
-        // let gitHubArr = theApps[i].getElementsByTagName('td')[2].innerHTML.replace(/<script[^>]*>(?:(?!<\/script>)[^])*<\/script>/g, '').replace(/\n/g, '').trim();
-        fndDTH.push({
-            id: theApps[i].id,
-            name: (devName.length > 1 ? devName[1] : devName).toString().trim(),
-            namespace: devName.length > 1 ? devName[0].toString().trim() : undefined,
-            published: theApps[i].getElementsByTagName('td')[3].innerText.replace(/\n/g, '').trim() === 'Published'
-                // capabilities: theApps[i].getElementsByTagName('td')[4].innerText.replace(/\n/g, '').trim(),
-                // oAuth: theApps[i].getElementsByTagName('td')[5].innerText.replace(/\n/g, '').trim()
-        });
+    if (theDevs && theDevs.length) {
+        for (var i = 0; i < theDevs.length; i++) {
+            let devName = theDevs[i].getElementsByClassName('namespace-name')[0].getElementsByTagName('a')[0].innerText.replace(/\n/g, '').trim().split(':');
+            // let gitHubArr = theDevs[i].getElementsByTagName('td')[2].innerHTML.replace(/<script[^>]*>(?:(?!<\/script>)[^])*<\/script>/g, '').replace(/\n/g, '').trim();
+            fndDTH.push({
+                id: theDevs[i].id,
+                name: (devName.length > 1 ? devName[1] : devName).toString().trim(),
+                namespace: devName.length > 1 ? devName[0].toString().trim() : undefined,
+                published: theDevs[i].getElementsByTagName('td')[3].innerText.replace(/\n/g, '').trim() === 'Published'
+                    // capabilities: theDevs[i].getElementsByTagName('td')[4].innerText.replace(/\n/g, '').trim(),
+                    // oAuth: theDevs[i].getElementsByTagName('td')[5].innerText.replace(/\n/g, '').trim()
+            });
+        }
     }
     // console.log(fndDTH);
     return fndDTH;
@@ -958,23 +1015,24 @@ function getAvailableAppsDevices(updDom = false) {
                 reject(err);
             })
             .then(function(resp) {
-                // console.log(resp);
+                // console.log('getAvailableApps resp:', resp);
                 let fndApps = JSON.parse(resp);
                 if (fndApps.length) {
                     availableApps = fndApps;
                     out['apps'] = fndApps;
                 }
-                makeRequest(availableDevsUrl, 'GET', null)
+                makeRequest(availableDevsUrl, 'GET', null, null, null, null, 'application/json')
                     .catch(function(err) {
                         reject(err);
                     })
                     .then(function(resp) {
-                        // console.log(resp);
-                        let fndDevs = parseDomForDevices(resp);
-                        if (fndDevs.length) {
-                            availableDevs = fndDevs;
-                            out['devices'] = fndDevs;
-                        }
+                        if (resp) {
+                            let fndDevs = parseDomForDevices(resp);
+                            if (fndDevs.length) {
+                                availableDevs = fndDevs;
+                                out['devices'] = fndDevs;
+                            }
+                        } else { out['devices'] = []; }
                         resolve(out);
                     });
             });
@@ -1371,7 +1429,7 @@ function processItemsStatuses(data, viewType) {
                             // console.log(err);
                         })
                         .then(function(resp) {
-                            if (resp.installed === true) {
+                            if (resp && resp.installed && resp.installed === true) {
                                 cnt++;
                                 if (viewType === 'appView') {
                                     installBtnAvail(cnt, items[i]);
@@ -1394,7 +1452,7 @@ function processItemsStatuses(data, viewType) {
                                 // console.log(err);
                             })
                             .then(function(resp) {
-                                if (resp.installed === true) {
+                                if (resp && resp.installed && resp.installed === true) {
                                     cnt++;
                                     if (viewType === 'appView') {
                                         installBtnAvail(cnt, items[i]);
@@ -1418,7 +1476,7 @@ function processItemsStatuses(data, viewType) {
                             // console.log(err);
                         })
                         .then(function(resp) {
-                            if (resp.installed === true) {
+                            if (resp && resp.installed && resp.installed === true) {
                                 cnt++;
                                 if (viewType === 'appView') {
                                     installBtnAvail(cnt, items[i]);
@@ -2580,6 +2638,7 @@ function buildCoreHtml() {
     html += '\n                   <div class="d-flex flex-column justify-content-center align-items-center">';
     html += '\n                       <button class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#aboutModal" style="background: transparent; border-color: white !important;"><span class="white-text"><i class="fa fa-info"></i> About</span></button>';
     html += '\n                       <small class="align-middle"><u>v' + scriptVersion + ' (' + scriptRelType + ')</u></small>';
+    html += '\n                       <small class="align-middle">' + getStServerName() + '</small>';
     html += '\n                   </div>';
     html += '\n               </div>';
     html += '\n           </div>';
@@ -2648,6 +2707,10 @@ function buildCoreHtml() {
     html += '\n                                   <div class="d-flex flex-column justify-content-center align-items-center">';
     html += '\n                                       <small><u>WebApp Version:</u></small>';
     html += '\n                                       <small>v' + scriptVersion + ' (' + scriptRelType + ')</small>';
+    html += '\n                                   </div>';
+    html += '\n                                   <div class="d-flex flex-column justify-content-center align-items-center">';
+    html += '\n                                       <small><u>SmartThings Server:</u></small>';
+    html += '\n                                       <small>' + getStServerName() + '</small>';
     html += '\n                                   </div>';
     html += '\n                               </div>';
     html += '\n                           </div>';

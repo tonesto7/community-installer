@@ -18,7 +18,7 @@
         "sourceMapFileName": "",
         "sourceMapSeparate": false,
         "domainLock": [],
-        "reservedNames": ["^serverUrl", "^homeUrl", "^baseAppUrl", "^appVersion", "^appVerDate", "^hashedUuid"],
+        "reservedNames": ["^serverUrl", "^homeUrl", "^baseAppUrl", "^appVersion", "^appVerDate", "^hashedUuid", "^loginUrl"],
         "seed": 0,
         "controlFlowFlatteningThreshold": 0.75,
         "controlFlowFlattening": true,
