@@ -1,6 +1,6 @@
-const scriptVersion = '1.0.0313a';
-const scriptRelType = 'beta3';
-const scriptVerDate = '3/13/2018';
+const scriptVersion = '1.0.0319b';
+const scriptRelType = 'beta4';
+const scriptVerDate = '3/19/2018';
 const latestSaVer = '1.0.0213a';
 const allowInstalls = true;
 const allowUpdates = true;
@@ -51,24 +51,29 @@ function generateStUrl(path) {
     return serverUrl + path;
 }
 
-function makeRequest(url, method, message, appId = null, appDesc = null, contentType = null, responseType = null, anyStatus = false, allowTO = true) {
+function makeRequest(params) {
     return new Promise(function(resolve, reject) {
+        if (params === undefined || params.url === undefined || params.method === undefined) {
+            reject('missing params');
+        }
         var xhr = new XMLHttpRequest();
-        url += appId || '';
+        params.url += params.appId || '';
         xhr.onreadystatechange = function() {
             if (xhr.readyState === XMLHttpRequest.DONE) {
                 if (xhr.status === 200) {
-                    if (appId !== null && appDesc !== null) {
+                    if (params.appId !== undefined && params.appDesc !== undefined && params.appId !== null && params.appDesc !== null) {
                         // console.log(xhr.response);
                         resolve({
                             response: xhr.response,
-                            appId: appId,
-                            appDesc: appDesc
+                            appId: params.appId,
+                            appDesc: params.appDesc
                         });
                     } else {
                         resolve(xhr.response);
                     }
-                } else if ((xhr.status === 500 || xhr.status === 302) && anyStatus === true) {
+                } else if (xhr.status === 404 && params.anyStatus !== undefined && params.anyStatus === true) {
+                    resolve(undefined);
+                } else if ((xhr.status === 500 || xhr.status === 302) && params.anyStatus === true) {
                     // if (xhr.status === 500 && anyStatus === false) {
                     //     reject(Error(xhr.statusText));
                     // } else {
@@ -87,26 +92,28 @@ function makeRequest(url, method, message, appId = null, appDesc = null, content
             // console.log('LOADING', xhr.readyState); // readyState will be 3
         };
         xhr.onerror = function() {
-            if (appId !== null && appDesc !== null) {
+            if (params.appId !== undefined && params.appDesc !== undefined && params.appId !== null && params.appDesc !== null) {
                 reject({
                     statusText: xhr.statusText,
-                    appId: appId,
-                    appDesc: appDesc
+                    appId: params.appId,
+                    appDesc: params.appDesc
                 });
             } else {
                 reject(Error('XMLHttpRequest failed; error code:' + xhr.statusText));
             }
         };
-        xhr.open(method, url, true);
-        if (allowTO === false) { xhr.timeout = 8000; }
-        if (contentType !== null) {
-            xhr.setRequestHeader('Content-Type', contentType);
+        xhr.open(params.method, params.url, true);
+        if (params.setTimeout !== undefined && params.setTimeout === true) {
+            xhr.timeout = 8000;
         }
-        if (responseType !== null) {
-            xhr.responseType = responseType;
+        if (params.contentType !== undefined && params.contentType !== null) {
+            xhr.setRequestHeader('Content-Type', params.contentType);
         }
-        if (message) {
-            xhr.send(message);
+        if (params.responseType !== undefined && params.responseType !== null) {
+            xhr.responseType = params.responseType;
+        }
+        if (params.msgBody !== undefined && params.msgBody !== null) {
+            xhr.send(params.msgBody);
         } else {
             xhr.send();
         }
@@ -116,7 +123,7 @@ function makeRequest(url, method, message, appId = null, appDesc = null, content
 function getStAuth() {
     return new Promise(function(resolve, reject) {
         updLoaderText('Authenticating', 'Please Wait');
-        makeRequest(authUrl, 'GET', null, null, null, 'text/html', '')
+        makeRequest({ url: authUrl, method: 'GET', contentType: 'text/html', responseType: '' })
             .catch(function(err) {
                 installError(err);
             })
@@ -138,18 +145,11 @@ function getRandomItem(items) {
 
 function getStServerName() {
     let result = 'Unknown: (' + serverUrl + ')';
-    // const servers = [
-    //     'https://graph-na04-useast2.api.smartthings.com',
-    //     'https://graph.api.smartthings.com',
-    //     'https://graph-na02-useast1.api.smartthings.com',
-    //     'https://graph-ap02-apnortheast2.api.smartthings.com',
-    //     'https://graph-eu01-euwest1.api.smartthings.com'
-    // ];
     if (serverUrl) {
         let items = serverUrl.split('//')[1].toString().split('.');
         // console.log('items: ', items);
         if (items[0] === 'graph') {
-            result = "NA01 (US Main)";
+            result = 'NA01 (US Main)';
         } else if (items[0] !== undefined) {
             let d = items[0].split('-');
             // console.log('d: ', d);
@@ -280,6 +280,14 @@ function timeSince(timeStamp) {
         month = ts.toDateString().match(/ [a-zA-Z]*/)[0].replace(' ', '') + ' ';
         year = ts.getFullYear() === now.getFullYear() ? '' : ', ' + ts.getFullYear();
         return month + day + year;
+    }
+}
+
+function parseJsonStr(json) {
+    try {
+        return JSON.parse(json);
+    } catch (e) {
+        return undefined;
     }
 }
 
@@ -604,7 +612,7 @@ function addRepoToIde(repoData) {
         let repoParams = buildRepoParamString(repoData, writableRepos);
         // console.log('repoParams: ', repoParams);
         addResult('Repo (' + repoData.repoName + ')', true, 'repo', 'Not Added');
-        makeRequest(updRepoUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
+        makeRequest({ url: updRepoUrl, method: 'POST', msgBody: repoParams, contentType: 'application/x-www-form-urlencoded', responseType: '', anyStatus: true })
             .catch(function(err) {
                 installError(err, false);
                 addResult('Github Repo Issue', false, 'repo', err);
@@ -634,7 +642,7 @@ function addRepoToIde(repoData) {
 function checkItemUpdateStatus(objId, type) {
     return new Promise(function(resolve, reject) {
         let url = type === 'device' ? devUpdChkUrl : appUpdChkUrl;
-        makeRequest(url + objId, 'GET', null)
+        makeRequest({ url: url + objId, method: 'GET' })
             .catch(function(err) {
                 reject(err);
             })
@@ -655,7 +663,7 @@ function checkItemUpdateStatus(objId, type) {
 
 function getRepoId(repoName, repoBranch) {
     return new Promise(function(resolve, reject) {
-        makeRequest(fetchReposUrl, 'GET', null)
+        makeRequest({ url: fetchReposUrl, method: 'GET' })
             .catch(function(err) {
                 // console.log(err);
                 resolve(undefined);
@@ -683,7 +691,7 @@ function checkIdeForRepo(rname, branch, secondPass = false) {
     return new Promise(function(resolve, reject) {
         let repoFound = false;
         updLoaderText('Checking', 'Repos');
-        makeRequest(fetchReposUrl, 'GET', null)
+        makeRequest({ url: fetchReposUrl, method: 'GET' })
             .catch(function(err) {
                 installError(err, false);
                 addResult('Checking Repo (' + rname + ')', false, 'repo', err);
@@ -726,7 +734,7 @@ function installAppsToIde(apps, actType = 'install') {
             var pubPromise = new Promise(function(resolve, reject) {
                 if (pubApps.length > 0) {
                     repoParams = buildInstallParams(repoId, pubApps, 'apps', actType === 'update' ? 'update' : 'add');
-                    makeRequest(doAppRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
+                    makeRequest({ url: doAppRepoUpdUrl, method: 'POST', msgBody: repoParams, contentType: 'application/x-www-form-urlencoded', responseType: '', anyStatus: true })
                         .catch(function(err) {
                             installError(err, false);
                             addResult(actType === 'update' ? 'Updating' : 'Installing' + ' IDE Apps', false, 'app', err);
@@ -748,7 +756,7 @@ function installAppsToIde(apps, actType = 'install') {
                 var noPubPromise = new Promise(function(resolve, reject) {
                     if (noPubApps.length > 0) {
                         repoParams = buildInstallParams(repoId, noPubApps, 'apps', actType === 'update' ? 'update' : 'add', false);
-                        makeRequest(doAppRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
+                        makeRequest({ url: doAppRepoUpdUrl, method: 'POST', msgBody: repoParams, contentType: 'application/x-www-form-urlencoded', responseType: '', anyStatus: true })
                             .catch(function(err) {
                                 installError(err, false);
                                 addResult(actType === 'update' ? 'Updating' : 'Installing' + ' IDE Apps', false, 'app', err);
@@ -821,7 +829,7 @@ function updateDeviceFromRepo(devices) {
         if (devices) {
             updLoaderText('Updating', 'Devices');
             let repoParams = buildInstallParams(repoId, devices, 'devices', 'update');
-            makeRequest(doDevRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
+            makeRequest({ url: doDevRepoUpdUrl, method: 'POST', msgBody: repoParams, contentType: 'application/x-www-form-urlencoded', responseType: '', anyStatus: true })
                 .catch(function(err) {
                     installError(err, false);
                     addResult('Device Update Issue', false, 'device', err);
@@ -862,7 +870,7 @@ function removeAppsFromIde(appNames, selctd) {
             for (const da in availableApps) {
                 for (const i in allAppItems) {
                     if (availableApps[da].name === allAppItems[i].name) {
-                        makeRequest(doAppRemoveUrl + availableApps[da].id, 'GET', null)
+                        makeRequest({ url: doAppRemoveUrl + availableApps[da].id, method: 'GET' })
                             .catch(function(err) {
                                 installError(err, false);
                                 addResult('App Removal Issue', false, 'app', err);
@@ -883,7 +891,7 @@ function removeAppsFromIde(appNames, selctd) {
             for (const i in allDevItems) {
                 for (const da in availableDevs) {
                     if (availableDevs[da].name.trim() === allDevItems[i].name.trim()) {
-                        makeRequest(doDevRemoveUrl + availableDevs[da].id, 'GET', null)
+                        makeRequest({ url: doDevRemoveUrl + availableDevs[da].id, method: 'GET' })
                             .catch(function(err) {
                                 installError(err, false);
                                 addResult('Device Removal Issue', false, 'device', err);
@@ -919,7 +927,7 @@ function updateAppSettings(repoData) {
                 if (appList.length) {
                     for (const al in appList) {
                         let appParams = buildSettingParams(appList[al], updApps[i], repoId, repoData, 'app');
-                        makeRequest(doAppSettingUpdUrl, 'POST', appParams, null, null, 'application/x-www-form-urlencoded', '', true)
+                        makeRequest({ url: doAppSettingUpdUrl, method: 'POST', msgBody: appParams, contentType: 'application/x-www-form-urlencoded', responseType: '', anyStatus: true })
                             .catch(function(err) {
                                 installError(err, false);
                                 addResult('App Settings Update', false, 'app', err);
@@ -953,7 +961,7 @@ function installDevsToIde(devices) {
         if (devices) {
             updLoaderText('Installing', 'Devices');
             let repoParams = buildInstallParams(repoId, devices, 'devices', 'add');
-            makeRequest(doDevRepoUpdUrl, 'POST', repoParams, null, null, 'application/x-www-form-urlencoded', '', true)
+            makeRequest({ url: doDevRepoUpdUrl, method: 'POST', msgBody: repoParams, contentType: 'application/x-www-form-urlencoded', responseType: '', anyStatus: true })
                 .catch(function(err) {
                     installError(err, false);
                     addResult('Install Devices Issue', false, 'device', err);
@@ -972,35 +980,39 @@ function installDevsToIde(devices) {
 }
 
 function parseDomForDevices(domData) {
-    const parser = new DOMParser();
-    const respDoc = parser.parseFromString(domData.toString(), 'text/html');
-    const appTable = respDoc.getElementById('devicetype-table');
+    try {
+        const parser = new DOMParser();
+        const respDoc = parser.parseFromString(domData.toString(), 'text/html');
+        const appTable = respDoc.getElementById('devicetype-table');
 
-    let theBody;
-    let theDevs;
-    if (appTable) {
-        theBody = appTable.getElementsByTagName('tbody');
-        if (theBody) {
-            theDevs = theBody[0].getElementsByTagName('tr');
+        let theBody;
+        let theDevs;
+        if (appTable) {
+            theBody = appTable.getElementsByTagName('tbody');
+            if (theBody) {
+                theDevs = theBody[0].getElementsByTagName('tr');
+            }
         }
-    }
-    const fndDTH = [];
-    if (theDevs && theDevs.length) {
-        for (var i = 0; i < theDevs.length; i++) {
-            let devName = theDevs[i].getElementsByClassName('namespace-name')[0].getElementsByTagName('a')[0].innerText.replace(/\n/g, '').trim().split(':');
-            // let gitHubArr = theDevs[i].getElementsByTagName('td')[2].innerHTML.replace(/<script[^>]*>(?:(?!<\/script>)[^])*<\/script>/g, '').replace(/\n/g, '').trim();
-            fndDTH.push({
-                id: theDevs[i].id,
-                name: (devName.length > 1 ? devName[1] : devName).toString().trim(),
-                namespace: devName.length > 1 ? devName[0].toString().trim() : undefined,
-                published: theDevs[i].getElementsByTagName('td')[3].innerText.replace(/\n/g, '').trim() === 'Published'
-                    // capabilities: theDevs[i].getElementsByTagName('td')[4].innerText.replace(/\n/g, '').trim(),
-                    // oAuth: theDevs[i].getElementsByTagName('td')[5].innerText.replace(/\n/g, '').trim()
-            });
+        const fndDTH = [];
+        if (theDevs && theDevs.length) {
+            for (var i = 0; i < theDevs.length; i++) {
+                let devName = theDevs[i].getElementsByClassName('namespace-name')[0].getElementsByTagName('a')[0].innerText.replace(/\n/g, '').trim().split(':');
+                // let gitHubArr = theDevs[i].getElementsByTagName('td')[2].innerHTML.replace(/<script[^>]*>(?:(?!<\/script>)[^])*<\/script>/g, '').replace(/\n/g, '').trim();
+                fndDTH.push({
+                    id: theDevs[i].id,
+                    name: (devName.length > 1 ? devName[1] : devName).toString().trim(),
+                    namespace: devName.length > 1 ? devName[0].toString().trim() : undefined,
+                    published: theDevs[i].getElementsByTagName('td')[3].innerText.replace(/\n/g, '').trim() === 'Published'
+                        // capabilities: theDevs[i].getElementsByTagName('td')[4].innerText.replace(/\n/g, '').trim(),
+                        // oAuth: theDevs[i].getElementsByTagName('td')[5].innerText.replace(/\n/g, '').trim()
+                });
+            }
         }
+        // console.log(fndDTH);
+        return fndDTH;
+    } catch (ex) {
+        return [];
     }
-    // console.log(fndDTH);
-    return fndDTH;
 }
 
 function getAvailableAppsDevices(updDom = false) {
@@ -1010,7 +1022,7 @@ function getAvailableAppsDevices(updDom = false) {
         if (updDom) {
             updLoaderText('Loading Data', 'Please Wait');
         }
-        makeRequest(availableSaUrl, 'GET', null)
+        makeRequest({ url: availableSaUrl, method: 'GET' })
             .catch(function(err) {
                 reject(err);
             })
@@ -1021,7 +1033,7 @@ function getAvailableAppsDevices(updDom = false) {
                     availableApps = fndApps;
                     out['apps'] = fndApps;
                 }
-                makeRequest(availableDevsUrl, 'GET', null, null, null, null, 'application/json')
+                makeRequest({ url: availableDevsUrl, method: 'GET', contentType: '', responseType: 'application/json', anyStatus: true })
                     .catch(function(err) {
                         reject(err);
                     })
@@ -1032,7 +1044,9 @@ function getAvailableAppsDevices(updDom = false) {
                                 availableDevs = fndDevs;
                                 out['devices'] = fndDevs;
                             }
-                        } else { out['devices'] = []; }
+                        } else {
+                            out['devices'] = [];
+                        }
                         resolve(out);
                     });
             });
@@ -1044,7 +1058,7 @@ function checkIfItemsInstalled(itemObj, type, secondPass = false) {
         let url = type === 'device' ? availableDevsUrl : availableSaUrl;
         // console.log('apps:', apps);
         updLoaderText('Getting', capitalize(type) + ' Data');
-        makeRequest(url, 'GET', null)
+        makeRequest({ url: url, method: 'GET' })
             .catch(function(err) {
                 installError(err, false);
                 addResult('Getting ' + capitalize(type) + 's Issue', false, type, err);
@@ -1083,7 +1097,7 @@ function getProjectManifest(url) {
     return new Promise(function(resolve, reject) {
         updLoaderText('Getting', 'Manifests');
         url = manifestCache ? url : url + '?=' + getTimeStamp();
-        makeRequest(url, 'GET', null, null, null, null, null, null, null, false)
+        makeRequest({ url: url, method: 'GET', anyStatus: true, setTimeout: true })
             .catch(function(err) {
                 installError(err, false);
                 reject(err);
@@ -1094,9 +1108,9 @@ function getProjectManifest(url) {
                     reject(undefined);
                 }
                 if (resp !== undefined) {
-                    let mani = JSON.parse(resp);
-                    if (mani.name !== undefined) {
-                        resolve(mani);
+                    let manifest = parseJsonStr(resp);
+                    if (manifest !== undefined && manifest.name !== undefined) {
+                        resolve(manifest);
                     } else {
                         reject(undefined);
                     }
@@ -1115,17 +1129,18 @@ function getTimeStamp() {
 function getMainManifest() {
     return new Promise(function(resolve, reject) {
         updLoaderText('Getting', 'Available Apps');
-        makeRequest(baseAppUrl + '/content/configs/secret_sauce.json?=' + getTimeStamp(), 'GET', null)
+        url = baseAppUrl + '/content/configs/secret_sauce.json?=' + getTimeStamp();
+        makeRequest({ url: url, method: 'GET', setTimeout: true })
             .catch(function(err) {
                 reject(err);
             })
             .then(function(resp) {
                 // console.log(resp);
                 if (resp !== undefined) {
-                    let mani = JSON.parse(resp);
-                    if (mani.apps && mani.apps.length > 0) {
-                        mainManifest = mani.apps;
-                        resolve(mani.apps);
+                    let manifest = parseJsonStr(resp);
+                    if (manifest !== undefined && manifest.apps && manifest.apps.length > 0) {
+                        mainManifest = manifest.apps;
+                        resolve(manifest.apps);
                     } else {
                         reject(undefined);
                     }
@@ -1686,7 +1701,7 @@ function loadAllManifests() {
 }
 
 function isMobile() {
-    return (/iPhone|iPod|iPad|Android|BlackBerry/).test(navigator.userAgent);
+    return /iPhone|iPod|iPad|Android|BlackBerry/.test(navigator.userAgent);
 }
 
 function buildMainPage(filterStr = undefined, listType = 'apps') {
