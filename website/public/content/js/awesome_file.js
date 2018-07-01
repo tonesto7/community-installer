@@ -1,6 +1,6 @@
-const scriptVersion = '1.0.0506a';
+const scriptVersion = '1.0.0701';
 const scriptRelType = 'RC1';
-const scriptVerDate = '5/6/2018';
+const scriptVerDate = '7/01/2018';
 const latestSaVer = '1.0.0213a';
 const allowInstalls = true;
 const allowUpdates = true;
@@ -470,7 +470,11 @@ function buildSettingParams(objData, item, repoId, repoData, objType) {
         if (item.appSettings.length) {
             for (const as in item.appSettings) {
                 objs.push('smartAppSettings.name=' + as);
-                objs.push('smartAppSettings.value=' + item.appSettings[as]);
+                let val = " ";
+                if (item.appSettings[as] !== undefined || item.appSettings[as] !== "") {
+                    val = item.appSettings[as];
+                }
+                objs.push('smartAppSettings.value=' + val);
             }
         }
         objs.push('photoUrls=');
@@ -1754,6 +1758,10 @@ function itemStatusHandler(itemName, altName, type, viewType, manData, statusMap
                         if (statusMap.hasUpdate) {
                             $('#updateBtn').show();
                             elem.data('hasUpdate', true);
+                        } else if (!statusMap.hasUpdate && statusMap.isInstalled) {
+                            $('#updateBtn').show();
+                            $('#updateBtn').addClass('disabled');
+                            $('#updateBtn').text(' No Updates');
                         }
                         elem.data('published', manData.published);
                         elem.data('details', {
@@ -1867,7 +1875,7 @@ function buildMainPage(filterStr = undefined, listType = 'apps') {
         currentManifest = appData;
         html += '\n   <div id="objsGroupDiv" class="listGroup">';
         html += '\n       <div class="w-100 text-center pt-3 mb-1">';
-        html += '\n           <h6 id="" class="h6-responsive mb-0" style="font-weight: 100; font-style: italic;">' + sTitle + '</h6>';
+        html += '\n           <h6 class="h6-responsive mb-0" style="font-weight: 100; font-style: italic;">' + sTitle + '</h6>';
         html += '\n       </div>';
         html += '\n       <div class="pb-2 px-2 mb-0" style="background-color: transparent;">';
         if (appData && appData.length > 0) {
@@ -2580,8 +2588,10 @@ function installBtnAvail(cnt, data) {
     // console.log('installedItems: ' + cnt, 'TotalItems: ' + itemCnt);
     if (itemCnt === cnt) {
         $('#installBtn').addClass('disabled');
+        $('#installBtn').text(' Installed');
     } else {
         $('#installBtn').removeClass('disabled');
+        $('#installBtn').text(' Install');
     }
 }
 
@@ -2627,6 +2637,7 @@ function loaderFunc() {
         localStorage.setItem('refreshCount', '0');
     }
     localStorage.setItem('refreshCount', (parseInt(localStorage.getItem('refreshCount')) + 1).toString());
+    loaderVisible(true);
     scrollToTop();
     updSectTitle('App Details', true);
     getStAuth()
@@ -2750,7 +2761,7 @@ function buildCoreHtml() {
     html += '\n               <section class="px-3">';
     html += '\n                   <div class="w-100 text-center">';
     html += '\n                       <h5 id="sectTitle" class="h5-responsive" style="font-weight: 400;">Software Installer</h5>';
-    html += '\n                       <div id="loaderDiv" class="flex-row fadeIn fadeOut">';
+    html += '\n                       <div id="loaderDiv" class="flex-row fadeIn fadeOut" style="display: none;">';
     html += '\n                           <div class="d-flex flex-column justify-content-center align-items-center" style="height: 200px;">';
     html += '\n                               <svg id="loader" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid" class="lds-double-ring">';
     html += '\n                                   <circle cx="50" cy="50" ng-attr-r="{{config.radius}}" ng-attr-stroke-width="{{config.width}}" ng-attr-stroke="{{config.c1}}" ng-attr-stroke-dasharray="{{config.dasharray}}" fill="none" stroke-linecap="round" r="40" stroke-width="7" stroke="#18B9FF" stroke-dasharray="62.83185307179586 62.83185307179586" transform="rotate(139.357 50 50)">';

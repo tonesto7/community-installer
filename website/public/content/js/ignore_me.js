@@ -1,6 +1,6 @@
-const scriptVersion = '1.0.0506a';
+const scriptVersion = '1.0.0701';
 const scriptRelType = 'RC1';
-const scriptVerDate = '5/6/2018';
+const scriptVerDate = '7/01/2018';
 const latestSaVer = '1.0.0213a';
 const allowInstalls = true;
 const allowUpdates = true;
@@ -123,7 +123,12 @@ function makeRequest(params) {
 function getStAuth() {
     return new Promise(function(resolve, reject) {
         updLoaderText('Authenticating', 'Please Wait');
-        makeRequest({ url: authUrl, method: 'GET', contentType: 'text/html', responseType: '' })
+        makeRequest({
+                url: authUrl,
+                method: 'GET',
+                contentType: 'text/html',
+                responseType: ''
+            })
             .catch(function(err) {
                 installError(err);
             })
@@ -228,27 +233,43 @@ function addResult(str, good, type = '', str2 = '') {
     }
     switch (type) {
         case 'app':
-            $('#appResultsTitle').css({ display: 'block' });
-            $('#appResultUl').css({ display: 'block' }).append(s);
+            $('#appResultsTitle').css({
+                display: 'block'
+            });
+            $('#appResultUl').css({
+                display: 'block'
+            }).append(s);
             break;
         case 'device':
-            $('#devResultsTitle').css({ display: 'block' });
-            $('#devResultUl').css({ display: 'block' }).append(s);
+            $('#devResultsTitle').css({
+                display: 'block'
+            });
+            $('#devResultUl').css({
+                display: 'block'
+            }).append(s);
             break;
         case 'repo':
-            $('#repoResultsTitle').css({ display: 'block' });
+            $('#repoResultsTitle').css({
+                display: 'block'
+            });
             //   $('#repoResultUl').css({display: 'block'}).append(s);
             if (!checkListForDuplicate('#repoResultUl li', str)) {
-                $('#repoResultUl').css({ display: 'block' }).append(s);
+                $('#repoResultUl').css({
+                    display: 'block'
+                }).append(s);
             }
             break;
         default:
             s = "<li><p><span style='color: " + (good !== false ? '#25c225' : '#FF0000') + ";'>";
             s += "<i class='fa fa-" + (good !== false ? 'check' : 'exclamation') + "'></i>";
             s += '</span> ' + str + '</p></li>';
-            $('#ideResultsTitle').css({ display: 'block' });
+            $('#ideResultsTitle').css({
+                display: 'block'
+            });
             if (!checkListForDuplicate('#ideResultUl li', str)) {
-                $('#ideResultUl').css({ display: 'block' }).append(s);
+                $('#ideResultUl').css({
+                    display: 'block'
+                }).append(s);
             }
             break;
     }
@@ -308,18 +329,30 @@ function installError(err, reload = true) {
 
 function installComplete(text, red = false, noResults = false) {
     loaderVisible(false);
-    $('#finishedImg').removeClass('fa-exclamation-circle').addClass('fa-check').css({ display: 'block' });
+    $('#finishedImg').removeClass('fa-exclamation-circle').addClass('fa-check').css({
+        display: 'block'
+    });
     if (red) {
-        $('#finishedImg').removeClass('fa-check').addClass('fa-exclamation-circle').css({ color: 'red' });
+        $('#finishedImg').removeClass('fa-check').addClass('fa-exclamation-circle').css({
+            color: 'red'
+        });
     }
-    $('#actResultsDiv').css({ display: 'block' });
+    $('#actResultsDiv').css({
+        display: 'block'
+    });
     if (noResults) {
-        $('#resultsContainer').css({ display: 'none' });
+        $('#resultsContainer').css({
+            display: 'none'
+        });
     }
     if (!red && !noResults) {
-        $('#whatNextBtn').css({ display: 'block' });
+        $('#whatNextBtn').css({
+            display: 'block'
+        });
     }
-    $('#results').css({ display: 'block' }).html('<small>' + text + '</small>');
+    $('#results').css({
+        display: 'block'
+    }).html('<small>' + text + '</small>');
     $('#resultsDone').show();
     $('#resultsDoneHomeBtn').show();
     appCloseBtnAvail(false);
@@ -331,15 +364,25 @@ function installComplete(text, red = false, noResults = false) {
 
 function installCompleteLogin(text, red = false, noResults = false) {
     loaderVisible(false);
-    $('#finishedImg').removeClass('fa-exclamation-circle').addClass('fa-check').css({ display: 'block' });
+    $('#finishedImg').removeClass('fa-exclamation-circle').addClass('fa-check').css({
+        display: 'block'
+    });
     if (red) {
-        $('#finishedImg').removeClass('fa-check').addClass('fa-exclamation-circle').css({ color: 'red' });
+        $('#finishedImg').removeClass('fa-check').addClass('fa-exclamation-circle').css({
+            color: 'red'
+        });
     }
-    $('#actResultsDiv').css({ display: 'block' });
+    $('#actResultsDiv').css({
+        display: 'block'
+    });
     if (noResults) {
-        $('#resultsContainer').css({ display: 'none' });
+        $('#resultsContainer').css({
+            display: 'none'
+        });
     }
-    $('#results').css({ display: 'block' }).html('<small>' + text + '</small>');
+    $('#results').css({
+        display: 'block'
+    }).html('<small>' + text + '</small>');
     $('#resultsDone').show();
     $('#reloginBtn').show();
     $('#resultsDoneHomeBtn').hide();
@@ -351,7 +394,9 @@ function installCompleteLogin(text, red = false, noResults = false) {
 }
 
 function updSectTitle(str, hide = false) {
-    $('#sectTitle').html(str).css({ display: hide ? 'none' : 'block' });
+    $('#sectTitle').html(str).css({
+        display: hide ? 'none' : 'block'
+    });
     // $('#sectTitleHr').css({ display: hide ? 'none' : 'block' });
 }
 
@@ -425,7 +470,11 @@ function buildSettingParams(objData, item, repoId, repoData, objType) {
         if (item.appSettings.length) {
             for (const as in item.appSettings) {
                 objs.push('smartAppSettings.name=' + as);
-                objs.push('smartAppSettings.value=' + item.appSettings[as]);
+                let val = " ";
+                if (item.appSettings[as] !== undefined || item.appSettings[as] !== "") {
+                    val = item.appSettings[as];
+                }
+                objs.push('smartAppSettings.value=' + val);
             }
         }
         objs.push('photoUrls=');
@@ -612,7 +661,14 @@ function addRepoToIde(repoData) {
         let repoParams = buildRepoParamString(repoData, writableRepos);
         // console.log('repoParams: ', repoParams);
         addResult('Repo (' + repoData.repoName + ')', true, 'repo', 'Not Added');
-        makeRequest({ url: updRepoUrl, method: 'POST', msgBody: repoParams, contentType: 'application/x-www-form-urlencoded', responseType: '', anyStatus: true })
+        makeRequest({
+                url: updRepoUrl,
+                method: 'POST',
+                msgBody: repoParams,
+                contentType: 'application/x-www-form-urlencoded',
+                responseType: '',
+                anyStatus: true
+            })
             .catch(function(err) {
                 installError(err, false);
                 addResult('Github Repo Issue', false, 'repo', err);
@@ -642,7 +698,10 @@ function addRepoToIde(repoData) {
 function checkItemUpdateStatus(objId, type) {
     return new Promise(function(resolve, reject) {
         let url = type === 'device' ? devUpdChkUrl : appUpdChkUrl;
-        makeRequest({ url: url + objId, method: 'GET' })
+        makeRequest({
+                url: url + objId,
+                method: 'GET'
+            })
             .catch(function(err) {
                 reject(err);
             })
@@ -663,7 +722,10 @@ function checkItemUpdateStatus(objId, type) {
 
 function getRepoId(repoName, repoBranch) {
     return new Promise(function(resolve, reject) {
-        makeRequest({ url: fetchReposUrl, method: 'GET' })
+        makeRequest({
+                url: fetchReposUrl,
+                method: 'GET'
+            })
             .catch(function(err) {
                 // console.log(err);
                 resolve(undefined);
@@ -691,7 +753,10 @@ function checkIdeForRepo(rname, branch, secondPass = false) {
     return new Promise(function(resolve, reject) {
         let repoFound = false;
         updLoaderText('Checking', 'Repos');
-        makeRequest({ url: fetchReposUrl, method: 'GET' })
+        makeRequest({
+                url: fetchReposUrl,
+                method: 'GET'
+            })
             .catch(function(err) {
                 installError(err, false);
                 addResult('Checking Repo (' + rname + ')', false, 'repo', err);
@@ -734,7 +799,14 @@ function installAppsToIde(apps, actType = 'install') {
             var pubPromise = new Promise(function(resolve, reject) {
                 if (pubApps.length > 0) {
                     repoParams = buildInstallParams(repoId, pubApps, 'apps', actType === 'update' ? 'update' : 'add');
-                    makeRequest({ url: doAppRepoUpdUrl, method: 'POST', msgBody: repoParams, contentType: 'application/x-www-form-urlencoded', responseType: '', anyStatus: true })
+                    makeRequest({
+                            url: doAppRepoUpdUrl,
+                            method: 'POST',
+                            msgBody: repoParams,
+                            contentType: 'application/x-www-form-urlencoded',
+                            responseType: '',
+                            anyStatus: true
+                        })
                         .catch(function(err) {
                             installError(err, false);
                             addResult(actType === 'update' ? 'Updating' : 'Installing' + ' IDE Apps', false, 'app', err);
@@ -756,7 +828,14 @@ function installAppsToIde(apps, actType = 'install') {
                 var noPubPromise = new Promise(function(resolve, reject) {
                     if (noPubApps.length > 0) {
                         repoParams = buildInstallParams(repoId, noPubApps, 'apps', actType === 'update' ? 'update' : 'add', false);
-                        makeRequest({ url: doAppRepoUpdUrl, method: 'POST', msgBody: repoParams, contentType: 'application/x-www-form-urlencoded', responseType: '', anyStatus: true })
+                        makeRequest({
+                                url: doAppRepoUpdUrl,
+                                method: 'POST',
+                                msgBody: repoParams,
+                                contentType: 'application/x-www-form-urlencoded',
+                                responseType: '',
+                                anyStatus: true
+                            })
                             .catch(function(err) {
                                 installError(err, false);
                                 addResult(actType === 'update' ? 'Updating' : 'Installing' + ' IDE Apps', false, 'app', err);
@@ -829,7 +908,14 @@ function updateDeviceFromRepo(devices) {
         if (devices) {
             updLoaderText('Updating', 'Devices');
             let repoParams = buildInstallParams(repoId, devices, 'devices', 'update');
-            makeRequest({ url: doDevRepoUpdUrl, method: 'POST', msgBody: repoParams, contentType: 'application/x-www-form-urlencoded', responseType: '', anyStatus: true })
+            makeRequest({
+                    url: doDevRepoUpdUrl,
+                    method: 'POST',
+                    msgBody: repoParams,
+                    contentType: 'application/x-www-form-urlencoded',
+                    responseType: '',
+                    anyStatus: true
+                })
                 .catch(function(err) {
                     installError(err, false);
                     addResult('Device Update Issue', false, 'device', err);
@@ -870,7 +956,10 @@ function removeAppsFromIde(appNames, selctd) {
             for (const da in availableApps) {
                 for (const i in allAppItems) {
                     if (availableApps[da].name === allAppItems[i].name) {
-                        makeRequest({ url: doAppRemoveUrl + availableApps[da].id, method: 'GET' })
+                        makeRequest({
+                                url: doAppRemoveUrl + availableApps[da].id,
+                                method: 'GET'
+                            })
                             .catch(function(err) {
                                 installError(err, false);
                                 addResult('App Removal Issue', false, 'app', err);
@@ -891,7 +980,10 @@ function removeAppsFromIde(appNames, selctd) {
             for (const i in allDevItems) {
                 for (const da in availableDevs) {
                     if (availableDevs[da].name.trim() === allDevItems[i].name.trim()) {
-                        makeRequest({ url: doDevRemoveUrl + availableDevs[da].id, method: 'GET' })
+                        makeRequest({
+                                url: doDevRemoveUrl + availableDevs[da].id,
+                                method: 'GET'
+                            })
                             .catch(function(err) {
                                 installError(err, false);
                                 addResult('Device Removal Issue', false, 'device', err);
@@ -927,7 +1019,14 @@ function updateAppSettings(repoData) {
                 if (appList.length) {
                     for (const al in appList) {
                         let appParams = buildSettingParams(appList[al], updApps[i], repoId, repoData, 'app');
-                        makeRequest({ url: doAppSettingUpdUrl, method: 'POST', msgBody: appParams, contentType: 'application/x-www-form-urlencoded', responseType: '', anyStatus: true })
+                        makeRequest({
+                                url: doAppSettingUpdUrl,
+                                method: 'POST',
+                                msgBody: appParams,
+                                contentType: 'application/x-www-form-urlencoded',
+                                responseType: '',
+                                anyStatus: true
+                            })
                             .catch(function(err) {
                                 installError(err, false);
                                 addResult('App Settings Update', false, 'app', err);
@@ -961,7 +1060,14 @@ function installDevsToIde(devices) {
         if (devices) {
             updLoaderText('Installing', 'Devices');
             let repoParams = buildInstallParams(repoId, devices, 'devices', 'add');
-            makeRequest({ url: doDevRepoUpdUrl, method: 'POST', msgBody: repoParams, contentType: 'application/x-www-form-urlencoded', responseType: '', anyStatus: true })
+            makeRequest({
+                    url: doDevRepoUpdUrl,
+                    method: 'POST',
+                    msgBody: repoParams,
+                    contentType: 'application/x-www-form-urlencoded',
+                    responseType: '',
+                    anyStatus: true
+                })
                 .catch(function(err) {
                     installError(err, false);
                     addResult('Install Devices Issue', false, 'device', err);
@@ -1022,7 +1128,10 @@ function getAvailableAppsDevices(updDom = false) {
         if (updDom) {
             updLoaderText('Loading Data', 'Please Wait');
         }
-        makeRequest({ url: availableSaUrl, method: 'GET' })
+        makeRequest({
+                url: availableSaUrl,
+                method: 'GET'
+            })
             .catch(function(err) {
                 reject(err);
             })
@@ -1033,7 +1142,13 @@ function getAvailableAppsDevices(updDom = false) {
                     availableApps = fndApps;
                     out['apps'] = fndApps;
                 }
-                makeRequest({ url: availableDevsUrl, method: 'GET', contentType: '', responseType: 'application/json', anyStatus: true })
+                makeRequest({
+                        url: availableDevsUrl,
+                        method: 'GET',
+                        contentType: '',
+                        responseType: 'application/json',
+                        anyStatus: true
+                    })
                     .catch(function(err) {
                         reject(err);
                     })
@@ -1058,7 +1173,10 @@ function checkIfItemsInstalled(itemObj, type, secondPass = false) {
         let url = type === 'device' ? availableDevsUrl : availableSaUrl;
         // console.log('apps:', apps);
         updLoaderText('Getting', capitalize(type) + ' Data');
-        makeRequest({ url: url, method: 'GET' })
+        makeRequest({
+                url: url,
+                method: 'GET'
+            })
             .catch(function(err) {
                 installError(err, false);
                 addResult('Getting ' + capitalize(type) + 's Issue', false, type, err);
@@ -1097,7 +1215,12 @@ function getProjectManifest(url) {
     return new Promise(function(resolve, reject) {
         updLoaderText('Getting', 'Manifests');
         url = manifestCache ? url : url + '?=' + getTimeStamp();
-        makeRequest({ url: url, method: 'GET', anyStatus: true, setTimeout: true })
+        makeRequest({
+                url: url,
+                method: 'GET',
+                anyStatus: true,
+                setTimeout: true
+            })
             .catch(function(err) {
                 installError(err, false);
                 reject(err);
@@ -1130,7 +1253,11 @@ function getMainManifest() {
     return new Promise(function(resolve, reject) {
         updLoaderText('Getting', 'Available Apps');
         url = baseAppUrl + '/content/configs/secret_sauce.json?=' + getTimeStamp();
-        makeRequest({ url: url, method: 'GET', setTimeout: true })
+        makeRequest({
+                url: url,
+                method: 'GET',
+                setTimeout: true
+            })
             .catch(function(err) {
                 reject(err);
             })
@@ -1438,7 +1565,12 @@ function processItemsStatuses(data, viewType) {
             let cnt = 0;
             if (items[i] && items[i].smartApps) {
                 if (items[i].smartApps.parent) {
-                    let mData = { published: items[i].smartApps.parent.published, namespace: items[i].namespace, author: items[i].author, appUrl: items[i].smartApps.parent.appUrl };
+                    let mData = {
+                        published: items[i].smartApps.parent.published,
+                        namespace: items[i].namespace,
+                        author: items[i].author,
+                        appUrl: items[i].smartApps.parent.appUrl
+                    };
                     updateAppDeviceItemStatus(items[i].name, items[i].smartApps.parent.name, 'app', viewType, mData)
                         .catch(function(err) {
                             // console.log(err);
@@ -1461,7 +1593,12 @@ function processItemsStatuses(data, viewType) {
 
                 if (items[i].smartApps.children && items[i].smartApps.children.length) {
                     for (const sa in items[i].smartApps.children) {
-                        let mData = { published: items[i].smartApps.children[sa].published !== false, namespace: items[i].namespace, author: items[i].author, appUrl: items[i].smartApps.children[sa].appUrl };
+                        let mData = {
+                            published: items[i].smartApps.children[sa].published !== false,
+                            namespace: items[i].namespace,
+                            author: items[i].author,
+                            appUrl: items[i].smartApps.children[sa].appUrl
+                        };
                         updateAppDeviceItemStatus(items[i].smartApps.children[sa].name, undefined, 'app', viewType, mData, true)
                             .catch(function(err) {
                                 // console.log(err);
@@ -1485,7 +1622,12 @@ function processItemsStatuses(data, viewType) {
             }
             if (items[i] && items[i].deviceHandlers && items[i].deviceHandlers.length) {
                 for (const dh in items[i].deviceHandlers) {
-                    let mData = { published: true, namespace: items[i].namespace, author: items[i].author, appUrl: items[i].deviceHandlers[dh].appUrl };
+                    let mData = {
+                        published: true,
+                        namespace: items[i].namespace,
+                        author: items[i].author,
+                        appUrl: items[i].deviceHandlers[dh].appUrl
+                    };
                     updateAppDeviceItemStatus(items[i].deviceHandlers[dh].name, undefined, 'device', viewType, mData)
                         .catch(function(err) {
                             // console.log(err);
@@ -1537,7 +1679,12 @@ function updateAppDeviceItemStatus(itemName, altName = undefined, type, viewType
                             if (itemStatusMap[type] === undefined) {
                                 itemStatusMap[type] = {};
                             }
-                            itemStatusMap[type][installedItem.data[0].id] = { id: installedItem.data[0].id, hasUpdate: updateAvail, isInstalled: appInstalled, data: installedItem.data[0] };
+                            itemStatusMap[type][installedItem.data[0].id] = {
+                                id: installedItem.data[0].id,
+                                hasUpdate: updateAvail,
+                                isInstalled: appInstalled,
+                                data: installedItem.data[0]
+                            };
                             itemStatusHandler(itemName, altName, type, viewType, manData, itemStatusMap[type][installedItem.data[0].id]);
                             resolve({
                                 installed: appInstalled,
@@ -1611,6 +1758,10 @@ function itemStatusHandler(itemName, altName, type, viewType, manData, statusMap
                         if (statusMap.hasUpdate) {
                             $('#updateBtn').show();
                             elem.data('hasUpdate', true);
+                        } else if (!statusMap.hasUpdate && statusMap.isInstalled) {
+                            $('#updateBtn').show();
+                            $('#updateBtn').addClass('disabled');
+                            $('#updateBtn').text(' No Updates');
                         }
                         elem.data('published', manData.published);
                         elem.data('details', {
@@ -1638,7 +1789,9 @@ function updateRibbon(idName, status, color) {
         let ribbon = $('#' + idName + '_ribbon');
         let ribbonStatus = $('#' + idName + '_ribbon_status');
         if (ribbon.length) {
-            ribbon.css({ display: 'block' });
+            ribbon.css({
+                display: 'block'
+            });
         }
         if (ribbonStatus.length) {
             if (ribbonStatus.text() === 'Updates' && status === 'Installed') {
@@ -1722,7 +1875,7 @@ function buildMainPage(filterStr = undefined, listType = 'apps') {
         currentManifest = appData;
         html += '\n   <div id="objsGroupDiv" class="listGroup">';
         html += '\n       <div class="w-100 text-center pt-3 mb-1">';
-        html += '\n           <h6 id="" class="h6-responsive mb-0" style="font-weight: 100; font-style: italic;">' + sTitle + '</h6>';
+        html += '\n           <h6 class="h6-responsive mb-0" style="font-weight: 100; font-style: italic;">' + sTitle + '</h6>';
         html += '\n       </div>';
         html += '\n       <div class="pb-2 px-2 mb-0" style="background-color: transparent;">';
         if (appData && appData.length > 0) {
@@ -2287,8 +2440,12 @@ function renderAppView(appName, manifest) {
             // console.log('appCloseBtn');
             updSectTitle('', true);
             $('#appViewDiv').html('');
-            $('#appViewDiv').css({ display: 'none' });
-            $('#listContDiv').css({ display: 'block' });
+            $('#appViewDiv').css({
+                display: 'none'
+            });
+            $('#listContDiv').css({
+                display: 'block'
+            });
             appCloseBtnAvail(false);
             if (currentListType === 'apps') {
                 searchBtnAvail(true);
@@ -2309,10 +2466,16 @@ function renderAppView(appName, manifest) {
             // console.log('checked: ', selectedItems);
             updSectTitle('Install Progress');
             $('#appViewDiv').html('');
-            $('#appViewDiv').css({ display: 'none' });
-            $('#listContDiv').css({ display: 'none' });
+            $('#appViewDiv').css({
+                display: 'none'
+            });
+            $('#listContDiv').css({
+                display: 'none'
+            });
             loaderVisible(true);
-            $('#actResultsDiv').css({ display: 'block' });
+            $('#actResultsDiv').css({
+                display: 'block'
+            });
             homeBtnAvail(false);
             scrollToTop();
             if (!isInstalled && !isDevMode === true) {
@@ -2324,10 +2487,16 @@ function renderAppView(appName, manifest) {
             let selectedItems = getSelectedCodeItems();
             updSectTitle('Removal Progress');
             $('#appViewDiv').html('');
-            $('#appViewDiv').css({ display: 'none' });
-            $('#listContDiv').css({ display: 'none' });
+            $('#appViewDiv').css({
+                display: 'none'
+            });
+            $('#listContDiv').css({
+                display: 'none'
+            });
             loaderVisible(true);
-            $('#actResultsDiv').css({ display: 'block' });
+            $('#actResultsDiv').css({
+                display: 'block'
+            });
             scrollToTop();
             removeAppsFromIde(manifest, selectedItems);
         });
@@ -2339,10 +2508,16 @@ function renderAppView(appName, manifest) {
             updData['devs'] = devUpds;
             updSectTitle('Update Progress');
             $('#appViewDiv').html('');
-            $('#appViewDiv').css({ display: 'none' });
-            $('#listContDiv').css({ display: 'none' });
+            $('#appViewDiv').css({
+                display: 'none'
+            });
+            $('#listContDiv').css({
+                display: 'none'
+            });
             loaderVisible(true);
-            $('#actResultsDiv').css({ display: 'block' });
+            $('#actResultsDiv').css({
+                display: 'block'
+            });
             homeBtnAvail(false);
             scrollToTop();
             getRepoId(manifest.repoName, manifest.repoBranch)
@@ -2353,10 +2528,16 @@ function renderAppView(appName, manifest) {
                     updateIdeItems(updData);
                 });
         });
-        $('#listContDiv').css({ display: 'none' });
+        $('#listContDiv').css({
+            display: 'none'
+        });
         loaderVisible(false);
-        $('#actResultsDiv').css({ display: 'none' });
-        $('#appViewDiv').css({ display: 'block' });
+        $('#actResultsDiv').css({
+            display: 'none'
+        });
+        $('#appViewDiv').css({
+            display: 'block'
+        });
         searchBtnAvail(false);
         scrollToTop();
         processItemsStatuses(manifest, 'appView');
@@ -2407,8 +2588,10 @@ function installBtnAvail(cnt, data) {
     // console.log('installedItems: ' + cnt, 'TotalItems: ' + itemCnt);
     if (itemCnt === cnt) {
         $('#installBtn').addClass('disabled');
+        $('#installBtn').text(' Installed');
     } else {
         $('#installBtn').removeClass('disabled');
+        $('#installBtn').text(' Install');
     }
 }
 
@@ -2454,6 +2637,7 @@ function loaderFunc() {
         localStorage.setItem('refreshCount', '0');
     }
     localStorage.setItem('refreshCount', (parseInt(localStorage.getItem('refreshCount')) + 1).toString());
+    loaderVisible(true);
     scrollToTop();
     updSectTitle('App Details', true);
     getStAuth()
@@ -2577,7 +2761,7 @@ function buildCoreHtml() {
     html += '\n               <section class="px-3">';
     html += '\n                   <div class="w-100 text-center">';
     html += '\n                       <h5 id="sectTitle" class="h5-responsive" style="font-weight: 400;">Software Installer</h5>';
-    html += '\n                       <div id="loaderDiv" class="flex-row fadeIn fadeOut">';
+    html += '\n                       <div id="loaderDiv" class="flex-row fadeIn fadeOut" style="display: none;">';
     html += '\n                           <div class="d-flex flex-column justify-content-center align-items-center" style="height: 200px;">';
     html += '\n                               <svg id="loader" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid" class="lds-double-ring">';
     html += '\n                                   <circle cx="50" cy="50" ng-attr-r="{{config.radius}}" ng-attr-stroke-width="{{config.width}}" ng-attr-stroke="{{config.c1}}" ng-attr-stroke-dasharray="{{config.dasharray}}" fill="none" stroke-linecap="round" r="40" stroke-width="7" stroke="#18B9FF" stroke-dasharray="62.83185307179586 62.83185307179586" transform="rotate(139.357 50 50)">';
@@ -2770,7 +2954,9 @@ function buildCoreHtml() {
     html += '\n           </div>';
     html += '\n       </div>';
 
-    $('body').css({ 'overflow-x': 'hidden' });
+    $('body').css({
+        'overflow-x': 'hidden'
+    });
     $('#bodyDiv').html(html);
 }
 
