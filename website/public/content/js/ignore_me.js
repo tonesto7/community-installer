@@ -1758,11 +1758,12 @@ function itemStatusHandler(itemName, altName, type, viewType, manData, statusMap
                         if (statusMap.hasUpdate) {
                             $('#updateBtn').show();
                             elem.data('hasUpdate', true);
-                        } else if (!statusMap.hasUpdate && statusMap.isInstalled) {
-                            $('#updateBtn').show();
-                            $('#updateBtn').addClass('disabled');
-                            $('#updateBtn').text(' No Updates');
                         }
+                        // else if (!statusMap.hasUpdate && statusMap.isInstalled) {
+                        //     $('#updateBtn').show();
+                        //     $('#updateBtn').addClass('disabled');
+                        //     $('#updateBtn').text(' No Updates');
+                        // }
                         elem.data('published', manData.published);
                         elem.data('details', {
                             id: statusMap.id,
