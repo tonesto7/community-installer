@@ -1105,8 +1105,8 @@ function parseDomForDevices(domData) {
                     name: (devName.length > 1 ? devName[1] : devName).toString().trim(),
                     namespace: devName.length > 1 ? devName[0].toString().trim() : undefined,
                     published: theDevs[i].getElementsByTagName('td')[3].innerText.replace(/\n/g, '').trim() === 'Published'
-                    // capabilities: theDevs[i].getElementsByTagName('td')[4].innerText.replace(/\n/g, '').trim(),
-                    // oAuth: theDevs[i].getElementsByTagName('td')[5].innerText.replace(/\n/g, '').trim()
+                        // capabilities: theDevs[i].getElementsByTagName('td')[4].innerText.replace(/\n/g, '').trim(),
+                        // oAuth: theDevs[i].getElementsByTagName('td')[5].innerText.replace(/\n/g, '').trim()
                 });
             }
         }
