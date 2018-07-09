@@ -1,6 +1,6 @@
-const scriptVersion = '1.0.0701';
+const scriptVersion = '1.0.0709';
 const scriptRelType = 'RC1';
-const scriptVerDate = '7/01/2018';
+const scriptVerDate = '7/09/2018';
 const latestSaVer = '1.0.0213a';
 const allowInstalls = true;
 const allowUpdates = true;
@@ -467,14 +467,10 @@ function buildSettingParams(objData, item, repoId, repoData, objType) {
             objs.push('displayName=');
             objs.push('displayLink=');
         }
-        if (item.appSettings.length) {
+        if (Object.keys(item.appSettings).length > 0) {
             for (const as in item.appSettings) {
                 objs.push('smartAppSettings.name=' + as);
-                let val = " ";
-                if (item.appSettings[as] !== undefined || item.appSettings[as] !== "") {
-                    val = item.appSettings[as];
-                }
-                objs.push('smartAppSettings.value=' + val);
+                objs.push('smartAppSettings.value=' + item.appSettings[as]);
             }
         }
         objs.push('photoUrls=');
