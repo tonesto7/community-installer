@@ -7,6 +7,14 @@
         "news": {
             ".read": true,
             ".write": true
+        },
+        "crowdRepoData": {
+            ".read": true,
+            ".write": true
+        },
+        "repoDataTable": {
+            ".read": true,
+            ".write": true
         }
     }
 }

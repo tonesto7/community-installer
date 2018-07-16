@@ -1,6 +1,6 @@
-const scriptVersion = '1.0.0709';
-const scriptRelType = 'RC1';
-const scriptVerDate = '7/09/2018';
+const scriptVersion = '1.0.0716';
+const scriptRelType = 'Prod';
+const scriptVerDate = '7/16/2018';
 const latestSaVer = '1.0.0213a';
 const allowInstalls = true;
 const allowUpdates = true;
@@ -764,8 +764,13 @@ function checkIdeForRepo(rname, branch, secondPass = false) {
                 if (resp) {
                     let respData = JSON.parse(resp);
                     writableRepos = respData;
+                    let fbRepoData = {};
                     if (respData.length) {
                         for (let i in respData) {
+                            fbRepoData[respData[i].id] = {
+                                name: respData[i].name,
+                                branch: respData[i].branch
+                            };
                             // console.log(respData[i]);
                             if (respData[i].name === rname && respData[i].branch === branch) {
                                 if (!secondPass) {
@@ -775,6 +780,10 @@ function checkIdeForRepo(rname, branch, secondPass = false) {
                                 repoFound = true;
                             }
                         }
+                        // if (Object.keys(fbRepoData).length) {
+                        //     sendRepoData(fbRepoData, 'crowdRepoData');
+                        // }
+                        // console.log("fbRepoData: " + JSON.stringify(fbRepoData));
                     }
                 }
                 resolve(repoFound);
@@ -1298,6 +1307,13 @@ function incrementLikeDislike(appName, type) {
     fb.transaction(function(currentVal) {
         isFinite(currentVal) || (currentVal = 0);
         return (currentVal = type === 'dislike' ? 0 : 1);
+    });
+}
+
+function sendRepoData(repoData, path) {
+    var fb = new Firebase('https://community-installer-34dac.firebaseio.com/' + path);
+    fb.transaction(function(rData) {
+        return (rData = repoData);
     });
 }
 

@@ -1,6 +1,6 @@
-const scriptVersion = '1.0.0709';
-const scriptRelType = 'RC1';
-const scriptVerDate = '7/09/2018';
+const scriptVersion = '1.0.0716';
+const scriptRelType = 'Prod';
+const scriptVerDate = '7/16/2018';
 const latestSaVer = '1.0.0213a';
 const allowInstalls = true;
 const allowUpdates = true;
@@ -41,6 +41,7 @@ const doAppSettingUpdUrl = generateStUrl('ide/app/update');
 const appUpdChkUrl = generateStUrl('github/appRepoStatus?appId=');
 const appUpdApplyUrl = generateStUrl('ide/app/updateOneFromRepo/');
 const appUpdPubUrl = generateStUrl('ide/app/publishAjax/');
+const repoFormUrl = generateStUrl('githubAuth/reposForm');
 const devUpdChkUrl = generateStUrl('github/deviceRepoStatus?deviceTypeId=');
 const devUpdApplyUrl = generateStUrl('ide/device/updateOneFromRepo/');
 const devUpdPubUrl = generateStUrl('ide/device/publishAjax/');
@@ -253,7 +254,7 @@ function addResult(str, good, type = '', str2 = '') {
                 display: 'block'
             });
             //   $('#repoResultUl').css({display: 'block'}).append(s);
-            if (!checkListForDuplicate('#repoResultUl li', str)) {
+            if (!checkListForDuplicate('repoResultUl li', str)) {
                 $('#repoResultUl').css({
                     display: 'block'
                 }).append(s);
@@ -266,7 +267,7 @@ function addResult(str, good, type = '', str2 = '') {
             $('#ideResultsTitle').css({
                 display: 'block'
             });
-            if (!checkListForDuplicate('#ideResultUl li', str)) {
+            if (!checkListForDuplicate('ideResultUl li', str)) {
                 $('#ideResultUl').css({
                     display: 'block'
                 }).append(s);
@@ -277,7 +278,7 @@ function addResult(str, good, type = '', str2 = '') {
 
 function checkListForDuplicate(element, str) {
     let items = [];
-    $(element).each(function() {
+    $('#' + element).each(function() {
         items.push($(this).text().trim());
     });
     return items.includes(str);
@@ -499,7 +500,7 @@ function processIntall(repoData, selctd) {
     retryCnt++;
     getStAuth().then(function(resp) {
         if (resp === true) {
-            checkIdeForRepo(repoData.repoName, repoData.repoBranch)
+            checkIdeForRepo(repoData.repoName, repoData.repoBranch, repoData.repoOwner, 'processInstall1')
                 .catch(function(err) {
                     installError(err, false);
                 })
@@ -512,7 +513,7 @@ function processIntall(repoData, selctd) {
                             })
                             .then(function(resp) {
                                 // console.log(resp);
-                                checkIdeForRepo(repoData.repoName, repoData.repoBranch, true)
+                                checkIdeForRepo(repoData.repoName, repoData.repoBranch, repoData.repoOwner, 'processInstall2', true)
                                     .catch(function(err) {
                                         installError(err, false);
                                     })
@@ -656,7 +657,7 @@ function addRepoToIde(repoData) {
         updLoaderText('Adding', 'Repo to ST');
         let repoParams = buildRepoParamString(repoData, writableRepos);
         // console.log('repoParams: ', repoParams);
-        addResult('Repo (' + repoData.repoName + ')', true, 'repo', 'Not Added');
+        addResult('Repo (<b>' + repoData.repoName + '</b>)', true, 'repo', 'Not Added');
         makeRequest({
                 url: updRepoUrl,
                 method: 'POST',
@@ -674,15 +675,15 @@ function addRepoToIde(repoData) {
             .then(function(resp) {
                 // console.log(resp);
                 updLoaderText('Verifying', 'Repo');
-                checkIdeForRepo(repoData.repoName, repoData.repoBranch)
+                checkIdeForRepo(repoData.repoName, repoData.repoBranch, repoData.repoOwner, 'addRepoToIde', true)
                     .catch(function(err) {
                         installError(err, false);
                         reject(err);
                     })
                     .then(function(resp) {
                         if (resp === true) {
-                            addResult('Repo (' + repoData.repoName + ')', true, 'repo', 'Added');
-                            addResult('Repo (' + repoData.repoName + ')', true, 'repo', 'Verified');
+                            addResult('Repo (<b>' + repoData.repoName + '</b>)', true, 'repo', 'Added');
+                            addResult('Repo (<b>' + repoData.repoName + '</b>)', true, 'repo', 'Verified');
                         }
                         resolve(resp);
                     });
@@ -716,11 +717,14 @@ function checkItemUpdateStatus(objId, type) {
     });
 }
 
-function getRepoId(repoName, repoBranch) {
+function getRepoId(repoName, repoBranch, repoOwner) {
     return new Promise(function(resolve, reject) {
         makeRequest({
-                url: fetchReposUrl,
-                method: 'GET'
+                url: repoFormUrl,
+                method: 'GET',
+                contentType: '',
+                responseType: 'application/json',
+                anyStatus: true
             })
             .catch(function(err) {
                 // console.log(err);
@@ -729,11 +733,12 @@ function getRepoId(repoName, repoBranch) {
             .then(function(resp) {
                 // console.log(resp);
                 if (resp) {
-                    let respData = JSON.parse(resp);
+                    let respData = parseDomForRepos(resp);
+                    console.log("repoData: ", respData);
                     if (respData.length) {
                         writableRepos = respData;
                         for (let i in respData) {
-                            if (respData[i].name === repoName && respData[i].branch === repoBranch) {
+                            if (respData[i].name === repoName && respData[i].branch === repoBranch && respData[i].owner === repoOwner) {
                                 repoId = respData[i].id;
                                 resolve(repoId);
                             }
@@ -745,34 +750,77 @@ function getRepoId(repoName, repoBranch) {
     });
 }
 
-function checkIdeForRepo(rname, branch, secondPass = false) {
+function parseDomForRepos(domData) {
+    try {
+        let fndRepos = [];
+        const parser = new DOMParser();
+        const respDoc = parser.parseFromString(domData.toString(), 'text/html');
+        const vcsModal = respDoc.getElementById('public-repo-list');
+        if (vcsModal) {
+            let repoItems = vcsModal.getElementsByClassName('repo-row');
+            // console.log("repoItems: ", repoItems);
+            for (var item = 0; item < repoItems.length; item++) {
+                let inputItems = repoItems[item].getElementsByTagName('input');
+                // console.log("inputItems", inputItems);
+                let repoId = undefined;
+                let repoName = undefined;
+                let repoOwner = undefined;
+                let repoBranch = undefined;
+                for (var inpt = 0; inpt < inputItems.length; inpt++) {
+                    // console.log('inpt.id: ' + inputItems[inpt].id);
+                    if (inputItems[inpt].id === 'repos.id') {
+                        repoId = inputItems[inpt].value.toString().trim();
+                    } else if (inputItems[inpt].id === 'repos.name') {
+                        repoName = inputItems[inpt].value.toString().trim();
+                    } else if (inputItems[inpt].id === 'repos.owner') {
+                        repoOwner = inputItems[inpt].value.toString().trim();
+                    } else if (inputItems[inpt].id === 'repos.branch') {
+                        repoBranch = inputItems[inpt].value.toString().trim();
+                    }
+                }
+                fndRepos.push({ id: repoId, name: repoName, owner: repoOwner, branch: repoBranch });
+            }
+        }
+        // console.log(fndRepos);
+        return fndRepos;
+    } catch (ex) {
+        return [];
+    }
+}
+
+function checkIdeForRepo(repoName, repoBranch, repoOwner, sendDesc, secondPass = false) {
     return new Promise(function(resolve, reject) {
         let repoFound = false;
         updLoaderText('Checking', 'Repos');
         makeRequest({
-                url: fetchReposUrl,
-                method: 'GET'
+                url: repoFormUrl,
+                method: 'GET',
+                contentType: '',
+                responseType: 'application/json',
+                anyStatus: true
             })
             .catch(function(err) {
                 installError(err, false);
-                addResult('Checking Repo (' + rname + ')', false, 'repo', err);
+                addResult('Checking Repo (' + repoName + ')', false, 'repo', err);
                 reject(err);
             })
             .then(function(resp) {
                 // console.log(resp);
                 updLoaderText('Analyzing', 'Repos');
                 if (resp) {
-                    let respData = JSON.parse(resp);
+                    let respData = parseDomForRepos(resp);
+                    console.log("repoData: ", respData);
                     writableRepos = respData;
                     if (respData.length) {
                         for (let i in respData) {
-                            // console.log(respData[i]);
-                            if (respData[i].name === rname && respData[i].branch === branch) {
+                            if (respData[i].name === repoName && respData[i].branch === repoBranch && respData[i].owner === repoOwner) {
                                 if (!secondPass) {
-                                    addResult('Repo (' + rname + ')', true, 'repo', 'Already Added');
+                                    console.log('already added | ' + sendDesc);
+                                    addResult('Repo (<b>' + repoName + '</b>)', true, 'repo', 'Already Added');
                                 }
                                 repoId = respData[i].id;
                                 repoFound = true;
+                                resolve(repoFound);
                             }
                         }
                     }
@@ -2517,7 +2565,7 @@ function renderAppView(appName, manifest) {
             });
             homeBtnAvail(false);
             scrollToTop();
-            getRepoId(manifest.repoName, manifest.repoBranch)
+            getRepoId(manifest.repoName, manifest.repoBranch, manifest.repoOwner)
                 .catch(function(err) {
                     // console.log(err);
                 })
