@@ -1,11 +1,11 @@
-const scriptVersion = '1.0.0716';
+const scriptVersion = '1.0.0717a';
 const scriptRelType = 'Prod';
-const scriptVerDate = '7/16/2018';
+const scriptVerDate = '7/17/2018';
 const latestSaVer = '1.0.0213a';
 const allowInstalls = true;
 const allowUpdates = true;
-const allowRemoval = false;
-const isDevMode = false;
+const allowRemoval = (devMode === true);
+const isDevMode = (devMode === true);
 const manifestCache = false;
 
 var repoId = '';
@@ -723,7 +723,7 @@ function getRepoId(repoName, repoBranch, repoOwner) {
                 url: repoFormUrl,
                 method: 'GET',
                 contentType: '',
-                responseType: 'application/json',
+                responseType: 'text/html',
                 anyStatus: true
             })
             .catch(function(err) {
@@ -796,7 +796,7 @@ function checkIdeForRepo(repoName, repoBranch, repoOwner, sendDesc, secondPass =
                 url: repoFormUrl,
                 method: 'GET',
                 contentType: '',
-                responseType: 'application/json',
+                responseType: 'text/html',
                 anyStatus: true
             })
             .catch(function(err) {
@@ -805,7 +805,7 @@ function checkIdeForRepo(repoName, repoBranch, repoOwner, sendDesc, secondPass =
                 reject(err);
             })
             .then(function(resp) {
-                // console.log(resp);
+                console.log(resp);
                 updLoaderText('Analyzing', 'Repos');
                 if (resp) {
                     let respData = parseDomForRepos(resp);
@@ -2234,7 +2234,7 @@ function renderAppView(appName, manifest) {
         let isInstalled = appInpt.length > 0 && appInpt.data('installed') !== undefined && appInpt.data('installed') === true;
         // console.log('manifest: ', manifest);
         if (manifest !== undefined && Object.keys(manifest).length) {
-            if (isInstalled !== true && isDevMode !== true) {
+            if (isInstalled !== true && !isDevMode) {
                 incrementAppView(appName);
             }
             appCloseBtnAvail(true);
@@ -2467,7 +2467,7 @@ function renderAppView(appName, manifest) {
                 html += '\n                   <button id="installBtn" type="button" class="btn btn-success mx-2 p-0" style="border-radius: 20px;height: 40px;width: 100px;"><span><i class="fa fa-plus white-text"></i> Install</span></button>';
             }
             if (allowRemoval === true) {
-                html += '\n                   <button id="removeBtn" type="button" class="btn btn-danger mx-2" style="border-radius: 20px;height: 30px;">Remove</button>';
+                html += '\n                   <button id="removeBtn" type="button" class="btn btn-danger mx-2 p-0" style="border-radius: 20px;height: 40px;width: 100px;"><span><i class="fa fa-times white-text"></i> Remove</span></button>';
             }
             if (allowUpdates === true) {
                 html += '\n                   <button id="updateBtn" type="button" class="btn btn-warning mx-2 p-0" style="border-radius: 20px;height: 40px;width: 100px; display: none;"><span><i class="fa fa-arrow-up white-text"></i> Update</span></button>';
@@ -2523,7 +2523,7 @@ function renderAppView(appName, manifest) {
             });
             homeBtnAvail(false);
             scrollToTop();
-            if (!isInstalled && !isDevMode === true) {
+            if (!isInstalled && !isDevMode) {
                 incrementAppInstall(appName);
             }
             processIntall(manifest, selectedItems);
@@ -2634,9 +2634,11 @@ function installBtnAvail(cnt, data) {
     if (itemCnt === cnt) {
         $('#installBtn').addClass('disabled');
         $('#installBtn').text(' Installed');
+        if (allowRemoval === true) { $('#removeBtn').show(); }
     } else {
         $('#installBtn').removeClass('disabled');
         $('#installBtn').text(' Install');
+        if (allowRemoval === true) { $('#removeBtn').hide(); }
     }
 }
 
@@ -3069,6 +3071,9 @@ function loadScripts() {
 document.addEventListener('DOMContentLoaded', function() {
     buildCoreHtml();
     loadScripts();
+    if (isDevMode) {
+        console.log('DevMode Enabled: ' + isDevMode);
+    }
     loaderFunc();
     defineCoreClickActions();
 });
