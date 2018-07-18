@@ -1,11 +1,11 @@
-const scriptVersion = '1.0.0717a';
+const scriptVersion = '1.0.0718a';
 const scriptRelType = 'Prod';
-const scriptVerDate = '7/17/2018';
+const scriptVerDate = '7/18/2018';
 const latestSaVer = '1.0.0213a';
 const allowInstalls = true;
 const allowUpdates = true;
-const allowRemoval = (devMode === true);
-const isDevMode = (devMode === true);
+const allowRemoval = false;
+const isDevMode = false;
 const manifestCache = false;
 
 var repoId = '';
