@@ -734,7 +734,7 @@ function getRepoId(repoName, repoBranch, repoOwner) {
                 // console.log(resp);
                 if (resp) {
                     let respData = parseDomForRepos(resp);
-                    console.log("repoData: ", respData);
+                    // console.log("repoData: ", respData);
                     if (respData.length) {
                         writableRepos = respData;
                         for (let i in respData) {
@@ -810,7 +810,7 @@ function checkIdeForRepo(repoName, repoBranch, repoOwner, sendDesc, secondPass =
                 reject(err);
             })
             .then(function(resp) {
-                console.log(resp);
+                // console.log(resp);
                 updLoaderText('Analyzing', 'Repos');
                 if (resp) {
                     let respData = parseDomForRepos(resp);
