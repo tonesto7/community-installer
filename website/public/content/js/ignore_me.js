@@ -1,6 +1,6 @@
-const scriptVersion = '1.0.0718a';
+const scriptVersion = '1.0.0806a';
 const scriptRelType = 'Prod';
-const scriptVerDate = '7/18/2018';
+const scriptVerDate = '8/06/2018';
 const latestSaVer = '1.0.0213a';
 const allowInstalls = true;
 const allowUpdates = true;
@@ -778,7 +778,12 @@ function parseDomForRepos(domData) {
                         repoBranch = inputItems[inpt].value.toString().trim();
                     }
                 }
-                fndRepos.push({ id: repoId, name: repoName, owner: repoOwner, branch: repoBranch });
+                fndRepos.push({
+                    id: repoId,
+                    name: repoName,
+                    owner: repoOwner,
+                    branch: repoBranch
+                });
             }
         }
         // console.log(fndRepos);
@@ -809,7 +814,7 @@ function checkIdeForRepo(repoName, repoBranch, repoOwner, sendDesc, secondPass =
                 updLoaderText('Analyzing', 'Repos');
                 if (resp) {
                     let respData = parseDomForRepos(resp);
-                    console.log("repoData: ", respData);
+                    // console.log("repoData: ", respData);
                     writableRepos = respData;
                     if (respData.length) {
                         for (let i in respData) {
@@ -1255,36 +1260,41 @@ function checkIfItemsInstalled(itemObj, type, secondPass = false) {
     });
 }
 
-function getProjectManifest(url) {
+function getProjectManifest(mainList) {
     return new Promise(function(resolve, reject) {
         updLoaderText('Getting', 'Manifests');
-        url = manifestCache ? url : url + '?=' + getTimeStamp();
-        makeRequest({
-                url: url,
-                method: 'GET',
-                anyStatus: true,
-                setTimeout: true
-            })
-            .catch(function(err) {
-                installError(err, false);
-                reject(err);
-            })
-            .then(function(resp) {
-                // console.log(resp);
-                if (resp === 'timeout') {
-                    reject(undefined);
-                }
-                if (resp !== undefined) {
-                    let manifest = parseJsonStr(resp);
-                    if (manifest !== undefined && manifest.name !== undefined) {
-                        resolve(manifest);
+        url = manifestCache ? mainList.manifestUrl : mainList.manifestUrl + '?=' + getTimeStamp();
+        if (mainList.enabled !== false) {
+            makeRequest({
+                    url: url,
+                    method: 'GET',
+                    anyStatus: true,
+                    setTimeout: true
+                })
+                .catch(function(err) {
+                    installError(err, false);
+                    reject(err);
+                })
+                .then(function(resp) {
+                    // console.log(resp);
+                    if (resp === 'timeout') {
+                        reject(undefined);
+                    }
+                    if (resp !== undefined) {
+                        let manifest = parseJsonStr(resp);
+                        if (manifest !== undefined && manifest.name !== undefined) {
+                            resolve(manifest);
+                        } else {
+                            reject(undefined);
+                        }
                     } else {
                         reject(undefined);
                     }
-                } else {
-                    reject(undefined);
-                }
-            });
+                });
+        } else {
+            console.log('Skipping App (' + mainList.appName + ') because it\'s disabled');
+            resolve(undefined);
+        }
     });
 }
 
@@ -1857,7 +1867,7 @@ function loadAllManifests() {
                 updLoaderText('Loading', 'Manifest');
                 let cnt = 0;
                 for (let i in mainManifest) {
-                    getProjectManifest(mainManifest[i].manifestUrl)
+                    getProjectManifest(mainManifest[i])
                         .catch(function(err) {
                             cnt++;
                             if (cnt === mainManifest.length) {
@@ -2634,11 +2644,15 @@ function installBtnAvail(cnt, data) {
     if (itemCnt === cnt) {
         $('#installBtn').addClass('disabled');
         $('#installBtn').text(' Installed');
-        if (allowRemoval === true) { $('#removeBtn').show(); }
+        if (allowRemoval === true) {
+            $('#removeBtn').show();
+        }
     } else {
         $('#installBtn').removeClass('disabled');
         $('#installBtn').text(' Install');
-        if (allowRemoval === true) { $('#removeBtn').hide(); }
+        if (allowRemoval === true) {
+            $('#removeBtn').hide();
+        }
     }
 }
 
