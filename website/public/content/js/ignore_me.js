@@ -3090,16 +3090,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     loaderFunc();
     defineCoreClickActions();
-});.getScript('https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.5.0/js/mdb.min.js')
-  $.getScript('https://cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.6.1/jquery.timeago.min.js')
-}
-
-document.addEventListener('DOMContentLoaded', function () {
-  buildCoreHtml()
-  loadScripts()
-  if (isDevMode) {
-    console.log('DevMode Enabled: ' + isDevMode)
-  }
-  loaderFunc()
-  defineCoreClickActions()
-})
+});
