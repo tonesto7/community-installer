@@ -1,6 +1,6 @@
-const scriptVersion = '1.0.0806a';
+const scriptVersion = '1.0.041519a';
 const scriptRelType = 'Prod';
-const scriptVerDate = '8/06/2018';
+const scriptVerDate = '04/15/2019';
 const latestSaVer = '1.0.0213a';
 const allowInstalls = true;
 const allowUpdates = true;
@@ -2740,280 +2740,279 @@ const repoUrl = 'https://cdn.rawgit.com/tonesto7/st-community-installer/master';
 const repoImgUrl = 'https://raw.githubusercontent.com/tonesto7/st-community-installer/master';
 
 function buildCoreHtml() {
-    let head = '';
-    head += '\n                 <meta charset="utf-8">';
-    // head += '\n                 <base href="' + repoUrl + '" target="_blank">';
-    head += '\n                 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=0, viewport-fit=cover">';
-    head += '\n                 <meta http-equiv="cleartype" content="on">';
-    head += '\n                 <meta name="MobileOptimized" content="320">';
-    head += '\n                 <meta name="HandheldFriendly" content="True">';
-    head += '\n                 <meta name="description" content="Description">';
-    head += '\n                 <meta name="keywords" content="">';
-    head += '\n                 <title>Community Installer</title>';
+    let head = `
+        <meta charset="utf-8">
+        <!-- <base href="' + repoUrl + '" target="_blank"> -->
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=0, viewport-fit=cover">
+        <meta http-equiv="cleartype" content="on">
+        <meta name="MobileOptimized" content="320">
+        <meta name="HandheldFriendly" content="True">
+        <meta name="description" content="Description">
+        <meta name="keywords" content="">
+        <title>Community Installer</title>
 
-    head += '\n                 <!-- Android  -->';
-    head += '\n                 <meta name="theme-color" content="#2b3134"/>';
-    head += '\n                 <meta name="mobile-web-app-capable" content="yes">';
-    head += '\n                 <link rel="icon" type="image/png" href="' + repoImgUrl + '/images/icons/android-192x192.png" sizes="192x192">';
+        <!-- Android  -->
+        <meta name="theme-color" content="#2b3134"/>
+        <meta name="mobile-web-app-capable" content="yes">
+        <link rel="icon" type="image/png" href="${repoImgUrl}/images/icons/android-192x192.png" sizes="192x192">
 
-    head += '\n                 <!-- iOS -->';
-    head += '\n                 <meta name="apple-mobile-web-app-capable" content="yes">';
-    head += '\n                 <meta name="apple-mobile-web-app-title" content="Community Installer App">';
-    head += '\n                 <meta name="format-detection" content="telephone=no">';
-    head += '\n                 <meta name="apple-mobile-web-app-status-bar-style" content="black">';
-    head += '\n                 <link rel="apple-touch-icon" href="' + repoImgUrl + '/images/icons/apple-touch-icon-180x180.png" sizes="180x180">';
-    head += '\n                 <link rel="apple-touch-startup-image" href="' + repoImgUrl + '/images/icons/ios_launch.png">';
+        <!-- iOS -->
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-title" content="Community Installer App">
+        <meta name="format-detection" content="telephone=no">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <link rel="apple-touch-icon" href="${repoImgUrl}/images/icons/apple-touch-icon-180x180.png" sizes="180x180">
+        <link rel="apple-touch-startup-image" href="${repoImgUrl}/images/icons/ios_launch.png">
 
-    head += '\n                 <link rel="shortcut icon" type="image/x-icon" href="' + repoImgUrl + '/images/app_logo.ico" />';
+        <link rel="shortcut icon" type="image/x-icon" href="${repoImgUrl}/images/app_logo.ico" />
 
-    head += '\n                 <!-- Windows  -->';
-    head += '\n                 <meta http-equiv="x-ua-compatible" content="ie=edge">';
-    head += '\n                 <meta name="msapplication-navbutton-color" content="#2b3134">';
-    head += '\n                 <meta name="msapplication-TileColor" content="#2b3134">';
-    head += '\n                 <meta name="msapplication-TileImage" content="' + repoImgUrl + '/images/icons/ms-icon-144x144.png">';
-    head += '\n                 <meta name="msapplication-config" content="' + repoImgUrl + '/images/icons/browserconfig.xml">';
+        <!-- Windows  -->
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="msapplication-navbutton-color" content="#2b3134">
+        <meta name="msapplication-TileColor" content="#2b3134">
+        <meta name="msapplication-TileImage" content="${repoImgUrl}/images/icons/ms-icon-144x144.png">
+        <meta name="msapplication-config" content="${repoImgUrl}/images/icons/browserconfig.xml">
 
-    head += '\n                 <link rel="icon" type="image/png" href="' + repoImgUrl + '/images/icons/favicon-16x16.png" sizes="16x16">';
-    head += '\n                 <link rel="icon" type="image/png" href="' + repoImgUrl + '/images/icons/favicon-32x32.png" sizes="32x32">';
-    // head += '\n                 <link rel="icon" type="image/png" href="' + repoImgUrl + '/images/icons/favicon-48.png" sizes="48x48">';
+        <link rel="icon" type="image/png" href="${repoImgUrl}/images/icons/favicon-16x16.png" sizes="16x16">
+        <link rel="icon" type="image/png" href="${repoImgUrl}/images/icons/favicon-32x32.png" sizes="32x32">
+            <!-- <link rel="icon" type="image/png" href="${repoImgUrl}/images/icons/favicon-48.png" sizes="48x48"> -->
 
-    head += '\n                 <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400,400i,500,700,700i&amp;subset=cyrillic-ext" />';
-    head += '\n                 <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" />';
-    head += '\n                 <script src="https://use.fontawesome.com/a81eef09c0.js" async></script>';
-    head += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.13.0/umd/popper.min.js" async></script>';
-    head += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js" async></script>';
-    head += '\n                 <script src="https://static.firebase.com/v0/firebase.js" async></script>';
-    head += '\n                 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js" async></script>';
-    head += '\n                 <link href="' + repoUrl + '/manifest.json" rel="manifest">';
+        <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400,400i,500,700,700i&amp;subset=cyrillic-ext" />
+        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" />
+        <script src="https://use.fontawesome.com/a81eef09c0.js" async></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.13.0/umd/popper.min.js" async></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js" async></script>
+        <script src="https://static.firebase.com/v0/firebase.js" async></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js" async></script>
+        <link href="${repoUrl}/manifest.json" rel="manifest">
+    `;
     $('head').append(head);
 
-    let html = '';
-    html += '\n       <header>';
-    html += '\n           <nav class="navbar navbar-fixed-top navbar-dark ">';
-    html += '\n               <div class="d-flex w-100 justify-content-between align-items-center mx-auto" style="max-width: 725px;">';
-    html += '\n                   <div class="d-flex flex-column justify-content-center align-items-center">';
-    html += '\n                       <a id="homeNavBtn" class="nav-link white-text p-0" href="' + homeUrl + '" style="font-size: 30px;"><i id="homeBtn" class="fa fa-home"></i><span class="sr-only">(current)</span></a>';
-    html += '\n                   </div>';
-    html += '\n                   <div class="d-flex flex-column justify-content-center align-items-center">';
-    html += '\n                       <div class="d-inline-flex" id="navbarLogoWrapper">';
-    html += '\n                           <img src="https://raw.githubusercontent.com/tonesto7/st-community-installer/master/images/app_logo.png" height="40" alt="" id="navbarLogoImg">';
-    html += '\n                           <div id="navbarLogoText" class="m-0">';
-    html += '\n                               <p class="d-flex py-0 my-0">Community</p>';
-    html += '\n                               <p class="d-flex py-0 my-0">Installer</p>';
-    html += '\n                           </div>';
-    html += '\n                       </div>';
-    // html += '\n                       <a class="navbar-brand"><span class="align-middle"><img src="https://raw.githubusercontent.com/tonesto7/st-community-installer/master/images/app_logo.png" height="40" class="d-inline-block align-middle" alt=""> Installer</span></a>';
-    html += '\n                   </div>';
-    html += '\n                   <div class="d-flex flex-column justify-content-center align-items-center">';
-    html += '\n                       <a id="showSearchBtn" class="nav-link white-text p-0" style="font-size: 30px; display: none;"><i class="fa fa-search"></i><span class="sr-only">(current)</span></a>';
-    html += '\n                       <button type="button" id="appCloseBtn" class="btn-md close white-text" aria-label="Close" style="display: none;"><span aria-hidden="true"><i class="fa fa-arrow-left white-text"></i></span></button>';
-    html += '\n                   </div>';
-    html += '\n               </div>';
-    html += '\n           </nav>';
-    html += '\n       </header>';
-    html += '\n       <main class="mt-3">';
-    html += '\n           <div id="mainDiv" class="container-fluid" style="min-width: 380px; max-width: 750px; height: auto; min-height: 100%;">';
-    html += '\n               <div class="w-auto mx-4">';
-    html += '\n                   <div class="md-form form-sm input-group" id="searchForm" style="display: none;">';
-    html += '\n                       <input type="search" class="form-control text-white searchFlag" placeholder="Search..." id="appSearchBox" autocomplete="false">';
-    html += '\n                       <span class="input-group-btn"><button class="m-0 btn btn-sm grey px-1" type="button" id="searchBtn" style="border-top-right-radius: 10px;border-bottom-right-radius:  10px;"><i class="fa fa-search"></i> Search</button></span>';
-    html += '\n                   </div>';
-    html += '\n               </div>';
-    html += '\n               <section class="px-3">';
-    html += '\n                   <div class="w-100 text-center">';
-    html += '\n                       <h5 id="sectTitle" class="h5-responsive" style="font-weight: 400;">Software Installer</h5>';
-    html += '\n                       <div id="loaderDiv" class="flex-row fadeIn fadeOut" style="display: none;">';
-    html += '\n                           <div class="d-flex flex-column justify-content-center align-items-center" style="height: 200px;">';
-    html += '\n                               <svg id="loader" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid" class="lds-double-ring">';
-    html += '\n                                   <circle cx="50" cy="50" ng-attr-r="{{config.radius}}" ng-attr-stroke-width="{{config.width}}" ng-attr-stroke="{{config.c1}}" ng-attr-stroke-dasharray="{{config.dasharray}}" fill="none" stroke-linecap="round" r="40" stroke-width="7" stroke="#18B9FF" stroke-dasharray="62.83185307179586 62.83185307179586" transform="rotate(139.357 50 50)">';
-    html += '\n                                       <animateTransform attributeName="transform" type="rotate" calcMode="linear" values="0 50 50;360 50 50" keyTimes="0;1" dur="1.8s" begin="0s" repeatCount="indefinite"></animateTransform>';
-    html += '\n                                   </circle>';
-    html +=
-        '\n                                   <circle cx="50" cy="50" ng-attr-r="{{config.radius2}}" ng-attr-stroke-width="{{config.width}}" ng-attr-stroke="{{config.c2}}" ng-attr-stroke-dasharray="{{config.dasharray2}}" ng-attr-stroke-dashoffset="{{config.dashoffset2}}" fill="none" stroke-linecap="round" r="32" stroke-width="7" stroke="#FF7F27" stroke-dasharray="50.26548245743669 50.26548245743669" stroke-dashoffset="50.26548245743669" transform="rotate(-139.357 50 50)">';
-    html += '\n                                       <animateTransform attributeName="transform" type="rotate" calcMode="linear" values="0 50 50;-360 50 50" keyTimes="0;1" dur="1.8s" begin="0s" repeatCount="indefinite"></animateTransform>';
-    html += '\n                                   </circle>';
-    html += '\n                                   <text id="loaderText1" fill="gray" stroke-width="0" x="50%" y="50%" text-anchor="middle" class="loaderText">Please</text>';
-    html += '\n                                   <text id="loaderText2" fill="gray" stroke-width="0" x="50%" y="60%" text-anchor="middle" class="loaderText">Wait</text>';
-    html += '\n                               </svg>';
-    html += '\n                           </div>';
-    html += '\n                       </div>';
-    html += '\n                       <div id="listContDiv" class="row fadeIn fadeOut" style="display: none;"></div>';
-    html += '\n                       <div id="appViewDiv" class="row fadeIn fadeOut" style="display: none;"></div>';
+    let html = `
+        <header>
+            <nav class="navbar navbar-fixed-top navbar-dark">
+                <div class="d-flex w-100 justify-content-between align-items-center mx-auto" style="max-width: 725px;">
+                    <div class="d-flex flex-column justify-content-center align-items-center">
+                        <a id="homeNavBtn" class="nav-link white-text p-0" href="${homeUrl}" style="font-size: 30px;"><i id="homeBtn" class="fa fa-home"></i><span class="sr-only">(current)</span></a>
+                    </div>
+                    <div class="d-flex flex-column justify-content-center align-items-center">
+                        <div class="d-inline-flex" id="navbarLogoWrapper">
+                            <img src="https://raw.githubusercontent.com/tonesto7/st-community-installer/master/images/app_logo.png" height="40" alt="" id="navbarLogoImg">
+                            <div id="navbarLogoText" class="m-0">
+                                <p class="d-flex py-0 my-0">Community</p>
+                                <p class="d-flex py-0 my-0">Installer</p>
+                            </div>
+                        </div>
+                    <!-- <a class="navbar-brand"><span class="align-middle"><img src="https://raw.githubusercontent.com/tonesto7/st-community-installer/master/images/app_logo.png" height="40" class="d-inline-block align-middle" alt=""> Installer</span></a> -->
+                    </div>
+                    <div class="d-flex flex-column justify-content-center align-items-center">
+                        <a id="showSearchBtn" class="nav-link white-text p-0" style="font-size: 30px; display: none;"><i class="fa fa-search"></i><span class="sr-only">(current)</span></a>
+                        <button type="button" id="appCloseBtn" class="btn-md close white-text" aria-label="Close" style="display: none;"><span aria-hidden="true"><i class="fa fa-arrow-left white-text"></i></span></button>
+                    </div>
+                </div>
+            </nav>
+        </header>
+        <main class="mt-3">
+            <div id="mainDiv" class="container-fluid" style="min-width: 380px; max-width: 750px; height: auto; min-height: 100%;">
+                <div class="w-auto mx-4">
+                    <div class="md-form form-sm input-group" id="searchForm" style="display: none;">
+                        <input type="search" class="form-control text-white searchFlag" placeholder="Search..." id="appSearchBox" autocomplete="false">
+                        <span class="input-group-btn"><button class="m-0 btn btn-sm grey px-1" type="button" id="searchBtn" style="border-top-right-radius: 10px;border-bottom-right-radius:  10px;"><i class="fa fa-search"></i> Search</button></span>
+                    </div>
+                </div>
+                <section class="px-3">
+                    <div class="w-100 text-center">
+                        <h5 id="sectTitle" class="h5-responsive" style="font-weight: 400;">Software Installer</h5>
+                        <div id="loaderDiv" class="flex-row fadeIn fadeOut" style="display: none;">
+                            <div class="d-flex flex-column justify-content-center align-items-center" style="height: 200px;">
+                                <svg id="loader" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid" class="lds-double-ring">
+                                    <circle cx="50" cy="50" ng-attr-r="{{config.radius}}" ng-attr-stroke-width="{{config.width}}" ng-attr-stroke="{{config.c1}}" ng-attr-stroke-dasharray="{{config.dasharray}}" fill="none" stroke-linecap="round" r="40" stroke-width="7" stroke="#18B9FF" stroke-dasharray="62.83185307179586 62.83185307179586" transform="rotate(139.357 50 50)">
+                                        <animateTransform attributeName="transform" type="rotate" calcMode="linear" values="0 50 50;360 50 50" keyTimes="0;1" dur="1.8s" begin="0s" repeatCount="indefinite"></animateTransform>
+                                    </circle>
+                                    <circle cx="50" cy="50" ng-attr-r="{{config.radius2}}" ng-attr-stroke-width="{{config.width}}" ng-attr-stroke="{{config.c2}}" ng-attr-stroke-dasharray="{{config.dasharray2}}" ng-attr-stroke-dashoffset="{{config.dashoffset2}}" fill="none" stroke-linecap="round" r="32" stroke-width="7" stroke="#FF7F27" stroke-dasharray="50.26548245743669 50.26548245743669" stroke-dashoffset="50.26548245743669" transform="rotate(-139.357 50 50)">
+                                        <animateTransform attributeName="transform" type="rotate" calcMode="linear" values="0 50 50;-360 50 50" keyTimes="0;1" dur="1.8s" begin="0s" repeatCount="indefinite"></animateTransform>
+                                    </circle>
+                                    <text id="loaderText1" fill="gray" stroke-width="0" x="50%" y="50%" text-anchor="middle" class="loaderText">Please</text>
+                                    <text id="loaderText2" fill="gray" stroke-width="0" x="50%" y="60%" text-anchor="middle" class="loaderText">Wait</text>
+                                </svg>
+                            </div>
+                        </div>
+                        <div id="listContDiv" class="row fadeIn fadeOut" style="display: none;"></div>
+                        <div id="appViewDiv" class="row fadeIn fadeOut" style="display: none;"></div>
 
-    html += '\n                       <div id="actResultsDiv" class="row fadeIn fadeOut mb-5" style="display: none;">';
-    html += '\n                           <div class="listDiv">';
-    html += '\n                               <div id="resultList">';
-    html += '\n                                   <div class="card card-body card-outline" style="background-color: transparent; line-height:1.0;">';
+                        <div id="actResultsDiv" class="row fadeIn fadeOut mb-5" style="display: none;">
+                            <div class="listDiv">
+                                <div id="resultList">
+                                    <div class="card card-body card-outline" style="background-color: transparent; line-height:1.0;">
 
-    html += '\n                                       <div class="row">';
-    html += '\n                                           <div class="d-flex w-100 flex-column mb-3">';
-    html += '\n                                               <i id="finishedImg" class="fa fa-check" style="display: none;"></i>';
-    html += '\n                                               <div id="results"></div>';
-    html += '\n                                               <div id="resultsDone" class="mt-2" style="display: none;"><small>To Exit App Press Back/Save</small></div>';
-    html += '\n                                               <div id="resultsContainer" class="d-flex flex-column justify-content-center mx-2">';
-    html += '\n                                                   <div class="d-flex flex-column align-items-center" style="border: 1px solid gray; border-radius: 10px;">';
+                                        <div class="row">
+                                            <div class="d-flex w-100 flex-column mb-3">
+                                                <i id="finishedImg" class="fa fa-check" style="display: none;"></i>
+                                                <div id="results"></div>
+                                                <div id="resultsDone" class="mt-2" style="display: none;"><small>To Exit App Press Back/Save</small></div>
+                                                <div id="resultsContainer" class="d-flex flex-column justify-content-center mx-2">
+                                                    <div class="d-flex flex-column align-items-center" style="border: 1px solid gray; border-radius: 10px;">
 
-    html += '\n                                                       <div class="d-flex flex-column justify-content-center align-items-center">';
-    html += '\n                                                           <h6 id="ideResultsTitle" class="mt-2 mb-0" style="display: none;"><u>IDE Authentication</u></h6>';
-    html += '\n                                                           <ul id="ideResultUl" class="w-100 px-4" style="display: none;"></ul>';
-    html += '\n                                                       </div>';
+                                                        <div class="d-flex flex-column justify-content-center align-items-center">
+                                                            <h6 id="ideResultsTitle" class="mt-2 mb-0" style="display: none;"><u>IDE Authentication</u></h6>
+                                                            <ul id="ideResultUl" class="w-100 px-4" style="display: none;"></ul>
+                                                        </div>
 
-    html += '\n                                                       <div class="d-flex w-100 flex-column justify-content-center align-items-center">';
-    html += '\n                                                           <h6 id="repoResultsTitle" class="mt-2 mb-0" style="display: none;"><u>GitHub Integration</u></h6>';
-    html += '\n                                                           <ul id="repoResultUl" class="w-100 px-3" style="display: none;"></ul>';
-    html += '\n                                                       </div>';
+                                                        <div class="d-flex w-100 flex-column justify-content-center align-items-center">
+                                                            <h6 id="repoResultsTitle" class="mt-2 mb-0" style="display: none;"><u>GitHub Integration</u></h6>
+                                                            <ul id="repoResultUl" class="w-100 px-3" style="display: none;"></ul>
+                                                        </div>
 
-    html += '\n                                                       <div class="d-flex w-100 flex-column justify-content-center align-items-center">';
-    html += '\n                                                            <h6 id="appResultsTitle" class="mt-2 mb-0" style="display: none;"><u>SmartApps</u></h6>';
-    html += '\n                                                           <ul id="appResultUl" class="w-100 px-3" style="display: none; font-size: 0.9em;"></ul>';
-    html += '\n                                                       </div>';
+                                                        <div class="d-flex w-100 flex-column justify-content-center align-items-center">
+                                                            <h6 id="appResultsTitle" class="mt-2 mb-0" style="display: none;"><u>SmartApps</u></h6>
+                                                            <ul id="appResultUl" class="w-100 px-3" style="display: none; font-size: 0.9em;"></ul>
+                                                        </div>
 
-    html += '\n                                                       <div class="d-flex w-100 flex-column justify-content-center align-items-center">';
-    html += '\n                                                           <h6 id="devResultsTitle" class="mt-2 mb-0" style="display: none;"><u>Devices</u></h6>';
-    html += '\n                                                           <ul id="devResultUl" class="w-100 px-3" style="display: none; font-size: 0.9em;"></ul>';
-    html += '\n                                                       </div>';
+                                                        <div class="d-flex w-100 flex-column justify-content-center align-items-center">
+                                                            <h6 id="devResultsTitle" class="mt-2 mb-0" style="display: none;"><u>Devices</u></h6>
+                                                            <ul id="devResultUl" class="w-100 px-3" style="display: none; font-size: 0.9em;"></ul>
+                                                        </div>
 
-    html += '\n                                                   </div>';
-    html += '\n                                               </div>';
-    html += '\n                                               <div class="d-flex flex-column justify-content-center align-items-center">';
-    html += '\n                                                 <div class="btn-group">';
-    html += '\n                                                   <a id="reloginBtn" href="' + loginUrl + '" class="btn blue mt-3 mx-2 px-2" style="display: none; border-radius: 20px; background: transparent; width: 130px;"><i id="loginBtn" class="fa fa-sign-in"></i> Login Again</a>';
-    html += '\n                                                   <button id="resultsDoneHomeBtn" type="button" class="btn white-text mt-3 mx-2 px-2" style="display: none; border-radius: 20px; background: transparent; width: 130px;"><i id="homeBtn" class="fa fa-home"></i> Go Home</button>';
-    html += '\n                                                   <button id="whatNextBtn" type="button" class="btn waves-effect waves-light mt-3 mx-2 px-2 blue" style="border-radius: 20px; display: none; width: 130px;" data-toggle="modal" data-target="#doneModal"><span class="white-text"><i class="fa fa-chevron-circle-right"></i> What Next?</span></button>';
-    html += '\n                                                 </div>';
-    html += '\n                                               </div>';
-    html += '\n                                          </div>';
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex flex-column justify-content-center align-items-center">
+                                                    <div class="btn-group">
+                                                    <a id="reloginBtn" href="${loginUrl}" class="btn blue mt-3 mx-2 px-2" style="display: none; border-radius: 20px; background: transparent; width: 130px;"><i id="loginBtn" class="fa fa-sign-in"></i> Login Again</a>
+                                                    <button id="resultsDoneHomeBtn" type="button" class="btn white-text mt-3 mx-2 px-2" style="display: none; border-radius: 20px; background: transparent; width: 130px;"><i id="homeBtn" class="fa fa-home"></i> Go Home</button>
+                                                    <button id="whatNextBtn" type="button" class="btn waves-effect waves-light mt-3 mx-2 px-2 blue" style="border-radius: 20px; display: none; width: 130px;" data-toggle="modal" data-target="#doneModal"><span class="white-text"><i class="fa fa-chevron-circle-right"></i> What Next?</span></button>
+                                                    </div>
+                                                </div>
+                                            </div>
 
-    html += '\n                                     </div>';
-    html += '\n                                 </div>';
-    html += '\n                            </div>';
-    html += '\n                       </div>';
-    html += '\n               </section>';
+                                        </div>
+                                    </div>
+                            </div>
+                        </div>
+                </section>
 
-    html += '\n           </div>';
-    html += '\n       </main>';
-    html += '\n       <footer id="ftrSect" class="page-footer center-on-small-only m-0 p-0">';
-    html += '\n           <div class="footer-copyright">';
-    html += '\n               <div class="containter-fluid">';
-    html += '\n                   <div class="d-flex flex-column justify-content-center align-items-center">';
-    html += '\n                       <button class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#aboutModal" style="background: transparent; border-color: white !important;"><span class="white-text"><i class="fa fa-info"></i> About</span></button>';
-    html += '\n                       <small class="align-middle"><u>v' + scriptVersion + ' (' + scriptRelType + ')</u></small>';
-    html += '\n                       <small class="align-middle">' + getStServerName() + '</small>';
-    html += '\n                   </div>';
-    html += '\n               </div>';
-    html += '\n           </div>';
-    html += '\n       </footer>';
+            </div>
+        </main>
+        <footer id="ftrSect" class="page-footer center-on-small-only m-0 p-0">
+            <div class="footer-copyright">
+                <div class="containter-fluid">
+                    <div class="d-flex flex-column justify-content-center align-items-center">
+                        <button class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#aboutModal" style="background: transparent; border-color: white !important;"><span class="white-text"><i class="fa fa-info"></i> About</span></button>
+                        <small class="align-middle"><u>v${scriptVersion} (${scriptRelType})</u></small>
+                        <small class="align-middle">${getStServerName()}</small>
+                    </div>
+                </div>
+            </div>
+        </footer>
 
-    html += '\n       <!-- Modal -->';
-    html += '\n       <div class="modal fade-in" id="doneModal" tabindex="-1" role="dialog" aria-labelledby="doneModalLabel" aria-hidden="true">';
-    html += '\n           <div class="modal-dialog modal-dialog-centered" role="document">';
-    html += '\n               <div class="modal-content darkModalBg">';
-    html += '\n                   <!--  Modal BODY -->';
-    html += '\n                   <div class="modal-body py-2">';
-    html += '\n                       <div class="card card-body pt-3" style="background-color: transparent;">';
-    html += '\n                           <div class="flex-row align-center">';
-    html += '\n                               <div class="d-flex flex-row justify-content-center">';
-    html += '\n                                   <div class="d-flex flex-column justify-content-center align-items-center text-center">';
-    html += '\n                                       <h5><u>What Next?</u></h5>';
-    html += '\n                                       <ol class="m-0 p-0 text-left">';
-    html += '\n                                          <li style="font-size: 12px">Press Save All the way out of the app.</li>';
-    html += '\n                                          <li style="font-size: 12px">Tap Marketplace</li>';
-    html += '\n                                          <li style="font-size: 12px">Tap SmartApps Tab</li>';
-    html += '\n                                          <li style="font-size: 12px">Tap My Apps</li>';
-    html += '\n                                          <li style="font-size: 12px" id="appNameListItem"></li>';
-    html += '\n                                          <li style="font-size: 12px">That\'s It!</li>';
-    html += '\n                                       </ol>';
-    html += '\n                                   </div>';
-    html += '\n                               </div>';
-    html += '\n                           </div>';
-    html += '\n                       </div>';
-    html += '\n                   </div>';
-    html += '\n                   <!--  Modal FOOTER -->';
-    html += '\n                   <div class="modal-body py-2">';
-    html += '\n                       <div class="card card-body pt-3" style="background-color: transparent;">';
-    html += '\n                           <button type="button" class="btn btn-sm btn-secondary mx-5 my-0" data-dismiss="modal">Close</button>';
-    html += '\n                       </div>';
-    html += '\n                   </div>';
-    html += '\n               </div>';
-    html += '\n           </div>';
-    html += '\n       </div>';
+        <!-- Modal -->
+        <div class="modal fade-in" id="doneModal" tabindex="-1" role="dialog" aria-labelledby="doneModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content darkModalBg">
+                    <!--  Modal BODY -->
+                    <div class="modal-body py-2">
+                        <div class="card card-body pt-3" style="background-color: transparent;">
+                            <div class="flex-row align-center">
+                                <div class="d-flex flex-row justify-content-center">
+                                    <div class="d-flex flex-column justify-content-center align-items-center text-center">
+                                        <h5><u>What Next?</u></h5>
+                                        <ol class="m-0 p-0 text-left">
+                                            <li style="font-size: 12px">Press Save All the way out of the app.</li>
+                                            <li style="font-size: 12px">Tap Marketplace</li>
+                                            <li style="font-size: 12px">Tap SmartApps Tab</li>
+                                            <li style="font-size: 12px">Tap My Apps</li>
+                                            <li style="font-size: 12px" id="appNameListItem"></li>
+                                            <li style="font-size: 12px">That\'s It!</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!--  Modal FOOTER -->
+                    <div class="modal-body py-2">
+                        <div class="card card-body pt-3" style="background-color: transparent;">
+                            <button type="button" class="btn btn-sm btn-secondary mx-5 my-0" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    html += '\n       <!-- Modal -->';
-    html += '\n       <div class="modal fade-in" id="aboutModal" tabindex="-1" role="dialog" aria-labelledby="aboutModalLabel" aria-hidden="true">';
-    html += '\n           <div class="modal-dialog modal-dialog-centered" role="document">';
-    html += '\n               <div class="modal-content darkModalBg">';
-    html += '\n                   <!--  Modal BODY -->';
-    html += '\n                   <div class="modal-body pb-2">';
-    html += '\n                       <div class="card card-body pt-0" style="background-color: transparent;">';
-    html += '\n                           <div class="flex-row align-center">';
-    html += '\n                               <div class="d-flex flex-row justify-content-center">';
-    html += '\n                                   <h3 class="modal-title align-self-center" id="exampleModalLongTitle">Community Installer</h3>';
-    html += '\n                               </div>';
-    html += '\n                               <div class="flex-row justify-content-center mb-3">';
-    html += '\n                                   <div class="d-flex flex-column justify-content-center align-items-center">';
-    html += '\n                                       <small><u>Author:</u></small>';
-    html += '\n                                       <small>Anthony Santilli (@tonesto7)</small>';
-    html += '\n                                   </div>';
-    html += '\n                                   <div class="d-flex flex-column justify-content-center align-items-center">';
-    html += '\n                                       <small><u>Co-Author:</u></small>';
-    html += '\n                                       <small>Corey Lista (@coreylista)</small>';
-    html += '\n                                   </div>';
-    html += '\n                               </div>';
-    html += '\n                               <div class="flex-row justify-content-center">';
-    html += '\n                                   <div class="d-flex flex-column justify-content-center align-items-center">';
-    html += '\n                                       <small><u>SmartApp Version:</u></small>';
-    html += '\n                                       <small>v' + appVersion + '</small>';
-    html += '\n                                   </div>';
-    html += '\n                                   <div class="d-flex flex-column justify-content-center align-items-center">';
-    html += '\n                                       <small><u>WebApp Version:</u></small>';
-    html += '\n                                       <small>v' + scriptVersion + ' (' + scriptRelType + ')</small>';
-    html += '\n                                   </div>';
-    html += '\n                                   <div class="d-flex flex-column justify-content-center align-items-center">';
-    html += '\n                                       <small><u>SmartThings Server:</u></small>';
-    html += '\n                                       <small>' + getStServerName() + '</small>';
-    html += '\n                                   </div>';
-    html += '\n                               </div>';
-    html += '\n                           </div>';
-    html += '\n                       </div>';
-    html += '\n                   </div>';
-    html += '\n                   <div class="modal-body py-2">';
-    html += '\n                       <div class="card card-body pt-3" style="background-color: transparent;">';
-    html += '\n                           <div class="flex-row align-center">';
-    html += '\n                               <div class="d-flex flex-row justify-content-center">';
-    html += '\n                                   <div class="d-flex flex-column justify-content-center align-items-center text-center">';
-    html += '\n                                       <h5><u>Notice</u></h5>';
-    html += '\n                                       <small><strong>Use this product at your own risk!</strong></small>';
-    html += '\n                                       <small>We are NOT responsible for any SmartApps and/or Devices displayed in this App.  They will always be the responsibility of the individual developer</small>';
-    html += '\n                                       <small>We are NOT responsible for any damages obtained to yourself or your belonging while using this application</small>';
-    html += '\n                                       <small>Now Please Enjoy It!!!</small>';
-    html += '\n                                   </div>';
-    html += '\n                               </div>';
-    html += '\n                           </div>';
-    html += '\n                       </div>';
-    html += '\n                   </div>';
-    html += '\n                   <!--  Modal FOOTER -->';
-    html += '\n                   <div class="modal-body py-2">';
-    html += '\n                       <div class="card card-body pt-3 pb-0" style="background-color: transparent;">';
-    html += '\n                           <div class="flex-row align-center">';
-    html += '\n                               <div class="d-flex flex-row justify-content-center">';
-    html += '\n                                   <div class="d-flex flex-column justify-content-center align-items-center">';
-    html += '\n                                       <h6>Want to make a Donation?</h6>';
-    html +=
-        '\n                                       <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top"><input type="hidden" name="cmd" value="_s-xclick"><input type="hidden" name="hosted_button_id" value="VPPATVAXQLTNC"><input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!"></form>';
-    html += '\n                                       <small><u>Privacy</u></small>';
-    html += '\n                                       <a class="blue-text" href="https://cdn.rawgit.com/tonesto7/st-community-installer/master/privacypolicy.html"><small>Privacy Policy</small></a>';
-    html += '\n                                       <br>';
-    html += '\n                                       <small style="font-size: 10px;">Copyright \u00A9 2018 Anthony Santilli & Corey Lista</small>';
-    html += '\n                                   </div>';
+        <!-- Modal -->
+        <div class="modal fade-in" id="aboutModal" tabindex="-1" role="dialog" aria-labelledby="aboutModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content darkModalBg">
+                    <!--  Modal BODY -->
+                    <div class="modal-body pb-2">
+                        <div class="card card-body pt-0" style="background-color: transparent;">
+                            <div class="flex-row align-center">
+                                <div class="d-flex flex-row justify-content-center">
+                                    <h3 class="modal-title align-self-center" id="exampleModalLongTitle">Community Installer</h3>
+                                </div>
+                                <div class="flex-row justify-content-center mb-3">
+                                    <div class="d-flex flex-column justify-content-center align-items-center">
+                                        <small><u>Author:</u></small>
+                                        <small>Anthony Santilli (@tonesto7)</small>
+                                    </div>
+                                    <div class="d-flex flex-column justify-content-center align-items-center">
+                                        <small><u>Co-Author:</u></small>
+                                        <small>Corey Lista (@coreylista)</small>
+                                    </div>
+                                </div>
+                                <div class="flex-row justify-content-center">
+                                    <div class="d-flex flex-column justify-content-center align-items-center">
+                                        <small><u>SmartApp Version:</u></small>
+                                        <small>v${appVersion}</small>
+                                    </div>
+                                    <div class="d-flex flex-column justify-content-center align-items-center">
+                                        <small><u>WebApp Version:</u></small>
+                                        <small>v${scriptVersion} (${scriptRelType})</small>
+                                    </div>
+                                    <div class="d-flex flex-column justify-content-center align-items-center">
+                                        <small><u>SmartThings Server:</u></small>
+                                        <small>${getStServerName()}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-body py-2">
+                        <div class="card card-body pt-3" style="background-color: transparent;">
+                            <div class="flex-row align-center">
+                                <div class="d-flex flex-row justify-content-center">
+                                    <div class="d-flex flex-column justify-content-center align-items-center text-center">
+                                        <h5><u>Notice</u></h5>
+                                        <small><strong>Use this product at your own risk!</strong></small>
+                                        <small>We are NOT responsible for any SmartApps and/or Devices displayed in this App.  They will always be the responsibility of the individual developer</small>
+                                        <small>We are NOT responsible for any damages obtained to yourself or your belonging while using this application</small>
+                                        <small>Now Please Enjoy It!!!</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!--  Modal FOOTER -->
+                    <div class="modal-body py-2">
+                        <div class="card card-body pt-3 pb-0" style="background-color: transparent;">
+                            <div class="flex-row align-center">
+                                <div class="d-flex flex-row justify-content-center">
+                                    <div class="d-flex flex-column justify-content-center align-items-center">
+                                        <h6>Want to make a Donation?</h6>
+                                        <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top"><input type="hidden" name="cmd" value="_s-xclick"><input type="hidden" name="hosted_button_id" value="VPPATVAXQLTNC"><input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!"></form>
+                                        <small><u>Privacy</u></small>
+                                        <a class="blue-text" href="https://cdn.rawgit.com/tonesto7/st-community-installer/master/privacypolicy.html"><small>Privacy Policy</small></a>
+                                        <br>
+                                        <small style="font-size: 10px;">Copyright \u00A9 2019 Anthony Santilli & Corey Lista</small>
+                                    </div>
 
-    html += '\n                               </div>';
-    html += '\n                           </div>';
-    html += '\n                           <button type="button" class="btn btn-sm btn-secondary mx-5 my-4" data-dismiss="modal">Close</button>';
-    html += '\n                       </div>';
-    html += '\n                   </div>';
-    html += '\n               </div>';
-    html += '\n           </div>';
-    html += '\n       </div>';
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-secondary mx-5 my-4" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>`;
 
     $('body').css({
         'overflow-x': 'hidden'
@@ -3066,7 +3065,7 @@ function installerAppUpdAvail() {
             hideMethod: 'slideUp',
             closeMethod: 'slideUp'
         };
-        Command: toastr['info']('There is an update available to this installer SmartApp.<br/>Please visit the IDE to perform the Update. <br/><strong>Latest Version:</strong> v' + latestSaVer, '');
+        Command: toastr['info'](`There is an update available to this installer SmartApp.<br/>Please visit the IDE to perform the Update. <br/><strong>Latest Version:</strong> v${latestSaVer}`, '');
         $('#toast-container').addClass('nopacity');
     }
     return false;
@@ -3080,6 +3079,7 @@ function loadScripts() {
     $.getScript('https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js');
     $.getScript('https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.5.0/js/mdb.min.js');
     $.getScript('https://cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.6.1/jquery.timeago.min.js');
+    $.getScript('https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.1.2/handlebars.runtime.min.js');
 }
 
 document.addEventListener('DOMContentLoaded', function() {
