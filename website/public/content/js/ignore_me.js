@@ -1,7 +1,7 @@
-const scriptVersion = '1.0.041519a';
+const scriptVersion = '1.1.031120a';
 const scriptRelType = 'Prod';
-const scriptVerDate = '04/15/2019';
-const latestSaVer = '1.0.0213a';
+const scriptVerDate = '03/11/2020';
+const latestSaVer = '1.1.0311a';
 const allowInstalls = true;
 const allowUpdates = true;
 const allowRemoval = false;
@@ -209,9 +209,7 @@ function capitalize(value) {
 }
 
 function cleanString(str) {
-    if (str) {
-        return str === undefined ? '' : str.replace(/[^a-zA-Z0-9 ]/gi, ' ').replace(/\s{2,}/gi, ' ').trim();
-    }
+    return str === undefined ? '' : str.replace(/[^a-zA-Z0-9 ]/gi, ' ').replace(/\s{2,}/gi, ' ').trim();
 }
 
 function cleanIdName(name, repStr = '_') {
