@@ -1,4 +1,4 @@
-const scriptVersion = '1.0.062620d';
+const scriptVersion = '1.0.062620e';
 const scriptRelType = 'Prod';
 const scriptVerDate = '06/26/2020';
 const latestSaVer = '1.1.0311a';
@@ -1369,7 +1369,7 @@ function incrementAppInstall(appName) {
 
 function incrementLikeDislike(appName, type) {
     let fb_ratings = fb_database.ref(`metrics/appRatings/${appName}/${hashedUuid}`);
-    fb_ratings.transaction(function(currentCnt) {
+    fb_ratings.transaction(function(currentData) {
         return (currentData === null || currentData <= 0) ? 1 : (currentData + (type === 'dislike' ? 0 : 1));
     }, function(error, committed, snapshot) {
         if (error) {
