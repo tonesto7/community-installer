@@ -1,4 +1,4 @@
-const scriptVersion = '1.0.062620d';
+const scriptVersion = '1.0.062620G';
 const scriptRelType = 'Prod';
 const scriptVerDate = '06/26/2020';
 const latestSaVer = '1.1.0311a';
@@ -1335,7 +1335,34 @@ function getMainManifest() {
 /***********************************************************************/
 //                      FIREBASE METRIC FUNCTIONS
 /***********************************************************************/
+function initializeDB() {
+    var firebaseConfig = {
+        apiKey: "AIzaSyCrv9ROjZSNnVkoTnpoVGNKPfVLc92n6vk",
+        authDomain: "community-installer-34dac.firebaseapp.com",
+        databaseURL: "https://community-installer-34dac.firebaseio.com",
+        projectId: "community-installer-34dac",
+        storageBucket: "community-installer-34dac.appspot.com",
+        messagingSenderId: "1090891041037",
+        appId: "1:1090891041037:web:c02a0bd7909af1c2a28844"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    // Get a reference to the database service
+    fb_database = firebase.database();
 
+    let metrics = fb_database.ref('metrics');
+    metrics.on('value', function(snapshot) {
+        // console.log('metrics data: ', snapshot.val());
+        metricsData = snapshot.val();
+        updateMetricsData();
+    });
+    let news = fb_database.ref('news');
+    news.on('value', function(snapshot) {
+        // console.log('news data: ', snapshot.val());
+        newsData = snapshot.val();
+        updateNewsData();
+    });
+}
 
 function incrementAppView(appName) {
     let fb_views = fb_database.ref(`metrics/appViews/${appName}`);
@@ -1368,16 +1395,17 @@ function incrementAppInstall(appName) {
 }
 
 function incrementLikeDislike(appName, type) {
-    let fb_ratings = fb_database.ref(`metrics/appRatings/${appName}/${hashedUuid}`);
-    fb_ratings.transaction(function(currentCnt) {
-        return (currentData === null || currentData <= 0) ? 1 : (currentData + (type === 'dislike' ? 0 : 1));
+    let ratings = fb_database.ref(`metrics/appRatings/${appName}/${hashedUuid}`);
+    ratings.transaction(function(currentVal) {
+        isFinite(currentVal) || (currentVal = 0);
+        return (currentVal = type === 'dislike' ? 0 : 1);
     }, function(error, committed, snapshot) {
         if (error) {
-            console.log(`AppRating/${appName} Count Transaction failed abnormally!`, error);
+            console.log(`AppRating/${appName} (${type}) Count Transaction failed abnormally!`, error);
         } else if (!committed) {
-            console.log(`We aborted the appRating/${appName} transaction!`);
+            console.log(`We aborted the appRating/${appName} (${type}) transaction!`);
         } else {
-            console.log(`AppRating Count for ${appName} is: `, snapshot.val());
+            console.log(`AppRating (${type}) Count for ${appName} is: `, snapshot.val());
         }
     });
 }
@@ -1412,35 +1440,6 @@ function searchForApp(evtSender, listType) {
         srchVal = '';
     }
     buildMainPage(srchVal, listType);
-}
-
-function initializeDB() {
-    var firebaseConfig = {
-        apiKey: "AIzaSyCrv9ROjZSNnVkoTnpoVGNKPfVLc92n6vk",
-        authDomain: "community-installer-34dac.firebaseapp.com",
-        databaseURL: "https://community-installer-34dac.firebaseio.com",
-        projectId: "community-installer-34dac",
-        storageBucket: "community-installer-34dac.appspot.com",
-        messagingSenderId: "1090891041037",
-        appId: "1:1090891041037:web:c02a0bd7909af1c2a28844"
-    };
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    // Get a reference to the database service
-    fb_database = firebase.database();
-
-    let metrics = fb_database.ref('metrics');
-    metrics.on('value', function(snapshot) {
-        // console.log('metrics data: ', snapshot.val());
-        metricsData = snapshot.val();
-        updateMetricsData();
-    });
-    let news = fb_database.ref('news');
-    news.on('value', function(snapshot) {
-        // console.log('news data: ', snapshot.val());
-        newsData = snapshot.val();
-        updateNewsData();
-    });
 }
 
 function updateNewsData() {
@@ -2816,11 +2815,11 @@ function buildCoreHtml() {
 
         <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400,400i,500,700,700i&amp;subset=cyrillic-ext" />
         <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" />
-        <script src="https://kit.fontawesome.com/6178085449.js" crossorigin="anonymous"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.13.0/umd/popper.min.js" async></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js" async></script>
         <script src="https://www.gstatic.com/firebasejs/7.15.4/firebase-app.js"></script>
         <script src="https://www.gstatic.com/firebasejs/7.15.4/firebase-database.js"></script>
+        <script src="https://kit.fontawesome.com/6178085449.js" crossorigin="anonymous" async></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.13.0/umd/popper.min.js" async></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js" async></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js" async></script>
         <link href="${repoUrl}/manifest.json" rel="manifest">
     `;

@@ -1,4 +1,4 @@
-const scriptVersion = '1.0.062620e';
+const scriptVersion = '1.0.062620f';
 const scriptRelType = 'Prod';
 const scriptVerDate = '06/26/2020';
 const latestSaVer = '1.1.0311a';
