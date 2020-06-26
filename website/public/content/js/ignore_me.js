@@ -1,6 +1,6 @@
-const scriptVersion = '1.1.031120a';
+const scriptVersion = '1.0.062620d';
 const scriptRelType = 'Prod';
-const scriptVerDate = '03/11/2020';
+const scriptVerDate = '06/26/2020';
 const latestSaVer = '1.1.0311a';
 const allowInstalls = true;
 const allowUpdates = true;
@@ -26,6 +26,7 @@ var currentAppName;
 var mainManifest;
 var appManifests;
 var itemStatusMap;
+var fb_database;
 
 const authUrl = generateStUrl('hub');
 const fetchReposUrl = generateStUrl('github/writeableRepos');
@@ -209,7 +210,9 @@ function capitalize(value) {
 }
 
 function cleanString(str) {
-    return str === undefined ? '' : str.replace(/[^a-zA-Z0-9 ]/gi, ' ').replace(/\s{2,}/gi, ' ').trim();
+    if (str) {
+        return str === undefined ? '' : str.replace(/[^a-zA-Z0-9 ]/gi, ' ').replace(/\s{2,}/gi, ' ').trim();
+    }
 }
 
 function cleanIdName(name, repStr = '_') {
@@ -259,8 +262,8 @@ function addResult(str, good, type = '', str2 = '') {
             }
             break;
         default:
-            s = "<li><p><span style='color: " + (good !== false ? '#25c225' : '#FF0000') + ";'>";
-            s += "<i class='fa fa-" + (good !== false ? 'check' : 'exclamation') + "'></i>";
+            s = '<li><p><span style=\'color: ' + (good !== false ? '#25c225' : '#FF0000') + ';\'>';
+            s += '<i class=\'fa fa-' + (good !== false ? 'check' : 'exclamation') + '\'></i>';
             s += '</span> ' + str + '</p></li>';
             $('#ideResultsTitle').css({
                 display: 'block'
@@ -1333,27 +1336,49 @@ function getMainManifest() {
 //                      FIREBASE METRIC FUNCTIONS
 /***********************************************************************/
 
+
 function incrementAppView(appName) {
-    var fb = new Firebase('https://community-installer-34dac.firebaseio.com/metrics/appViews/' + appName);
-    fb.transaction(function(currentVal) {
-        isFinite(currentVal) || (currentVal = 0);
-        return currentVal + 1;
+    let fb_views = fb_database.ref(`metrics/appViews/${appName}`);
+    fb_views.transaction(function(currentData) {
+        return (currentData === null || currentData <= 0) ? 1 : (currentData + 1);
+    }, function(error, committed, snapshot) {
+        if (error) {
+            console.log(`AppView/${appName} Count Transaction failed abnormally!`, error);
+        } else if (!committed) {
+            console.log(`We aborted the appView/${appName} transaction!`);
+        } else {
+            console.log(`AppView Count for ${appName} is: `, snapshot.val());
+        }
     });
 }
 
 function incrementAppInstall(appName) {
-    var fb = new Firebase('https://community-installer-34dac.firebaseio.com/metrics/appInstalls/' + appName);
-    fb.transaction(function(currentVal) {
-        isFinite(currentVal) || (currentVal = 0);
-        return currentVal + 1;
+    let fb_installs = fb_database.ref(`metrics/appInstalls/${appName}`);
+    fb_installs.transaction(function(currentData) {
+        return (currentData === null || currentData <= 0) ? 1 : (currentData + 1);
+    }, function(error, committed, snapshot) {
+        if (error) {
+            console.log(`AppInstall/${appName} Count Transaction failed abnormally!`, error);
+        } else if (!committed) {
+            console.log(`We aborted the appInstall/${appName} transaction!`);
+        } else {
+            console.log(`AppInstall Count for ${appName} is: `, snapshot.val());
+        }
     });
 }
 
 function incrementLikeDislike(appName, type) {
-    var fb = new Firebase('https://community-installer-34dac.firebaseio.com/metrics/appRatings/' + appName + '/' + hashedUuid);
-    fb.transaction(function(currentVal) {
-        isFinite(currentVal) || (currentVal = 0);
-        return (currentVal = type === 'dislike' ? 0 : 1);
+    let fb_ratings = fb_database.ref(`metrics/appRatings/${appName}/${hashedUuid}`);
+    fb_ratings.transaction(function(currentCnt) {
+        return (currentData === null || currentData <= 0) ? 1 : (currentData + (type === 'dislike' ? 0 : 1));
+    }, function(error, committed, snapshot) {
+        if (error) {
+            console.log(`AppRating/${appName} Count Transaction failed abnormally!`, error);
+        } else if (!committed) {
+            console.log(`We aborted the appRating/${appName} transaction!`);
+        } else {
+            console.log(`AppRating Count for ${appName} is: `, snapshot.val());
+        }
     });
 }
 
@@ -1389,19 +1414,31 @@ function searchForApp(evtSender, listType) {
     buildMainPage(srchVal, listType);
 }
 
-function startFirebaseListener() {
-    var fb = new Firebase('https://community-installer-34dac.firebaseio.com/metrics/');
-    fb.on('value', function(snap) {
-        var v = snap.val();
-        // console.log('v: ', v);
-        metricsData = v;
+function initializeDB() {
+    var firebaseConfig = {
+        apiKey: "AIzaSyCrv9ROjZSNnVkoTnpoVGNKPfVLc92n6vk",
+        authDomain: "community-installer-34dac.firebaseapp.com",
+        databaseURL: "https://community-installer-34dac.firebaseio.com",
+        projectId: "community-installer-34dac",
+        storageBucket: "community-installer-34dac.appspot.com",
+        messagingSenderId: "1090891041037",
+        appId: "1:1090891041037:web:c02a0bd7909af1c2a28844"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    // Get a reference to the database service
+    fb_database = firebase.database();
+
+    let metrics = fb_database.ref('metrics');
+    metrics.on('value', function(snapshot) {
+        // console.log('metrics data: ', snapshot.val());
+        metricsData = snapshot.val();
         updateMetricsData();
     });
-    var fb = new Firebase('https://community-installer-34dac.firebaseio.com/news/');
-    fb.on('value', function(snap) {
-        var v = snap.val();
-        // console.log('v: ', v);
-        newsData = v;
+    let news = fb_database.ref('news');
+    news.on('value', function(snapshot) {
+        // console.log('news data: ', snapshot.val());
+        newsData = snapshot.val();
         updateNewsData();
     });
 }
@@ -1431,7 +1468,7 @@ function updateNewsData() {
         html += '\n     <!--New Card Panel-->';
         html += '\n     <div class="card card-body card-outline px-1 py-0 mb-2" style="background-color: transparent;">';
         html += '\n       <div class="py-4" style="background-color: transparent;">';
-        html += "\n           <h6>Sorry!<br/> I don't have any News to share (Yet!)</h6>";
+        html += '\n           <h6>Sorry!<br/> I don\'t have any News to share (Yet!)</h6>';
         html += '\n       </div>';
         html += '\n     </div>';
     }
@@ -1460,7 +1497,9 @@ function timeAgo(selector) {
     };
 
     var timer = function(time) {
-        if (!time) return;
+        if (!time) {
+            return;
+        }
         time = time.replace(/\.\d+/, ''); // remove milliseconds
         time = time.replace(/-/, '/').replace(/-/, '/');
         time = time.replace(/T/, ' ').replace(/Z/, ' UTC');
@@ -1899,7 +1938,7 @@ function loadAllManifests() {
     loadManifests.then(resp => {
         if (appManifests.apps.length > 0) {
             buildMainPage();
-            startFirebaseListener();
+            initializeDB();
         } else {
             installComplete(resultStrings.inst_comp_text.errors.app_list_manifest_error, true);
         }
@@ -2246,7 +2285,7 @@ function renderAppView(appName, manifest) {
                 incrementAppView(appName);
             }
             appCloseBtnAvail(true);
-            $('#appNameListItem').text('Tap On (' + appName + ')');
+            $('#appNameListItem').text('Tap On (' + manifest.name + ')');
             html += '\n    <div id="appViewCard" class="p-0 mb-0" style="background-color: transparent;">';
             updSectTitle('', true);
             let cnt = 1;
@@ -2777,10 +2816,11 @@ function buildCoreHtml() {
 
         <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400,400i,500,700,700i&amp;subset=cyrillic-ext" />
         <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" />
-        <script src="https://use.fontawesome.com/a81eef09c0.js" async></script>
+        <script src="https://kit.fontawesome.com/6178085449.js" crossorigin="anonymous"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.13.0/umd/popper.min.js" async></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/wow/1.1.2/wow.min.js" async></script>
-        <script src="https://static.firebase.com/v0/firebase.js" async></script>
+        <script src="https://www.gstatic.com/firebasejs/7.15.4/firebase-app.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/7.15.4/firebase-database.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js" async></script>
         <link href="${repoUrl}/manifest.json" rel="manifest">
     `;
@@ -2919,7 +2959,7 @@ function buildCoreHtml() {
                                             <li style="font-size: 12px">Tap SmartApps Tab</li>
                                             <li style="font-size: 12px">Tap My Apps</li>
                                             <li style="font-size: 12px" id="appNameListItem"></li>
-                                            <li style="font-size: 12px">That\'s It!</li>
+                                            <li style="font-size: 12px">That's It!</li>
                                         </ol>
                                     </div>
                                 </div>
@@ -3000,7 +3040,7 @@ function buildCoreHtml() {
                                         <small><u>Privacy</u></small>
                                         <a class="blue-text" href="https://cdn.rawgit.com/tonesto7/st-community-installer/master/privacypolicy.html"><small>Privacy Policy</small></a>
                                         <br>
-                                        <small style="font-size: 10px;">Copyright \u00A9 2019 Anthony Santilli & Corey Lista</small>
+                                        <small style="font-size: 10px;">Copyright \u00A9 2020 Anthony Santilli & Corey Lista</small>
                                     </div>
 
                                 </div>
